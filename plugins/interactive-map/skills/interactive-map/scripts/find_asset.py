@@ -3,9 +3,11 @@
 
 usage: python3 find_asset.py WORD [WORD ...]
 Prints the names to use in the map: "icon" values (Lucide), "logo" slugs (Simple Icons)
-and role keys for "cat". Matching is case-insensitive on names and logo titles.
+and role keys for "cat". Logos marked "colour fallback" come from gilbarbara/logos
+and are used only where Simple Icons has no such slug. Matching is case-insensitive on names and logo titles.
 """
 import json
+import re
 import pathlib
 import sys
 
@@ -20,6 +22,7 @@ def main(words):
     load = lambda name: json.loads((LIBRARY / f'{name}.json').read_text(encoding='utf-8'))['items']
     icons = [k for k in load('icons') if hit(k)]
     logos = [f'{k} ({v["name"]})' for k, v in load('logos').items() if hit(k, v['name'])]
+    logos += [f'{k} (colour fallback)' for k in load('logos-color') if hit(k) and not k.endswith('-wordmark')]
     roles = [f'{k} ({v["label"]})' for k, v in load('roles').items() if hit(k, v['label'])]
     for title, items in (('icons', icons), ('logos', logos), ('roles', roles)):
         print(f'{title}: ' + (', '.join(items[:60]) + (f' … {len(items) - 60} more' if len(items) > 60 else '') if items else 'none'))

@@ -23,7 +23,7 @@ Start from an example, copy its structure and replace the content. Every section
 - Many text fields are inserted into the page as HTML. Write that markup yourself and never paste HTML from a repository, web page or document you are analysing; escape `<` and `&` in quoted text.
 - Use the asset library instead of drawing your own. `render.py` fills in any icon, logo or role that the map names but does not define:
   - `icon`: any [Lucide](https://lucide.dev) name (about 2,300, e.g. `database`, `server`, `clock`, `user`).
-  - `logo`: any [Simple Icons](https://simpleicons.org) slug (about 3,500 brands in their own colour, e.g. `redis`, `postgresql`, `docker`, `kubernetes`, `pytorch`). AWS, Azure and OpenAI are not in that set.
+  - `logo`: any [Simple Icons](https://simpleicons.org) slug (about 3,500 brands, drawn as a white mark on the brand colour, e.g. `redis`, `postgresql`, `docker`, `kubernetes`, `pytorch`). Where Simple Icons has no such brand, a full-colour mark from [gilbarbara/logos](https://github.com/gilbarbara/logos) is used (e.g. `aws`, `aws-s3`, `microsoft-azure`, `openai`, `slack`).
   - `cat` and every other role key: presets `person`, `component`, `background`, `store`, `external`, `model`, `alert`, with tested light and dark colours.
   - Find names with `python3 scripts/find_asset.py <word> [<word> ...]`.
   Put logos on technologies and outside services (databases, brokers, cloud services). Leave your own components on role icons so the map stays calm.

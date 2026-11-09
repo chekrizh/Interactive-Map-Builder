@@ -15,7 +15,7 @@ export interface ToolDefinition {
   page: {title:string;slots?:Record<string,string>};
   panels: Record<string,string>; ui: Record<string,string>;
   roles: Record<string,{label:string;light:string;dark:string;fillLight:string;fillDark:string}>;
-  logos: Record<string,{name:string;src:string;size:number}>;
+  logos: Record<string,{name:string;src:string;size:number;/** Tile colour behind a light mark. */ tile?:string}>;
   settings: {
     embedded:boolean;zoomable:boolean;linkTarget:string;recapOrder:string[];pinnedFlowFraction:number;
     appearanceRoles:{accent:string;artifact:string;error:string};

@@ -52,6 +52,8 @@
   function brandTile(parent, x, y, size, fallbackMarkup, logo) {
     const { tile, icon } = iconTile(parent, x, y, size, fallbackMarkup);
     tile.classList.add("logo-tile");
+    // Library logos carry their brand colour: a light mark on a tile of that colour.
+    if (logo.tile) { tile.style.fill = logo.tile; tile.classList.add("brand-tile"); }
     const inset = (size - logo.size) / 2;
     const image = element("image", { x: x + inset, y: y + inset,
       width: logo.size, height: logo.size, preserveAspectRatio: "xMidYMid meet",

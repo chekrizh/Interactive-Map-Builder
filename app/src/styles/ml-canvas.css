@@ -187,3 +187,6 @@
 .ml-canvas g.node.shape-external .nicon-tile:not(.logo-tile) { fill: var(--ml-node-fill); }
 .ml-canvas g.node.shape-external .nicon { stroke: currentColor; }
 .ml-canvas g.node:is(.future, .dimmed) :is(.nstack, .ncap) { opacity: .25; }
+.ml-canvas g.node .nicon-tile.logo-tile { rx: 10; }
+.ml-canvas g.node.shape-person .nicon-tile.logo-tile { rx: 18; }
+.ml-canvas g.node .nicon-tile.logo-tile:not(.brand-tile) { fill: #fff; stroke: #10182824; stroke-width: 1; }

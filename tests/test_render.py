@@ -97,7 +97,10 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(render.problems(d), [])
         self.assertIn('<ellipse', d['icons']['database'])
         self.assertTrue(d['logos']['redis']['src'].startswith('data:image/svg+xml;base64,'))
+        self.assertEqual(d['logos']['redis']['tile'], '#FF4438')  # Simple Icons: white mark on brand colour
         self.assertEqual(d['roles']['store']['label'], 'Data store')
+        aws = render.with_library(broken(lambda d: d['nodes'][0].update(logo='aws')))['logos']['aws']
+        self.assertNotIn('tile', aws)  # not in Simple Icons: full-colour gilbarbara mark
         self.assertEqual(render.with_library(EXAMPLE)['roles'], EXAMPLE['roles'])  # authored entries win
 
     def test_shipped_template_has_exactly_one_empty_placeholder(self):

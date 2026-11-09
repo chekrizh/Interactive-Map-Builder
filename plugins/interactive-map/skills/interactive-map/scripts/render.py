@@ -54,20 +54,32 @@ def library(name):
     return json.loads(path.read_text(encoding='utf-8'))['items'] if path.is_file() else {}
 
 
-def logo_uri(item):
-    """A Simple Icons mark as a data: URI in its brand colour (near-white marks are drawn dark)."""
-    hexcode = item['hex']
-    r, g, b = (int(hexcode[i:i + 2], 16) for i in (0, 2, 4))
-    fill = '#2b3445' if 0.2126 * r + 0.7152 * g + 0.0722 * b > 225 else f'#{hexcode}'
-    svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{fill}" d="{item["path"]}"/></svg>'
+def svg_uri(svg):
     return 'data:image/svg+xml;base64,' + base64.b64encode(svg.encode()).decode()
+
+
+def library_logo(slug, simple, color):
+    """A logo entry for the viewer. Simple Icons first: a white mark on a tile in the brand colour
+    (a dark mark when the brand colour is very light). gilbarbara/logos in full colour as the fallback."""
+    if slug in simple:
+        item = simple[slug]
+        r, g, b = (int(item['hex'][i:i + 2], 16) for i in (0, 2, 4))
+        mark = '#1d2330' if 0.2126 * r + 0.7152 * g + 0.0722 * b > 200 else '#ffffff'
+        svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{mark}" d="{item["path"]}"/></svg>'
+        return {'name': item['name'], 'src': svg_uri(svg), 'size': 20, 'tile': f'#{item["hex"]}'}
+    for name in (slug, f'{slug}-icon'):
+        if name in color:
+            item = color[name]
+            svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{item["box"]}">{item["body"]}</svg>'
+            return {'name': slug, 'src': svg_uri(svg), 'size': 24}
+    return None
 
 
 def with_library(d):
     """Fill icons, logos and roles the map names but does not define from assets/library.
 
     Authored entries always win. Icons are Lucide (24px grid, scaled to the viewer's 20px grid),
-    logos are Simple Icons slugs, roles are presets for C4 kinds. Returns a new dict."""
+    logos are Simple Icons slugs (gilbarbara/logos names as a fallback), roles are presets for C4 kinds. Returns a new dict."""
     if not isinstance(d, dict):
         return d
     d = dict(d)
@@ -80,10 +92,12 @@ def with_library(d):
             icons[name] = f'<g transform="scale(.8333)">{lib[name]}</g>'
     d['icons'] = icons
     logos, wanted = dict(d.get('logos') or {}), {n.get('logo') for n in nodes} - {None}
-    lib = library('logos') if wanted - set(logos) else {}
-    for slug in wanted - set(logos):
-        if slug in lib:
-            logos[slug] = {'name': lib[slug]['name'], 'src': logo_uri(lib[slug]), 'size': 22}
+    if wanted - set(logos):
+        simple, color = library('logos'), library('logos-color')
+        for slug in wanted - set(logos):
+            entry = library_logo(slug, simple, color)
+            if entry:
+                logos[slug] = entry
     d['logos'] = logos
     roles = dict(d.get('roles') or {})
     used = {n.get('cat') for n in nodes} | {g.get('huekey') for g in groups}
