@@ -53,8 +53,8 @@
   /* Fast clicks never select a button's label (2026-11-01). */
   button, [role="button"] { -webkit-user-select: none; user-select: none; }
   svg.mapsvg { display: block; width: 100%; height: auto; }
-  /* The big picture is a 2x2 loop: cap its width so it stays a picture, not a poster. */
-  svg#map0 { max-width: 640px; margin: 0 auto; }
+  /* The big picture fills the stage up to a reading size (2026-11-09; was 640px, which shrank card text to ~8px). */
+  svg#map0 { max-width: 1000px; margin: auto; }
   @media (max-width: 980px) {
     svg.mapsvg:not(#map0) { min-width: 1000px; }
     main.wrap { flex-direction: column; }
