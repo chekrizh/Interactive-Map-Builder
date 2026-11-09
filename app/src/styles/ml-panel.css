@@ -1,0 +1,50 @@
+/* Shared Journey Board side cards for the ML map. Every panel renderer uses
+   these rules, including the same card reparented into fullscreen. */
+.panel[data-panel-design="journey"] {
+  font-family: var(--ml-font);
+}
+.panel[data-panel-design="journey"] .p-eyebrow {
+  gap: 8px; font-family: inherit; font-size: 12px; line-height: 16px; font-weight: 500;
+  text-transform: none; letter-spacing: 0; color: var(--muted);
+}
+.panel[data-panel-design="journey"] .p-eyebrow::before {
+  content: ""; width: 8px; height: 8px; flex: none; border-radius: 50%;
+  background: var(--p-hue);
+}
+.panel[data-panel-design="journey"] h2 {
+  font-family: inherit; font-size: 22px; line-height: 28px; font-weight: 600;
+  letter-spacing: -.01em; margin-bottom: 4px;
+}
+/* Unslop pass, 2026-10-31: the card shares the tour card's type. 14px body
+   on a 22px line, 13px section headings at 600, every gap on the 4px grid. */
+.panel[data-panel-design="journey"] p {
+  font-size: 14px; line-height: 22px; margin-bottom: 0;
+}
+.panel[data-panel-design="journey"] p.p-sub {
+  color: var(--muted); font-size: 14px; line-height: 20px; margin-bottom: 12px;
+}
+.panel[data-panel-design="journey"] .p-chips { margin-bottom: 24px; }
+.panel[data-panel-design="journey"] .pchip {
+  font-family: inherit; font-size: 12px; font-weight: 500; line-height: 16px;
+  border: none; background: color-mix(in srgb, var(--ink) 5%, var(--surface));
+  border-radius: 6px; padding: 4px 8px; font-variant-numeric: tabular-nums;
+}
+.panel[data-panel-design="journey"] h3 {
+  font-family: inherit; font-size: 13px; line-height: 20px; font-weight: 600;
+  letter-spacing: 0; text-transform: none; color: var(--ink);
+  margin: 24px 0 8px;
+}
+.panel[data-panel-design="journey"] .p-chips + h3 { margin-top: 0; }
+.panel[data-panel-design="journey"] .toolline { color: var(--muted); }
+.panel[data-panel-design="journey"] code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .9em;
+  border: 1px solid var(--line); border-radius: 4px; padding: 1px 4px;
+  background: color-mix(in srgb, var(--ink) 3%, var(--surface));
+}
+
+/* Multi-paragraph introductions and flow narration keep their reading rhythm. */
+.panel[data-panel-design="journey"] p + p { margin-top: 12px; }
+.panel[data-panel-design="journey"] li { line-height: 22px; }
+.panel[data-panel-design="journey"] ol.steps li .n { font-family: inherit; }
+.panel[data-panel-design="journey"] .p-note { font-size: 13px; line-height: 20px; margin-top: 12px; }
+.panel[data-panel-design="journey"] .p-note + p { margin-top: 12px; }

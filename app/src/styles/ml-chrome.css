@@ -1,0 +1,229 @@
+/* Journey Board theme and controls for the ML tool. Shared geometry and
+   typography keep normal, standalone, pinned and fullscreen views consistent. */
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("../assets/fonts/Manrope-variable.ttf") format("truetype");
+}
+  :root {
+    --bg: #f6f7fa;
+    --surface: #ffffff;
+    --ink: #243044;
+    --muted: #606d85;
+    --line: #e2e5ee;
+    --dot: #e5e8f0;
+    --edge: #b7c2d5;
+
+
+
+
+
+
+
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #171c27;
+      --surface: #1e2633;
+      --ink: #e7ecf6;
+      --muted: #aab7ce;
+      --line: #354259;
+      --dot: #2a3345;
+      --edge: #65758f;
+
+
+
+
+
+
+
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171c27;
+    --surface: #1e2633;
+    --ink: #e7ecf6;
+    --muted: #aab7ce;
+    --line: #354259;
+    --dot: #2a3345;
+    --edge: #65758f;
+
+
+
+
+
+
+
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f7fa;
+    --surface: #ffffff;
+    --ink: #243044;
+    --muted: #606d85;
+    --line: #e2e5ee;
+    --dot: #e5e8f0;
+    --edge: #b7c2d5;
+
+
+
+
+
+
+
+  }
+
+  .controls {
+    max-width: 1720px; margin: 20px auto 16px;
+    display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end;
+    padding: 0; border: 0; background: transparent; position: relative; z-index: 3;
+    --flow-hue: var(--map-accent);
+  }
+  .embedded .controls { margin-top: 4px; }
+  .flow-controls[hidden] { display: none; }
+  .flow-controls { display: flex; align-items: flex-end; gap: 12px; }
+  .flow-field { width: 272px; max-width: 100%; }
+  .build-controls { margin-left: 0; padding-left: 24px; border-left: 1px solid var(--line); }
+  .flow-picker { position: relative; }
+  .flow-picker > summary {
+    display: flex; align-items: center; gap: 8px; height: 36px;
+    padding: 0 40px 0 12px; position: relative; list-style: none; cursor: pointer;
+    transition: border-color .15s var(--ml-ease);
+    border: 1px solid color-mix(in srgb,var(--flow-hue) 40%,var(--line)); border-radius: var(--ml-control-radius);
+    color: var(--flow-hue); background: color-mix(in srgb,var(--flow-hue) 6%,var(--surface));
+    font-size: 13px; font-weight: 500;
+  }
+  .flow-picker > summary:hover { border-color: color-mix(in srgb,var(--flow-hue) 70%,var(--line)); }
+  .flow-picker > summary::-webkit-details-marker { display: none; }
+  #flowSelected { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .flow-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--flow-hue); flex: none; }
+  .flow-chevron { position: absolute; right: 12px; top: 9px; width: 16px; height: 16px; }
+  .flow-menu {
+    position: absolute; left: 0; top: calc(100% + 8px); z-index: 10;
+    width: max(100%, 272px); max-height: min(400px, 60dvh); overflow-y: auto;
+    padding: 8px; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--surface); box-shadow: var(--ml-float-shadow);
+  }
+  .flow-options-label {
+    padding: 8px 8px 4px; font-size: 12px; line-height: 16px;
+    letter-spacing: 0; text-transform: none; color: var(--muted); font-weight: 500;
+  }
+  .flow-option-group + .flow-option-group { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 4px; }
+  .flow-option-group[hidden] { display: none; }
+  .flow-option {
+    display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 8px;
+    /* Nested radius: the 12px menu less its 8px padding. */
+    border: 0; border-radius: 4px; background: transparent; color: var(--ink);
+    text-align: left; font: inherit; font-size: 13px; line-height: 20px; cursor: pointer;
+    transition: background-color .15s var(--ml-ease);
+  }
+  .flow-option:hover { background: color-mix(in srgb,var(--ink) 5%,var(--surface)); }
+  .flow-option[aria-pressed="true"] { background: color-mix(in srgb,var(--flow-hue) 9%,var(--surface)); font-weight: 600; }
+  .flow-play {
+    height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 0 16px; border: 1px solid var(--ink); border-radius: var(--ml-control-radius);
+    /* Neutral ink, like the selected build step: the flow's colour lives in
+       the picker and on the map, never on the action itself. */
+    color: var(--bg); background: var(--ink); font: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; cursor: pointer;
+    transition: background-color .15s var(--ml-ease), border-color .15s var(--ml-ease);
+  }
+  .flow-play svg { width: 16px; height: 16px; flex: none; }
+  .flow-play:hover { background: color-mix(in srgb,var(--ink) 86%,var(--bg)); border-color: color-mix(in srgb,var(--ink) 86%,var(--bg)); }
+  .flow-picker > summary:focus-visible, .flow-option:focus-visible, .flow-play:focus-visible {
+    outline: 2px solid var(--flow-hue); outline-offset: 2px;
+  }
+  .build-controls .seg { height: 36px; }
+  .build-controls .seg button { padding: 0 12px; }
+  .cgroup { display: flex; flex-direction: column; gap: 8px; }
+  .clabel {
+    font-family: var(--ml-font);
+    font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0; color: var(--muted); text-transform: none;
+  }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--ml-control-radius); overflow: hidden; background: var(--surface); }
+  .seg button {
+    font-family: var(--ml-font);
+    font-size: 12px; color: var(--muted); background: transparent;
+    border: none; border-right: 1px solid var(--line);
+    padding: 6px 12px; cursor: pointer; font-variant-numeric: tabular-nums;
+    transition: color .15s var(--ml-ease), background-color .15s var(--ml-ease);
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button:hover { color: var(--ink); }
+  .seg button:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+  .seg button.on { background: var(--ink); color: var(--bg); }
+
+
+  .crumbbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-bottom: 1px solid var(--line);
+    min-height: 48px;
+  }
+  button.crumbbtn {
+    font-family: inherit; font-size: 13px; line-height: 20px; color: var(--ink);
+    background: transparent; border: 1px solid var(--line); border-radius: var(--ml-control-radius);
+    padding: 4px 12px; min-height: 32px; cursor: pointer;
+    transition: border-color .15s var(--ml-ease), color .15s var(--ml-ease), background-color .15s var(--ml-ease);
+  }
+  button.crumbbtn:hover { border-color: var(--muted); }
+  button.crumbbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .crumbnote {
+    font-weight: 500;
+    font-family: var(--ml-font);
+    font-size: 13px; line-height: 20px; letter-spacing: 0; color: var(--muted); text-transform: none;
+  }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center;
+    border-top: 1px solid var(--line);
+    padding: 8px 16px; font-size: 12px; line-height: 20px; color: var(--muted);
+  }
+  .lg { display: inline-flex; align-items: center; gap: 8px; }
+  .sw { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--legend-hue); }
+
+
+  /* Unslop pass, 2026-10-31: radii and sizes on the 4px grid, one ease-out
+     curve for every hover and entrance, and one soft neutral shadow for
+     anything that floats (menus, the zoom control, the drawer). */
+  :root {
+    --ml-font: "Manrope", system-ui, sans-serif; --ml-control-radius: 8px;
+    --ml-ease: cubic-bezier(.22, 1, .36, 1);
+    --ml-float-shadow: 0 8px 24px rgba(15, 18, 28, .08), 0 1px 2px rgba(15, 18, 28, .05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --ml-float-shadow: 0 12px 32px rgba(0, 0, 0, .32); }
+  }
+  :root[data-theme="dark"] { --ml-float-shadow: 0 12px 32px rgba(0, 0, 0, .32); }
+  body { font-family: var(--ml-font); }
+  /* Focus rings only for the keyboard, in ink: a mouse click shows the
+     map's own selected and hover states, never the browser's blue ring. */
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  :focus:not(:focus-visible) { outline: none; }
+  button.crumbbtn, button.lookbtn, button.panel-action {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .ml-control-icon { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  button.lookbtn:focus-visible {
+    outline: 2px solid var(--ink); outline-offset: 2px;
+  }
+  #unfocus {
+    gap: 8px; color: var(--focus-hue); background: color-mix(in srgb,var(--focus-hue) 7%,var(--surface));
+    border-color: color-mix(in srgb,var(--focus-hue) 30%,var(--line));
+  }
+  #unfocus::before { content: ""; width: 8px; height: 8px; flex: none; border-radius: 50%; background: currentColor; }
+  #unfocus .ml-control-icon { width: 14px; height: 14px; order: 1; }
+  .inside h2 { font-family: var(--ml-font); font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -.01em; margin-top: 16px; }
+  .inside .i-sub, .inside .i-cap { font-family: var(--ml-font); }
+  .eyebrow { font-family: var(--ml-font); letter-spacing: 0; }
+  .stagecard, aside.panel { border-radius: 16px; }
+  button.lookbtn, button.panel-action { border-radius: var(--ml-control-radius); }
+  .crumbbar button[hidden] { display: none; }
+
+  .panel .panelclose, .drawer .drawerclose { border-radius: 8px; min-height: 28px; }
+
+  .panel .xrepo a .ml-control-icon { vertical-align: middle; margin-left: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flow-picker > summary, .flow-option, .flow-play, .seg button, button.crumbbtn { transition: none; }
+  }

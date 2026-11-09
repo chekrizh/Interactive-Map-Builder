@@ -1,0 +1,6 @@
+/* The app takes the original iframe's content box, without the website shell. */
+#app { display: contents; }
+/* The original marketing-only mobile gate is intentionally not installed. */
+/* A map that fails validation shows its error instead of a blank page. */
+.map-error { margin: 24px; padding: 16px; white-space: pre-wrap; font: 14px/1.5 ui-monospace, monospace;
+  color: #c62a2f; background: #fff; border: 1px solid #c62a2f; border-radius: 12px; }

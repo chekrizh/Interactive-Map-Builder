@@ -4,9 +4,9 @@
   "owner": { "name": "chekrizh" },
   "plugins": [
     {
-      "name": "pretty-text",
-      "source": "./plugins/pretty-text",
-      "description": "Turn a text into a polished one-page web app delivered as a single HTML file."
+      "name": "interactive-map",
+      "source": "./plugins/interactive-map",
+      "description": "Build an interactive system map (components, flows, build order, guided tour) as one offline HTML file."
     }
   ]
 }

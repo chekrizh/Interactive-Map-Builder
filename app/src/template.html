@@ -1,0 +1,113 @@
+
+
+
+<div class="pintitle" id="pinTitle" hidden>
+  <span class="eyebrow">Your system so far</span>
+  <h1 id="pinTitleWeek"></h1>
+</div>
+
+<section class="controls" aria-label="Explore the map">
+  <div class="flow-controls" id="flowControls">
+    <div class="cgroup flow-field">
+      <div class="clabel" id="flowLabel">Flow</div>
+      <details class="flow-picker" id="flowPicker">
+        <summary aria-labelledby="flowLabel flowSelected"><span class="flow-dot" aria-hidden="true"></span><span id="flowSelected">Choose a flow</span><svg class="flow-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <div class="flow-menu" aria-label="Available flows">
+          <div class="flow-option-group" role="group" aria-labelledby="systemFlowsLabel"><div class="flow-options-label" id="systemFlowsLabel">System flows</div><div id="storyOptions"></div></div>
+          <div class="flow-option-group" role="group" aria-labelledby="failureFlowsLabel"><div class="flow-options-label" id="failureFlowsLabel">Failure scenario</div><div id="failureOptions"></div></div>
+        </div>
+      </details>
+    </div>
+    <button type="button" class="flow-play" id="playFlow"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 1.5 14 8 3 14.5Z"/></svg><span>Play flow</span></button>
+  </div>
+  <div class="cgroup build-controls">
+    <div class="clabel">Build order</div>
+    <div class="seg" id="weekSeg"></div>
+  </div>
+  <div class="cgroup tour-controls" id="tourControls">
+    <div class="clabel" id="tourLabel">New here?</div>
+    <button type="button" class="tour-entry" id="tourBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 8.6v6.8l5.6-3.4z" fill="currentColor"/></svg><span id="tourBtnText">{{tourEntry}}</span></button>
+  </div>
+
+</section>
+<div id="ctrlSlot" hidden></div>
+
+<main class="wrap">
+  <div class="stagecard">
+
+    <div class="tourbar" id="tourBar">
+      <div class="tb-text"><div class="tb-eyebrow">Guided tour</div><div class="tb-status" id="tourStatus"></div></div>
+      <ol class="tb-chapters" id="tourChapters" aria-label="Tour chapters"></ol>
+      <button type="button" class="crumbbtn tb-exit" id="tourExit">Exit tour</button>
+    </div>
+    <div class="crumbbar">
+      <button class="crumbbtn" id="toL0" hidden>&lsaquo; Big picture</button>
+      <span class="crumbnote" id="crumbNote">The big picture</span>
+      <button class="crumbbtn" id="unfocus" hidden></button>
+
+      <button class="crumbbtn" id="panelBtn" hidden>Show panel</button>
+      <button class="crumbbtn" id="fsBtn">Full screen</button>
+    </div>
+    <div class="stage-scroll">
+      <span class="zoomctl" id="zoomCtl" role="group" aria-label="Canvas zoom">
+        <button type="button" class="crumbbtn" id="zoomOut" aria-label="Zoom out" title="Zoom out">−</button>
+        <button type="button" class="crumbbtn" id="zoomFit" aria-label="Fit whole map" title="Fit whole map">Fit</button>
+        <button type="button" class="crumbbtn" id="zoomIn" aria-label="Zoom in" title="Zoom in">+</button>
+      </span>
+      <svg id="map0" class="mapsvg ml-canvas" viewBox="{{overviewViewBox}}" role="img"
+        aria-label="{{overviewDescription}}"></svg>
+      <svg id="map" class="mapsvg ml-canvas" viewBox="{{mapViewBox}}" role="img" style="display:none"
+        aria-label="{{mapDescription}}"></svg>
+    </div>
+    <div class="legend ml-canvas">{{legend}}</div>
+    <div class="inside" id="inside" hidden>
+      <button class="crumbbtn" id="insideBack">&lsaquo; Back to the map</button>
+      <h2 id="insideTitle"></h2>
+      <p class="i-sub" id="insideSub"></p>
+      <div id="insideScene"></div>
+      <p class="i-cap" id="insideCap"></p>
+    </div>
+    <div class="drawer" id="drawer">
+      <div class="panelhead"><button type="button" class="crumbbtn drawerclose" id="drawerClose" aria-label="Close panel" title="Close panel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      <div id="drawerBody"></div>
+    </div>
+    <section class="tourcard" id="tourCard" aria-labelledby="tcTitle" hidden>
+      <div class="tc-scroll" id="tcScroll">
+      <div aria-live="polite">
+        <div class="tc-eyebrow"><span class="tc-dot" aria-hidden="true"></span><span id="tcEyebrow"></span></div>
+        <h2 id="tcTitle" tabindex="-1"></h2>
+        <div class="tc-body" id="tcBody"></div>
+        <ol class="tc-list" id="tcList" hidden></ol>
+        <div class="tc-why" id="tcWhy"><div class="tc-why-label">Why it matters</div><p id="tcWhyText"></p></div>
+      </div>
+      </div>
+      <p class="tc-hint" id="tcHint" hidden>Press Next to walk through each step.<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14m-6-6 6 6 6-6"/></svg></p>
+      <div class="tc-foot">
+        <span class="tc-count" id="tcCount"></span>
+        <button type="button" class="tc-back" id="tcBack">Back</button>
+        <button type="button" class="tc-next" id="tcNext">Next</button>
+      </div>
+      <p class="tc-keys" aria-hidden="true"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> to go back or next <span>&middot;</span> <kbd>Esc</kbd> to exit</p>
+    </section>
+    <div class="tourend" id="tourEnd" hidden>
+      <div class="tourend-card" role="dialog" aria-labelledby="teTitle">
+        <div class="te-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
+        <div class="te-eyebrow">{{completionCount}}</div>
+        <h1 id="teTitle" tabindex="-1">You've finished the tour</h1>
+        <p class="te-lede">{{completionIntro}}</p>
+        <ul class="te-list">{{completionLessons}}</ul>
+
+        <div class="te-links">
+          <button type="button" id="teBack">Back to the map</button>
+          <span class="te-sep" aria-hidden="true" {{nextToolHidden}}>|</span>
+          <a id="teNext" href="{{nextToolUrl}}" {{nextToolHidden}}>{{nextToolLabel}}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <span id="panelSlot" hidden></span>
+  <aside class="panel" id="panel">
+    <div class="panelhead"><button type="button" class="crumbbtn panelclose" id="panelClose" aria-label="Close panel" title="Close panel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div id="panelBody"></div>
+  </aside>
+</main>

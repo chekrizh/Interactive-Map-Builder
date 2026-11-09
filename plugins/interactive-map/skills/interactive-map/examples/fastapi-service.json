@@ -1,0 +1,521 @@
+{
+  "id": "fastapi-greeting-service",
+  "page": {
+    "title": "A Tiny FastAPI Service",
+    "slots": {
+      "overviewDescription": "A small FastAPI greeting service: send a request, validate it, and return a response.",
+      "mapDescription": "A request reaches FastAPI, Pydantic validates it, and the service returns either a greeting or a validation error.",
+      "legend": "<span class=\"lg\"><span class=\"sw\" style=\"--legend-hue:var(--h-input)\"></span>Request</span><span class=\"lg\"><span class=\"sw\" style=\"--legend-hue:var(--h-service)\"></span>Service</span><span class=\"lg\"><span class=\"sw\" style=\"--legend-hue:var(--h-output)\"></span>Response</span><span class=\"lg\"><span class=\"sw\" style=\"--legend-hue:var(--h-error)\"></span>Error</span>",
+      "completionLessons": "<li>How a request becomes a response</li><li>Why validation runs before greeting code</li>",
+      "tourEntry": "Take the guided tour · 2 min",
+      "completionCount": "Tour complete · 3 steps",
+      "completionIntro": "You followed a valid request from the client to the response."
+    }
+  },
+  "panels": {
+    "introHtml": "<div class=\"p-eyebrow\">Start here</div><h2>A tiny API, one request at a time</h2><p style=\"margin-top:8px\">This map follows a small FastAPI service with one endpoint: <code>POST /greet</code>.</p><p>A valid name gets a greeting. A missing name gets a validation error before the greeting function runs.</p><h3>Try it</h3><ul class=\"newlist\"><li>Choose a flow to read all its steps.</li><li>Press Play to watch the request move.</li><li>Open a component to see what it does.</li></ul><div class=\"panel-actions\"><button type=\"button\" class=\"panel-action\" id=\"gofull\">Open full map</button></div>",
+    "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>One endpoint, two outcomes</h2><p style=\"margin-top:8px\">The service validates a JSON body and returns either a greeting or an HTTP 422 error.</p><h3>How to read it</h3><p>Follow the arrows from left to right. The two flows show valid and invalid requests.</p>",
+    "stageEyebrow": "Part",
+    "stageMembers": "Components in this part",
+    "stageNote": "The flow follows the connections between these parts.",
+    "decision": "Why this choice",
+    "repository": "Example code location",
+    "course": "Learning note",
+    "what": "What it does",
+    "why": "Why it matters",
+    "tools": "Technology",
+    "newNodes": "Components added",
+    "runnable": "Example command",
+    "pinnedNote": "This view shows the service at this step.",
+    "buildNote": "The steps build the service from request model to endpoint.",
+    "fileSuffix": " · File",
+    "nodeBuildLabel": "Build step {step} of {total}",
+    "nodeCourseLabel": "Example step {step}",
+    "buildLabel": "Build order · Step {step} of {total}",
+    "courseLabel": "Service · Step {step}",
+    "buildRole": "service"
+  },
+  "ui": {
+    "fullSystem": "Full service",
+    "pinnedTitle": "Step {step}: {title}",
+    "tourEntry": "Take the guided tour · 2 min",
+    "flowComplete": "Flow complete. Choose another request or inspect a component."
+  },
+  "groups": {
+    "request": {
+      "title": "Send a request",
+      "huekey": "input",
+      "icon": "client",
+      "line1": "A client sends a name",
+      "line2": "to the greeting endpoint.",
+      "chips": "Browser · curl",
+      "text": "A client sends a POST request with a JSON body containing a name.",
+      "members": [
+        "client"
+      ]
+    },
+    "service": {
+      "title": "Handle the request",
+      "huekey": "service",
+      "icon": "endpoint",
+      "line1": "FastAPI validates input",
+      "line2": "then runs the handler.",
+      "chips": "FastAPI · Pydantic · Python",
+      "text": "FastAPI routes the request, Pydantic checks the name, and a Python function builds the response.",
+      "members": [
+        "endpoint",
+        "validation",
+        "greeting"
+      ]
+    },
+    "response": {
+      "title": "Return a result",
+      "huekey": "output",
+      "icon": "success",
+      "line1": "Valid input gets a greeting.",
+      "line2": "Invalid input gets HTTP 422.",
+      "chips": "JSON · HTTP",
+      "text": "A valid request returns a JSON greeting. A request without a name is rejected.",
+      "members": [
+        "success",
+        "invalid"
+      ]
+    }
+  },
+  "overview": [
+    {
+      "g": "request"
+    },
+    {
+      "g": "service"
+    },
+    {
+      "g": "response"
+    }
+  ],
+  "overviewEdges": [
+    {
+      "id": "request-service",
+      "from": "request",
+      "to": "service",
+      "label": ""
+    },
+    {
+      "id": "service-response",
+      "from": "service",
+      "to": "response",
+      "label": ""
+    }
+  ],
+  "nodes": [
+    {
+      "id": "client",
+      "group": "request",
+      "cat": "input",
+      "week": 1,
+      "icon": "client",
+      "tool": "Browser or curl",
+      "concept": "API client",
+      "what": "Sends POST /greet with a JSON body containing a name.",
+      "why": "An API lets another program ask the service to do work.",
+      "tools": "Any HTTP client."
+    },
+    {
+      "id": "endpoint",
+      "group": "service",
+      "cat": "service",
+      "week": 1,
+      "icon": "endpoint",
+      "tool": "FastAPI",
+      "concept": "POST /greet",
+      "what": "Receives the request and connects it to the input model and handler.",
+      "why": "The route gives clients one stable address for the operation.",
+      "tools": "FastAPI route function."
+    },
+    {
+      "id": "validation",
+      "group": "service",
+      "cat": "service",
+      "week": 2,
+      "icon": "validation",
+      "tool": "Pydantic",
+      "concept": "Input validation",
+      "what": "Checks that the request body contains the required name field.",
+      "why": "Invalid input is rejected before the greeting code runs.",
+      "tools": "A Pydantic request model."
+    },
+    {
+      "id": "greeting",
+      "group": "service",
+      "cat": "service",
+      "week": 3,
+      "icon": "greeting",
+      "tool": "greet(name)",
+      "concept": "Greeting function",
+      "what": "Builds a message such as Hello, Sam! from the validated name.",
+      "why": "A small function keeps the route easy to read and test.",
+      "tools": "Ordinary Python code."
+    },
+    {
+      "id": "success",
+      "group": "response",
+      "cat": "output",
+      "week": 3,
+      "icon": "success",
+      "tool": "HTTP 200 · JSON",
+      "concept": "Greeting response",
+      "what": "Returns a greeting message to the client.",
+      "why": "The client can use the result in its own interface or workflow.",
+      "tools": "FastAPI serializes the response as JSON."
+    },
+    {
+      "id": "invalid",
+      "group": "response",
+      "cat": "error",
+      "week": 2,
+      "icon": "invalid",
+      "tool": "HTTP 422",
+      "concept": "Validation response",
+      "what": "Explains that the required name field is missing.",
+      "why": "The client gets a clear response instead of a server crash.",
+      "tools": "FastAPI request validation."
+    }
+  ],
+  "zones": [],
+  "edges": [
+    {
+      "id": "client-endpoint",
+      "from": "client",
+      "to": "endpoint",
+      "label": "POST /greet"
+    },
+    {
+      "id": "endpoint-validation",
+      "from": "endpoint",
+      "to": "validation",
+      "label": "request body"
+    },
+    {
+      "id": "validation-greeting",
+      "from": "validation",
+      "to": "greeting",
+      "label": "name is valid"
+    },
+    {
+      "id": "greeting-success",
+      "from": "greeting",
+      "to": "success",
+      "label": "message"
+    },
+    {
+      "id": "validation-invalid",
+      "from": "validation",
+      "to": "invalid",
+      "label": "name is missing"
+    }
+  ],
+  "flows": {
+    "valid": {
+      "title": "Valid name",
+      "hue": "service",
+      "desc": "A client sends a name and receives a greeting.",
+      "hops": [
+        {
+          "e": "client-endpoint",
+          "t": "The client sends POST /greet with { name: Sam }."
+        },
+        {
+          "e": "endpoint-validation",
+          "t": "FastAPI passes the request body to Pydantic."
+        },
+        {
+          "e": "validation-greeting",
+          "t": "Pydantic confirms the name is present, so the greeting function runs."
+        },
+        {
+          "e": "greeting-success",
+          "t": "The service returns a greeting with HTTP 200."
+        }
+      ]
+    },
+    "missing": {
+      "title": "Name is missing",
+      "hue": "error",
+      "desc": "Pydantic rejects a request without a name before the greeting function runs.",
+      "hops": [
+        {
+          "e": "client-endpoint",
+          "t": "The client sends POST /greet without the required name."
+        },
+        {
+          "e": "endpoint-validation",
+          "t": "FastAPI passes the request body to Pydantic."
+        },
+        {
+          "e": "validation-invalid",
+          "t": "Pydantic rejects the body and FastAPI returns HTTP 422. The greeting function never runs."
+        }
+      ]
+    }
+  },
+  "buildSteps": [
+    null,
+    {
+      "title": "Add the endpoint",
+      "text": "Define the request and create POST /greet.",
+      "decision": "Validate at the boundary so the handler can trust its input.",
+      "runnable": "uvicorn app:app --reload",
+      "nodes": [
+        "client",
+        "endpoint"
+      ]
+    },
+    {
+      "title": "Validate the name",
+      "text": "Add a Pydantic model and let FastAPI reject invalid input.",
+      "decision": "Reject bad input before it reaches the service logic.",
+      "runnable": "curl -X POST localhost:8000/greet -H 'Content-Type: application/json' -d '{}'",
+      "nodes": [
+        "validation",
+        "invalid"
+      ]
+    },
+    {
+      "title": "Return a greeting",
+      "text": "Add the greeting function and return its result as JSON.",
+      "decision": "Keep the operation small and easy to test.",
+      "runnable": "curl -X POST localhost:8000/greet -H 'Content-Type: application/json' -d '{\"name\":\"Sam\"}'",
+      "nodes": [
+        "greeting",
+        "success"
+      ]
+    }
+  ],
+  "tourChapters": [
+    {
+      "name": "Request",
+      "hue": "--h-input"
+    },
+    {
+      "name": "Service",
+      "hue": "--h-service"
+    },
+    {
+      "name": "Response",
+      "hue": "--h-output"
+    }
+  ],
+  "tour": [
+    {
+      "ch": 0,
+      "level": 1,
+      "flow": "valid",
+      "hops": [
+        0,
+        1
+      ],
+      "title": "Send the request",
+      "body": [
+        "A client sends POST /greet with the name Sam."
+      ],
+      "why": "The endpoint gives every client one clear way to ask for a greeting."
+    },
+    {
+      "ch": 1,
+      "level": 1,
+      "flow": "valid",
+      "hops": [
+        1,
+        3
+      ],
+      "title": "Validate and process it",
+      "body": [
+        "FastAPI passes the request body to Pydantic.",
+        "Because the name is present, the greeting function runs."
+      ],
+      "why": "Validation keeps incomplete requests away from the greeting code."
+    },
+    {
+      "ch": 2,
+      "level": 1,
+      "flow": "valid",
+      "hops": [
+        3,
+        4
+      ],
+      "title": "Return the result",
+      "body": [
+        "The service returns the greeting as JSON with HTTP 200."
+      ],
+      "why": "The client can now use the response in its own interface."
+    }
+  ],
+  "beatSeconds": 15,
+  "flowBeatSeconds": 15,
+  "insides": {},
+  "insideMarkers": "",
+  "roles": {
+    "input": {
+      "label": "Request",
+      "light": "#4f6bd5",
+      "dark": "#9bb5ff",
+      "fillLight": "#edf1ff",
+      "fillDark": "#25314c"
+    },
+    "service": {
+      "label": "Service",
+      "light": "#26847f",
+      "dark": "#7ad1c5",
+      "fillLight": "#e8f5f2",
+      "fillDark": "#203d3d"
+    },
+    "output": {
+      "label": "Response",
+      "light": "#518662",
+      "dark": "#a2cf9d",
+      "fillLight": "#edf5e9",
+      "fillDark": "#2c3c2c"
+    },
+    "error": {
+      "label": "Validation error",
+      "light": "#d64545",
+      "dark": "#e77676",
+      "fillLight": "#fbeceb",
+      "fillDark": "#452b33"
+    }
+  },
+  "icons": {
+    "client": "<circle cx=\"10\" cy=\"7\" r=\"3\"/><path d=\"M3 18a7 7 0 0 1 14 0\"/>",
+    "endpoint": "<rect x=\"2\" y=\"3\" width=\"16\" height=\"14\" rx=\"2\"/><path d=\"M2 7h16\"/>",
+    "validation": "<path d=\"M3 10l5 5 10-11\"/>",
+    "greeting": "<path d=\"M3 4h14v10H9l-5 4v-4H3z\"/>",
+    "success": "<path d=\"M4 3h8l4 4v10H4zM12 3v5h4\"/>",
+    "invalid": "<path d=\"M10 2 19 18H1z\"/><path d=\"M10 7v5m0 3h.1\"/>"
+  },
+  "logos": {},
+  "settings": {
+    "embedded": true,
+    "zoomable": true,
+    "linkTarget": "_top",
+    "recapOrder": [
+      "request",
+      "service",
+      "response"
+    ],
+    "pinnedFlowFraction": 0.5,
+    "appearanceRoles": {
+      "accent": "service",
+      "artifact": "input",
+      "error": "error"
+    }
+  },
+  "links": {
+    "projectStructure": "#"
+  },
+  "layout": {
+    "viewBoxes": {
+      "map": [
+        1460,
+        650
+      ],
+      "map0": [
+        1000,
+        680
+      ]
+    },
+    "overviewCard": {
+      "width": 260,
+      "height": 220
+    },
+    "scale": {
+      "x": 1,
+      "y": 1
+    },
+    "nodes": {
+      "client": {
+        "x": 50,
+        "y": 220,
+        "w": 180,
+        "h": 72
+      },
+      "endpoint": {
+        "x": 320,
+        "y": 220,
+        "w": 180,
+        "h": 72
+      },
+      "validation": {
+        "x": 590,
+        "y": 220,
+        "w": 180,
+        "h": 72
+      },
+      "greeting": {
+        "x": 860,
+        "y": 220,
+        "w": 180,
+        "h": 72
+      },
+      "success": {
+        "x": 1150,
+        "y": 220,
+        "w": 180,
+        "h": 72
+      },
+      "invalid": {
+        "x": 1150,
+        "y": 430,
+        "w": 180,
+        "h": 72
+      }
+    },
+    "edges": {
+      "client-endpoint": {
+        "d": "M230,256 L320,256"
+      },
+      "endpoint-validation": {
+        "d": "M500,256 L590,256"
+      },
+      "validation-greeting": {
+        "d": "M770,256 L860,256"
+      },
+      "greeting-success": {
+        "d": "M1040,256 L1150,256"
+      },
+      "validation-invalid": {
+        "d": "M680,292 L680,466 L1150,466"
+      }
+    },
+    "zones": {},
+    "overview": {
+      "request": {
+        "x": 60,
+        "y": 230
+      },
+      "service": {
+        "x": 370,
+        "y": 230
+      },
+      "response": {
+        "x": 680,
+        "y": 230
+      }
+    },
+    "overviewEdges": {
+      "request-service": {
+        "d": "M320,340 L370,340",
+        "x": 345,
+        "y": 327,
+        "anchor": "middle"
+      },
+      "service-response": {
+        "d": "M630,340 L680,340",
+        "x": 655,
+        "y": 327,
+        "anchor": "middle"
+      }
+    },
+    "annotations": [],
+    "insideMarkers": ""
+  }
+}

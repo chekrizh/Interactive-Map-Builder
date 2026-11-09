@@ -1,33 +1,89 @@
 """Run: python3 -m unittest discover tests"""
+import copy
 import json
 import pathlib
 import re
+import shutil
+import subprocess
 import sys
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'plugins' / 'pretty-text' / 'skills' / 'pretty-text' / 'scripts'))
+SKILL = ROOT / 'plugins' / 'interactive-map' / 'skills' / 'interactive-map'
+sys.path.insert(0, str(SKILL / 'scripts'))
 import render  # noqa: E402
+
+EXAMPLE = json.loads((SKILL / 'examples' / 'fastapi-service.json').read_text(encoding='utf-8'))
+NODE = shutil.which('node')
+
+
+def js_error(definition):
+    """What the page's own validator (prepareDefinition) says: '' when it accepts the map."""
+    module = (ROOT / 'app' / 'src' / 'runtime' / 'definition.js').as_uri()
+    script = (f'import {{ prepareDefinition }} from "{module}"; let s = "";'
+              'process.stdin.on("data", c => s += c).on("end", () => {'
+              ' try { prepareDefinition(JSON.parse(s)); console.log(""); } catch (e) { console.log(e.message || String(e)); } });')
+    run = subprocess.run([NODE, '--input-type=module', '-e', script], input=json.dumps(definition),
+                         capture_output=True, text=True, check=True)
+    return run.stdout.strip()
+
+
+def broken(change):
+    d = copy.deepcopy(EXAMPLE)
+    change(d)
+    return d
+
+
+# Mistakes a model is likely to make; Python and the page must both reject each one.
+BROKEN = {
+    'edge to unknown node': lambda d: d['edges'][0].update(to='ghost'),
+    'node in unknown group': lambda d: d['nodes'][0].update(group='ghost'),
+    'duplicate node id': lambda d: d['nodes'].append(dict(d['nodes'][0])),
+    'node week without build step': lambda d: d['nodes'][0].update(week=99),
+    'node icon not in icons': lambda d: d['nodes'][0].update(icon='ghost'),
+    'group lists a node of another group': lambda d: next(iter(d['groups'].values()))['members'].append(d['nodes'][-1]['id']),
+    'flow hop on unknown edge': lambda d: next(iter(d['flows'].values()))['hops'][0].update(e='ghost'),
+    'node without layout': lambda d: d['layout']['nodes'].pop(d['nodes'][0]['id']),
+    'tour step with unknown flow': lambda d: d['tour'][0].update(flow='ghost'),
+    'final tour step walks nothing': lambda d: [d['tour'][-1].pop(k, None) for k in ('flow', 'whole')],
+    'recap order with unknown group': lambda d: d['settings']['recapOrder'].append('ghost'),
+    'missing id': lambda d: d.pop('id'),
+}
 
 
 class RenderTest(unittest.TestCase):
-    def test_text_that_looks_like_html_stays_inside_the_json_tag(self):
-        content = {'title': '</script><script>alert(1)</script><!--', 'sections': [{'heading': 'h', 'points': ['<b>x</b>']}]}
-        page = render.render('<body>' + render.PLACEHOLDER + '</body>', content)
-        payload = re.search(r'id="page-content">(.*?)</script>', page).group(1)
-        self.assertEqual(json.loads(payload), content)
+    def test_example_map_is_valid(self):
+        self.assertEqual(render.problems(EXAMPLE), [])
+
+    def test_python_rejects_every_broken_map(self):
+        for name, change in BROKEN.items():
+            with self.subTest(name):
+                self.assertTrue(render.problems(broken(change)))
+
+    @unittest.skipUnless(NODE, 'node is needed to run the page validator')
+    def test_page_validator_agrees(self):
+        self.assertEqual(js_error(EXAMPLE), '')
+        for name, change in BROKEN.items():
+            with self.subTest(name):
+                self.assertTrue(js_error(broken(change)))
+
+    def test_logos_become_data_uris_and_paths_stay_inside_assets(self):
+        d = broken(lambda d: d['logos'].update(slack={'name': 'Slack', 'src': '/assets/logos/slack.svg', 'size': 20}))
+        self.assertEqual(render.problems(d), [])
+        self.assertTrue(render.with_data_uris(d)['logos']['slack']['src'].startswith('data:image/svg+xml;base64,'))
+        for bad in ('/assets/logos/ghost.svg', '/assets/../SKILL.md', '/assets/../../../../etc/hosts'):
+            with self.subTest(bad):
+                d['logos']['slack']['src'] = bad
+                self.assertTrue(any(bad in p for p in render.problems(d)))
+
+    def test_markup_in_text_stays_inside_the_json_tag(self):
+        d = broken(lambda d: d['page'].update(title='</script><script>alert(1)</script><!--'))
+        page = render.render('<body>' + render.PLACEHOLDER + '</body>', d)
+        payload = re.search(r'id="map-definition">(.*?)</script>', page).group(1)
+        self.assertEqual(json.loads(payload), d)
 
     def test_shipped_template_has_exactly_one_empty_placeholder(self):
         self.assertEqual(render.TEMPLATE.read_text(encoding='utf-8').count(render.PLACEHOLDER), 1)
-
-    def test_sample_content_is_valid_and_broken_content_is_reported(self):
-        sample = json.loads((ROOT / 'app' / 'src' / 'content.json').read_text(encoding='utf-8'))
-        self.assertEqual(render.problems(sample), [])
-        self.assertEqual(render.problems({'title': ' ', 'sections': [{'heading': 'h', 'body': 'x'}]}), [
-            'title must be a non-empty string',
-            'sections[0]: unknown field body',
-            'sections[0] needs paragraphs or points',
-        ])
 
 
 if __name__ == '__main__':

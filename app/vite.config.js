@@ -1,8 +1,12 @@
 import { defineConfig } from 'vite';
 
+// The skill folder is the public dir, so /examples/*.json and /assets/logos/* resolve in dev
+// exactly as render.py resolves them: relative to the skill folder.
+const skill = '../plugins/interactive-map/skills/interactive-map';
+
 // `npm run build:template` (vite build --mode template) emits ONE self-contained HTML file:
 // JS, CSS and the font are inlined, nothing is fetched at runtime. The empty
-// <script id="page-content"> stays empty; render.py fills it. `npm run dev` is plain Vite.
+// <script id="map-definition"> stays empty; render.py fills it.
 const singleFile = {
   name: 'single-file',
   enforce: 'post',
@@ -24,13 +28,17 @@ const singleFile = {
   },
 };
 
-export default defineConfig(({ mode }) => mode !== 'template' ? {} : {
-  base: './',
-  plugins: [singleFile],
-  build: {
-    outDir: 'dist-template',
-    assetsInlineLimit: () => true, // font → data: URI
-    modulePreload: false,
-    rolldownOptions: { output: { codeSplitting: false } },
-  },
-});
+export default defineConfig(({ mode }) => ({
+  publicDir: skill,
+  ...(mode === 'template' && {
+    base: './',
+    plugins: [singleFile],
+    build: {
+      outDir: 'dist-template',
+      copyPublicDir: false,
+      assetsInlineLimit: () => true, // font -> data: URI
+      modulePreload: false,
+      rolldownOptions: { output: { codeSplitting: false } },
+    },
+  }),
+}));

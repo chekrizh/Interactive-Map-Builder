@@ -1,0 +1,162 @@
+/* Journey Board primitives for ML diagrams. The contract lives in
+   docs/tools/ml-canvas/DESIGN.md. Theme and control typography live in ml-chrome.css. */
+.stagecard {
+  --ml-ink: #243044;
+  --ml-muted: #606d85;
+  --ml-wire: #b7c2d5;
+  --ml-canvas: #fcfcfe;
+  --ml-dot: #d3d9e4;
+  --ml-dot-radius: 1px;
+  --ml-group: #f0f3f8;
+  --ml-group-border: #bdc8da;
+  --ml-icon-surface: #ffffffd9;
+
+
+
+
+
+
+  --ml-shadow: drop-shadow(0 2px 4px #3c42680f);
+}
+:root[data-theme="dark"] .stagecard {
+  --ml-ink: #e7ecf6;
+  --ml-muted: #aab7ce;
+  --ml-wire: #65758f;
+  --ml-canvas: #171c27;
+  --ml-dot: #2a3345;
+  --ml-dot-radius: .8px;
+  --ml-group: #1b2230;
+  --ml-group-border: #3e4a61;
+  --ml-icon-surface: #ffffff10;
+
+
+
+
+
+
+  --ml-shadow: drop-shadow(0 2px 4px #0000001f);
+}
+.ml-canvas {
+  --edge: var(--ml-wire);
+  font-family: var(--ml-font);
+}
+.stage-scroll {
+  background-color: var(--ml-canvas);
+  background-image: radial-gradient(var(--ml-dot) var(--ml-dot-radius), transparent var(--ml-dot-radius));
+  background-size: 14px 14px;
+}
+.ml-canvas g.block, .ml-canvas g.node { cursor: pointer; outline: none; }
+.ml-canvas .brect, .ml-canvas .nrect {
+  /* Resting cards carry a faint outline in their own hue so they separate
+     from the group surface; hover and every highlighted state take it to
+     full strength. The fade animates stroke-opacity only: a number tweens
+     smoothly, whereas a currentColor mix or an SVG drop-shadow re-renders
+     unevenly frame to frame and reads as flicker. The shadow never changes. */
+  fill: var(--ml-node-fill); stroke: currentColor; stroke-opacity: .32; stroke-width: 1.5;
+  filter: var(--ml-shadow); transition: opacity .25s var(--ml-ease), stroke-opacity .15s var(--ml-ease);
+}
+.ml-canvas g.block:is(:hover, :focus-visible) .brect,
+.ml-canvas g.node:is(:hover, :focus-visible, .sel, .lit, .future, .dimmed, .justbuilt, .broken) .nrect { stroke-opacity: 1; }
+.ml-canvas .brect { rx: 24; }
+.ml-canvas .nrect { rx: 20; }
+.ml-canvas .nicon-tile { fill: var(--ml-icon-surface); }
+.ml-canvas .nicon-tile.logo-tile { fill: #fff; }
+.ml-canvas .nlogo { pointer-events: none; }
+.ml-canvas .nicon { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.ml-canvas .btitle { font: 600 23px var(--ml-font); letter-spacing: -.01em; fill: var(--ml-ink); }
+.ml-canvas .bline { font: 400 15px var(--ml-font); fill: var(--ml-muted); }
+.ml-canvas .btools { font: 400 12px var(--ml-font); fill: var(--ml-muted); }
+.ml-canvas .bgo { font: 600 12px var(--ml-font); fill: currentColor; }
+.ml-canvas .bstep-c { fill: var(--ml-node-fill); stroke: currentColor; stroke-opacity: .35; stroke-width: 1.2; }
+.ml-canvas .bstep { font: 600 11px var(--ml-font); fill: currentColor; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.ml-canvas .baction { fill: var(--ml-icon-surface); rx: 8; }
+.ml-canvas .l1 { font: 600 13.5px var(--ml-font); fill: var(--ml-ink); text-anchor: start; }
+.ml-canvas .l2 { font: 400 11px var(--ml-font); fill: var(--ml-muted); text-anchor: start; }
+.ml-canvas .zone-r, .ml-canvas .igrp {
+  fill: var(--ml-group); stroke: var(--ml-group-border); stroke-dasharray: 4 5;
+  stroke-width: 1; rx: 16;
+}
+.ml-canvas .zone-t, .ml-canvas .gt {
+  font: 600 11px var(--ml-font); letter-spacing: 0; fill: var(--ml-muted);
+}
+/* Environment titles are short structural labels, distinct from card titles. */
+.ml-canvas .zone-t { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; }
+.ml-canvas .hostchip { fill: none; stroke: var(--ml-group-border); stroke-dasharray: 3 3; }
+.ml-canvas .hostchip-t { font: 400 10px var(--ml-font); fill: var(--ml-muted); text-anchor: middle; }
+.ml-canvas .epath, .ml-canvas .l0edge, .ml-canvas .ie {
+  fill: none; stroke: var(--ml-wire); stroke-width: 1.5; transition: opacity .25s var(--ml-ease);
+}
+.ml-canvas .epath.eactive { stroke-width: 2.4; }
+.ml-canvas .elabel, .ml-canvas .l0lab {
+  font: 500 10px var(--ml-font); fill: var(--ml-muted);
+  paint-order: stroke; stroke: var(--ml-canvas); stroke-width: 5px; stroke-linejoin: round;
+}
+.ml-canvas .l0lab { text-anchor: middle; }
+.ml-canvas g.block:focus-visible .brect, .ml-canvas g.node:focus-visible .nrect { stroke: currentColor; stroke-width: 3; }
+.ml-canvas g.node.sel .nrect { stroke: currentColor; stroke-width: 2.5; }
+.ml-canvas g.node.lit .nrect { stroke: var(--story-hue) !important; stroke-width: 2.8; }
+/* Faded cards and environments stay opaque: their surface is mixed toward
+   the canvas instead of made transparent, so the dot grid and the wires
+   behind never show through. Only their contents take the opacity. */
+.ml-canvas g.node.future > :not(.badge-c):not(.badge-t):not(.nrect) { opacity: .35; }
+.ml-canvas g.node.future .nrect {
+  fill: color-mix(in srgb, var(--ml-node-fill) 35%, var(--ml-canvas));
+  stroke: color-mix(in srgb, currentColor 35%, var(--ml-canvas)); stroke-dasharray: 4 3; filter: none;
+}
+.ml-canvas g.node.dimmed > :not(.nrect) { opacity: .18; }
+.ml-canvas g.node.dimmed .nrect {
+  fill: color-mix(in srgb, var(--ml-node-fill) 18%, var(--ml-canvas));
+  stroke: color-mix(in srgb, currentColor 18%, var(--ml-canvas)); filter: none;
+}
+.ml-canvas g.zone.future .zone-r {
+  fill: color-mix(in srgb, var(--ml-group) 35%, var(--ml-canvas));
+  stroke: color-mix(in srgb, var(--ml-group-border) 35%, var(--ml-canvas));
+}
+.ml-canvas g.zone.future .zone-t, .ml-canvas g.zone.future .hostchip, .ml-canvas g.zone.future .hostchip-t { opacity: .35; }
+.ml-canvas .epath.future, .ml-canvas .elabel.future { opacity: .24; }
+.ml-canvas .epath.dimmed, .ml-canvas .elabel.dimmed { opacity: .15; }
+.ml-canvas g.node.justbuilt .nrect { stroke: currentColor; animation: ml-built 1.6s ease-in-out infinite; }
+@keyframes ml-built { 0%,100% { stroke-width: 2; } 50% { stroke-width: 3; } }
+.ml-canvas .badge-c { fill: var(--story-hue); }
+.ml-canvas .badge-t { font: 600 10px var(--ml-font); fill: var(--bg); text-anchor: middle; font-variant-numeric: tabular-nums; }
+.ml-canvas g.node.broken .nrect {
+  stroke: var(--map-error) !important; fill: var(--map-error-fill);
+  animation: ml-built 2s ease-in-out infinite;
+}
+.ml-canvas .silent-c { fill: var(--ml-canvas); stroke: var(--map-error); stroke-width: 1.6; }
+.ml-canvas .silent-x { fill: none; stroke: var(--map-error); stroke-width: 1.6; stroke-linecap: round; }
+.ml-canvas .silent-t { font: 500 10px var(--ml-font); fill: var(--map-error); text-anchor: middle; paint-order: stroke; stroke: var(--ml-canvas); stroke-width: 4; }
+/* Close-ups share card surfaces and type. Their authored data/geometry stays intact. */
+.inside { background: var(--ml-canvas); }
+.ml-canvas.iscene text { font-family: var(--ml-font); fill: var(--ml-ink); }
+.ml-canvas .ib, .ml-canvas .ibart { fill: var(--ml-node-fill); stroke: transparent; rx: 12; filter: var(--ml-shadow); }
+.ml-canvas .ibart { fill: var(--map-artifact-fill); }
+.ml-canvas .lbl { font-size: 11px; font-weight: 600; text-anchor: middle; }
+.ml-canvas .sm, .ml-canvas .smL { font-size: 9px; fill: var(--ml-muted); }
+.ml-canvas .sm { text-anchor: middle; }
+.ml-canvas .smL { text-anchor: start; }
+@media (prefers-reduced-motion: reduce) {
+  .ml-canvas g.node.justbuilt .nrect, .ml-canvas g.node.broken .nrect { animation: none; stroke-width: 2.8; }
+  .ml-canvas .brect, .ml-canvas .nrect, .ml-canvas .epath { transition: none; }
+}
+
+@media (prefers-color-scheme: dark) {
+:root:not([data-theme]) .stagecard {
+  --ml-ink: #e7ecf6;
+  --ml-muted: #aab7ce;
+  --ml-wire: #65758f;
+  --ml-canvas: #171c27;
+  --ml-dot: #2a3345;
+  --ml-dot-radius: .8px;
+  --ml-group: #1b2230;
+  --ml-group-border: #3e4a61;
+  --ml-icon-surface: #ffffff10;
+
+
+
+
+
+
+  --ml-shadow: drop-shadow(0 2px 4px #0000001f);
+}
+}
