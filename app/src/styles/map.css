@@ -668,8 +668,8 @@
   }
   .ml-canvas g.fchip .fchip-t { font: 600 10px var(--ml-font); fill: var(--ml-ink, var(--ink)); }
   .ml-canvas g.fchip.now .fchip-r { fill: var(--story-hue); filter: drop-shadow(0 3px 6px color-mix(in srgb, var(--story-hue) 45%, transparent)); }
-  .ml-canvas g.fchip.now .fchip-t { fill: #fff; }
-  .ml-canvas g.fchip.now .badge-c { fill: #fff; }
+  .ml-canvas g.fchip.now .fchip-t { fill: var(--ml-tile-ink, #fff); }
+  .ml-canvas g.fchip.now .badge-c { fill: var(--ml-tile-ink, #fff); }
   .ml-canvas g.fchip.now .badge-t { fill: var(--story-hue); }
   .ml-canvas .elabel.inchip { display: none; }
   .ml-canvas .fstart { fill: var(--story-hue); }
