@@ -18,6 +18,7 @@ ASSETS = SKILL / 'assets'
 TEMPLATE = ASSETS / 'template.html'
 PLACEHOLDER = '<script type="application/json" id="map-definition"></script>'
 NUMBER = (int, float)
+SHAPES = ('component', 'person', 'worker', 'database', 'queue', 'external')
 # Sections the viewer reads, with the JSON type each must have.
 SECTIONS = {
     'id': str, 'page': dict, 'panels': dict, 'ui': dict, 'roles': dict, 'logos': dict, 'settings': dict,
@@ -86,6 +87,8 @@ def problems(d):
                 ref(d[section], n[field], f'node {nid}.{field}')
         ref(d['roles'], n.get('cat'), f'node {nid}.cat')
         ref(d['icons'], n.get('icon'), f'node {nid}.icon')
+        if n.get('shape') is not None and n['shape'] not in SHAPES:
+            found.append(f'node {nid}.shape: {n["shape"]!r} is not one of {", ".join(SHAPES)}')
         week = n.get('week')
         if not (isinstance(week, int) and 0 <= week < len(steps) and steps[week]):
             found.append(f'node {nid}.week: no build step {week!r}')

@@ -354,4 +354,10 @@ d = {
         "overviewEdges": {i: {"d": dd, "x": x, "y": y, "anchor": a} for i, f, t, l, dd, x, y, a in oedges},
         "annotations": [], "insideMarkers": ""},
 }
+SHAPE = {"visitor": "person", "user": "person", "target": "external", "oidc": "external", "smtp": "external",
+         "visitq": "worker", "cron": "worker", "mail": "worker", "db": "database", "redis": "queue"}
+if "--plain" not in __import__("sys").argv:
+    for n in nodes:
+        if n["id"] in SHAPE:
+            n["shape"] = SHAPE[n["id"]]
 print(json.dumps(d, ensure_ascii=False, indent=1))

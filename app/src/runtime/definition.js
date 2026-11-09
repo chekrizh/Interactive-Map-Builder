@@ -25,6 +25,7 @@ export function prepareDefinition(input) {
     if (n.logo && !d.logos[n.logo]) fail(`node ${n.id}.logo: ${n.logo}`);
     if (!d.roles[n.cat]) fail(`node ${n.id}.cat: ${n.cat}`);
     if (!d.icons[n.icon]) fail(`node ${n.id}.icon: ${n.icon}`);
+    if (n.shape != null && !['component','person','worker','database','queue','external'].includes(n.shape)) fail(`node ${n.id}.shape: ${n.shape}`);
     if (!d.buildSteps[n.week]) fail(`node ${n.id}.week: ${n.week}`);
   }
   for (const e of d.edges) {

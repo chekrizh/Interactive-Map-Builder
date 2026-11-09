@@ -13,8 +13,34 @@
     parent.appendChild(node);
     return node;
   };
-  function card(parent, { x, y, width, height, overview = false }) {
-    return element("rect", { x, y, width, height, class: overview ? "brect" : "nrect" }, parent);
+  /* Node shapes follow C4 conventions so the kind of element reads without a
+     legend: person (pill), worker (stack of cards), database (cylinder),
+     queue (pipe), external (dashed, flat). Colour stays with the role. */
+  const SHAPES = ["component", "person", "worker", "database", "queue", "external"];
+  function card(parent, { x, y, width, height, overview = false, shape }) {
+    if (overview) return element("rect", { x, y, width, height, class: "brect" }, parent);
+    const kind = SHAPES.includes(shape) ? shape : "component";
+    parent.classList.add("shape-" + kind);
+    if (kind === "worker") {
+      for (const off of [10, 5]) element("rect", { x: x + off, y: y + off, width, height, class: "nstack" }, parent);
+    }
+    if (kind === "database") {
+      const ry = 9, r = x + width, b = y + height;
+      const body = element("path", { class: "nrect", d:
+        `M${x},${y + ry} A${width / 2},${ry} 0 0 1 ${r},${y + ry} V${b - ry} A${width / 2},${ry} 0 0 1 ${x},${b - ry} Z` }, parent);
+      element("path", { class: "ncap", d: `M${x},${y + ry} A${width / 2},${ry} 0 0 0 ${r},${y + ry}` }, parent);
+      return body;
+    }
+    if (kind === "queue") {
+      const rx = 13, rr = height / 2, r = x + width - rx;
+      const body = element("path", { class: "nrect", d:
+        `M${x + rr},${y} H${r} A${rx},${rr} 0 0 1 ${r},${y + height} H${x + rr} A${rr},${rr} 0 0 1 ${x + rr},${y} Z` }, parent);
+      element("ellipse", { class: "ncap", cx: r, cy: y + rr, rx, ry: rr }, parent);
+      return body;
+    }
+    const attrs = { x, y, width, height, class: "nrect" };
+    if (kind === "person") attrs.rx = attrs.ry = height / 2;
+    return element("rect", attrs, parent);
   }
   function iconTile(parent, x, y, size, markup) {
     const tile = element("rect", { x, y, width: size, height: size, rx: size / 2, class: "nicon-tile", "aria-hidden": "true" }, parent);
@@ -59,7 +85,8 @@
     ctx.font = `600 13.5px ${font}`;
     nodes.forEach((n) => {
       n.original = { x: n.x * sx, y: n.y * sy, w: n.w * sx, h: n.h * sy };
-      n.w = Math.max(168, Math.ceil(Math.max(ctx.measureText(n.tool).width, ctx.measureText(n.concept).width) + 76));
+      n.w = Math.max(168, Math.ceil(Math.max(ctx.measureText(n.tool).width, ctx.measureText(n.concept).width) + 76))
+        + (n.shape === "queue" ? 26 : 0);
       n.h = 72;
       n.x = n.original.x + n.original.w / 2 - n.w / 2;
       n.y = n.original.y + n.original.h / 2 - n.h / 2;

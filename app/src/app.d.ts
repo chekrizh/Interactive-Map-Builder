@@ -3,7 +3,9 @@ export interface MapNode {
   id: string; zone?: string;
   cat: string; group: string; week: number; icon: string; tool: string; concept: string;
   what: string; why: string; tools: string;
-  logo?: string; inside?: string; structure?: string; decision?: string; bootcampNote?: string;
+  logo?: string; inside?: string;
+  /** C4 kind drawn as the card outline. Defaults to "component". */
+  shape?: 'component' | 'person' | 'worker' | 'database' | 'queue' | 'external'; structure?: string; decision?: string; bootcampNote?: string;
   [key: string]: unknown;
 }
 export interface MapEdge { id: string; from: string; to: string; [key: string]: unknown; }

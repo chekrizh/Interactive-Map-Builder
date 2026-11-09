@@ -199,7 +199,8 @@
    "what": "Anyone who clicks a short link such as <code>kutt.it/abc</code>. Never signs in.",
    "why": "Most traffic is visitors, so the redirect path is the one that has to be fast and must never break.",
    "tools": "Any browser or HTTP client.",
-   "zone": "outside"
+   "zone": "outside",
+   "shape": "person"
   },
   {
    "id": "target",
@@ -212,7 +213,8 @@
    "what": "The original long URL a short link points to.",
    "why": "Kutt never proxies the page. It answers with a 302 and the browser goes there on its own.",
    "tools": "Whatever site the link owner chose.",
-   "zone": "outside"
+   "zone": "outside",
+   "shape": "external"
   },
   {
    "id": "user",
@@ -225,7 +227,8 @@
    "what": "Signs up, shortens URLs, sets custom addresses, passwords and expiry, reads click stats. Admins are the same users with an admin role: they ban links, domains and users.",
    "why": "Owners are the only ones who write data. Everything they do goes through the API.",
    "tools": "Browser (server-rendered pages with htmx) or any script with an API key.",
-   "zone": "outside"
+   "zone": "outside",
+   "shape": "person"
   },
   {
    "id": "oidc",
@@ -238,7 +241,8 @@
    "what": "An OpenID Connect identity provider, used for single sign-on when <code>OIDC_ENABLED</code> is set.",
    "why": "Lets a company plug Kutt into its existing login instead of passwords.",
    "tools": "Any OpenID Connect provider · <code>openid-client</code>",
-   "zone": "outside"
+   "zone": "outside",
+   "shape": "external"
   },
   {
    "id": "redirect",
@@ -329,7 +333,8 @@
    "what": "Takes queued visits, works out browser, OS, referrer and country, increments the link's counter and stores the visit.",
    "why": "Stats work is moved out of the redirect so a click is answered before any of it happens.",
    "tools": "Bull queue <code>visit</code>, 6 sandboxed workers · <code>server/queues/visit.js</code> · geoip-lite, express-useragent",
-   "zone": "server"
+   "zone": "server",
+   "shape": "worker"
   },
   {
    "id": "cron",
@@ -342,7 +347,8 @@
    "what": "Every 30 seconds deletes links whose expiry time has passed.",
    "why": "Runs inside the web process, only on instance 0, so a cluster does not delete twice.",
    "tools": "<code>setInterval</code> in <code>server/cron.js</code>",
-   "zone": "server"
+   "zone": "server",
+   "shape": "worker"
   },
   {
    "id": "mail",
@@ -355,7 +361,8 @@
    "what": "Sends verification, password reset and change-of-email messages from HTML templates.",
    "why": "Accounts are confirmed by email before they can create links (when verification is on).",
    "tools": "nodemailer · <code>server/mail</code>",
-   "zone": "server"
+   "zone": "server",
+   "shape": "worker"
   },
   {
    "id": "redis",
@@ -368,7 +375,8 @@
    "what": "Cache for hot lookups, the rate-limit counters and the visit queue.",
    "why": "Optional: with <code>REDIS_ENABLED=false</code> the cache is skipped and visits are processed inline.",
    "tools": "redis:alpine in docker-compose · ioredis · Bull",
-   "zone": "data"
+   "zone": "data",
+   "shape": "queue"
   },
   {
    "id": "db",
@@ -381,7 +389,8 @@
    "what": "Tables for links, visits, users, domains, hosts and IPs. Migrations live in the repo.",
    "why": "The single source of truth. Redis only holds copies.",
    "tools": "Postgres, MariaDB/MySQL or SQLite via Knex · <code>server/migrations</code>",
-   "zone": "data"
+   "zone": "data",
+   "shape": "database"
   },
   {
    "id": "smtp",
@@ -394,7 +403,8 @@
    "what": "The SMTP server that actually delivers Kutt's emails.",
    "why": "Kutt does not send mail itself; without SMTP settings, signup verification cannot work.",
    "tools": "Any SMTP provider (<code>MAIL_HOST</code>, <code>MAIL_PORT</code>)",
-   "zone": "outside-mail"
+   "zone": "outside-mail",
+   "shape": "external"
   }
  ],
  "zones": [
