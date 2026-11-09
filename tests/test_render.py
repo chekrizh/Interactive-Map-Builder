@@ -6,7 +6,7 @@ import sys
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'skill' / 'pretty-text' / 'scripts'))
+sys.path.insert(0, str(ROOT / 'plugins' / 'pretty-text' / 'skills' / 'pretty-text' / 'scripts'))
 import render  # noqa: E402
 
 

@@ -1,0 +1,12 @@
+{
+  "name": "interactive-map-builder",
+  "description": "Skills that turn content into self-contained, offline HTML pages.",
+  "owner": { "name": "chekrizh" },
+  "plugins": [
+    {
+      "name": "pretty-text",
+      "source": "./plugins/pretty-text",
+      "description": "Turn a text into a polished one-page web app delivered as a single HTML file."
+    }
+  ]
+}

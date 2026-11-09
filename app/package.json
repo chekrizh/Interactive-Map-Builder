@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build:template": "vite build --mode template && cp dist-template/index.html ../skill/pretty-text/assets/template.html"
+    "build:template": "vite build --mode template && cp dist-template/index.html ../plugins/pretty-text/skills/pretty-text/assets/template.html"
   },
   "devDependencies": {
     "vite": "8.3.6"

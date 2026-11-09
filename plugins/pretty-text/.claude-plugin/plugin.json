@@ -1,0 +1,7 @@
+{
+  "name": "pretty-text",
+  "version": "0.1.0",
+  "description": "Turn a text into a polished one-page web app delivered as a single self-contained HTML file.",
+  "author": { "name": "chekrizh" },
+  "repository": "https://github.com/chekrizh/Interactive-Map-Builder"
+}
