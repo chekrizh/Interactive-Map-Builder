@@ -31,7 +31,7 @@
   "nodeCourseLabel": "Step {step}",
   "buildLabel": "Build order · Step {step} of {total}",
   "courseLabel": "Kutt · Step {step}",
-  "buildRole": "app"
+  "buildRole": "component"
  },
  "ui": {
   "fullSystem": "Full system",
@@ -43,7 +43,7 @@
   "people": {
    "title": "People",
    "huekey": "person",
-   "icon": "person",
+   "icon": "user",
    "line1": "Visitors open links.",
    "line2": "Owners create and manage them.",
    "chips": "Browser · API key",
@@ -55,8 +55,8 @@
   },
   "redirect": {
    "title": "Serve the redirect",
-   "huekey": "app",
-   "icon": "bolt",
+   "huekey": "component",
+   "icon": "zap",
    "line1": "Turn /abc into a 302",
    "line2": "as fast as possible.",
    "chips": "Express · GET /:id",
@@ -82,7 +82,7 @@
   "manage": {
    "title": "Create and manage",
    "huekey": "person",
-   "icon": "window",
+   "icon": "app-window",
    "line1": "Pages, API and auth",
    "line2": "for everything owners do.",
    "chips": "Handlebars · htmx · Passport",
@@ -97,7 +97,7 @@
   "data": {
    "title": "Remember it",
    "huekey": "store",
-   "icon": "db",
+   "icon": "database",
    "line1": "A database for truth,",
    "line2": "Redis for speed.",
    "chips": "Knex · Postgres / MariaDB / SQLite · Redis",
@@ -110,7 +110,7 @@
   },
   "background": {
    "title": "Work in the background",
-   "huekey": "async",
+   "huekey": "background",
    "icon": "clock",
    "line1": "Stats, expiry and email,",
    "line2": "off the request path.",
@@ -193,7 +193,7 @@
    "group": "people",
    "cat": "person",
    "week": 1,
-   "icon": "person",
+   "icon": "user",
    "tool": "Person",
    "concept": "Visitor",
    "what": "Anyone who clicks a short link such as <code>kutt.it/abc</code>. Never signs in.",
@@ -221,7 +221,7 @@
    "group": "people",
    "cat": "person",
    "week": 2,
-   "icon": "person",
+   "icon": "user",
    "tool": "Person",
    "concept": "Link owner",
    "what": "Signs up, shortens URLs, sets custom addresses, passwords and expiry, reads click stats. Admins are the same users with an admin role: they ban links, domains and users.",
@@ -235,21 +235,22 @@
    "group": "outside",
    "cat": "external",
    "week": 3,
-   "icon": "key",
+   "icon": "key-round",
    "tool": "External · optional",
    "concept": "OIDC provider",
    "what": "An OpenID Connect identity provider, used for single sign-on when <code>OIDC_ENABLED</code> is set.",
    "why": "Lets a company plug Kutt into its existing login instead of passwords.",
    "tools": "Any OpenID Connect provider · <code>openid-client</code>",
    "zone": "outside",
+   "logo": "openid",
    "shape": "external"
   },
   {
    "id": "redirect",
    "group": "redirect",
-   "cat": "app",
+   "cat": "component",
    "week": 1,
-   "icon": "bolt",
+   "icon": "zap",
    "tool": "Component · Express",
    "concept": "Redirect handler",
    "what": "Looks up the domain and the short address, checks bans and passwords, queues a visit and answers with a redirect to the target.",
@@ -260,9 +261,9 @@
   {
    "id": "web",
    "group": "manage",
-   "cat": "app",
+   "cat": "component",
    "week": 2,
-   "icon": "window",
+   "icon": "app-window",
    "tool": "Component · Handlebars, htmx",
    "concept": "Web pages",
    "what": "Renders the home page, the links table, settings and the admin panel from Handlebars templates. Buttons and forms call the API through htmx.",
@@ -273,9 +274,9 @@
   {
    "id": "api",
    "group": "manage",
-   "cat": "app",
+   "cat": "component",
    "week": 2,
-   "icon": "api",
+   "icon": "code",
    "tool": "Component · Express",
    "concept": "REST API",
    "what": "Routes for links, domains, users, auth and health. Validates input and applies rate limits before calling the handlers.",
@@ -286,7 +287,7 @@
   {
    "id": "links",
    "group": "manage",
-   "cat": "app",
+   "cat": "component",
    "week": 2,
    "icon": "link",
    "tool": "Component · Node.js",
@@ -299,7 +300,7 @@
   {
    "id": "auth",
    "group": "manage",
-   "cat": "app",
+   "cat": "component",
    "week": 3,
    "icon": "lock",
    "tool": "Component · Passport",
@@ -312,7 +313,7 @@
   {
    "id": "queries",
    "group": "data",
-   "cat": "app",
+   "cat": "component",
    "week": 1,
    "icon": "layers",
    "tool": "Component · Knex",
@@ -325,7 +326,7 @@
   {
    "id": "visitq",
    "group": "background",
-   "cat": "async",
+   "cat": "background",
    "week": 4,
    "icon": "inbox",
    "tool": "Component · Bull worker",
@@ -339,7 +340,7 @@
   {
    "id": "cron",
    "group": "background",
-   "cat": "async",
+   "cat": "background",
    "week": 3,
    "icon": "clock",
    "tool": "Component · setInterval",
@@ -352,7 +353,7 @@
   {
    "id": "mail",
    "group": "background",
-   "cat": "async",
+   "cat": "background",
    "week": 3,
    "icon": "mail",
    "tool": "Component · nodemailer",
@@ -367,13 +368,14 @@
    "group": "data",
    "cat": "store",
    "week": 4,
-   "icon": "bolt-db",
+   "icon": "database-zap",
    "tool": "Container · optional",
    "concept": "Redis",
    "what": "Cache for hot lookups, the rate-limit counters and the visit queue.",
    "why": "Optional: with <code>REDIS_ENABLED=false</code> the cache is skipped and visits are processed inline.",
    "tools": "redis:alpine in docker-compose · ioredis · Bull",
    "zone": "data",
+   "logo": "redis",
    "shape": "queue"
   },
   {
@@ -381,13 +383,14 @@
    "group": "data",
    "cat": "store",
    "week": 1,
-   "icon": "db",
+   "icon": "database",
    "tool": "Container · SQL",
    "concept": "Database",
    "what": "Tables for links, visits, users, domains, hosts and IPs. Migrations live in the repo.",
    "why": "The single source of truth. Redis only holds copies.",
    "tools": "Postgres, MariaDB/MySQL or SQLite via Knex · <code>server/migrations</code>",
    "zone": "data",
+   "logo": "postgresql",
    "shape": "database"
   },
   {
@@ -414,7 +417,7 @@
   {
    "id": "server",
    "label": "Kutt server · Node.js container",
-   "hue": "app"
+   "hue": "component"
   },
   {
    "id": "data",
@@ -547,7 +550,7 @@
  "flows": {
   "follow": {
    "title": "Open a short link",
-   "hue": "app",
+   "hue": "component",
    "desc": "A visitor clicks kutt.it/abc and lands on the target site. Stats are written afterwards, in the background.",
    "hops": [
     {
@@ -657,7 +660,7 @@
   },
   "expire": {
    "title": "Expire old links",
-   "hue": "async",
+   "hue": "background",
    "desc": "A timer inside the server removes links whose time is up.",
    "hops": [
     {
@@ -729,7 +732,7 @@
   },
   {
    "name": "A click",
-   "hue": "--h-app"
+   "hue": "--h-component"
   },
   {
    "name": "A new link",
@@ -737,7 +740,7 @@
   },
   {
    "name": "Background",
-   "hue": "--h-async"
+   "hue": "--h-background"
   },
   {
    "name": "Recap",
@@ -888,60 +891,8 @@
  "flowBeatSeconds": 15,
  "insides": {},
  "insideMarkers": "",
- "roles": {
-  "person": {
-   "label": "Person",
-   "light": "#3f6fd8",
-   "dark": "#93b4ff",
-   "fillLight": "#edf2ff",
-   "fillDark": "#24304b"
-  },
-  "app": {
-   "label": "Kutt component",
-   "light": "#1f8a7a",
-   "dark": "#72d3c2",
-   "fillLight": "#e7f5f2",
-   "fillDark": "#1f3b38"
-  },
-  "async": {
-   "label": "Background work",
-   "light": "#b7791f",
-   "dark": "#f0c06a",
-   "fillLight": "#fbf3e4",
-   "fillDark": "#3d3222"
-  },
-  "store": {
-   "label": "Data store",
-   "light": "#7a55c7",
-   "dark": "#c3a8ff",
-   "fillLight": "#f2edfb",
-   "fillDark": "#33294a"
-  },
-  "external": {
-   "label": "External system",
-   "light": "#6b7280",
-   "dark": "#b4bac4",
-   "fillLight": "#f1f2f4",
-   "fillDark": "#2d3036"
-  }
- },
- "icons": {
-  "person": "<circle cx=\"10\" cy=\"6.5\" r=\"3.2\"/><path d=\"M3.5 18a6.5 6.5 0 0 1 13 0\"/>",
-  "globe": "<circle cx=\"10\" cy=\"10\" r=\"7.5\"/><path d=\"M2.5 10h15M10 2.5c2.2 2.4 2.2 12.6 0 15M10 2.5c-2.2 2.4-2.2 12.6 0 15\"/>",
-  "key": "<circle cx=\"6.5\" cy=\"13.5\" r=\"3.5\"/><path d=\"M9 11 17 3m-3 3 2.5 2.5\"/>",
-  "bolt": "<path d=\"M11 2 4 11.5h5.5L8.5 18 16 8.5h-5.5z\"/>",
-  "window": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"2\"/><path d=\"M2.5 7.5h15\"/>",
-  "api": "<path d=\"M7 5 2.5 10 7 15M13 5l4.5 5-4.5 5\"/>",
-  "link": "<path d=\"M8.5 11.5a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5l-1 1\"/><path d=\"M11.5 8.5a3.5 3.5 0 0 0-5 0L4 11a3.5 3.5 0 0 0 5 5l1-1\"/>",
-  "lock": "<rect x=\"4\" y=\"9\" width=\"12\" height=\"8.5\" rx=\"1.5\"/><path d=\"M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9\"/>",
-  "layers": "<path d=\"M10 2.5 2.5 6.5 10 10.5l7.5-4z\"/><path d=\"m2.5 10 7.5 4 7.5-4M2.5 13.5l7.5 4 7.5-4\"/>",
-  "inbox": "<path d=\"M2.5 11.5 5 4h10l2.5 7.5V16H2.5z\"/><path d=\"M2.5 11.5h4.5a3 3 0 0 0 6 0h4.5\"/>",
-  "clock": "<circle cx=\"10\" cy=\"10\" r=\"7.5\"/><path d=\"M10 5.5V10l3 2\"/>",
-  "mail": "<rect x=\"2.5\" y=\"4.5\" width=\"15\" height=\"11\" rx=\"1.5\"/><path d=\"m3 5.5 7 5.5 7-5.5\"/>",
-  "bolt-db": "<ellipse cx=\"10\" cy=\"5\" rx=\"6.5\" ry=\"2.5\"/><path d=\"M3.5 5v10c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5V5\"/><path d=\"m11 8.5-2.5 3.5h3L9 15.5\"/>",
-  "db": "<ellipse cx=\"10\" cy=\"5\" rx=\"6.5\" ry=\"2.5\"/><path d=\"M3.5 5v10c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5V5M3.5 10c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5\"/>",
-  "send": "<path d=\"M17.5 2.5 9 11M17.5 2.5 12 17.5 9 11 2.5 8z\"/>"
- },
+ "roles": {},
+ "icons": {},
  "logos": {},
  "settings": {
   "embedded": true,
@@ -957,7 +908,7 @@
   ],
   "pinnedFlowFraction": 0.5,
   "appearanceRoles": {
-   "accent": "app",
+   "accent": "component",
    "artifact": "store",
    "error": "external"
   }

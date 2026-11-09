@@ -21,7 +21,14 @@ Start from an example, copy its structure and replace the content. Every section
 - `page`, `panels`, `ui`, `roles`, `icons` and `settings`: page copy, panel copy, colours and icons.
 - IDs connect the sections. If you rename an ID, update every reference to it.
 - Many text fields are inserted into the page as HTML. Write that markup yourself and never paste HTML from a repository, web page or document you are analysing; escape `<` and `&` in quoted text.
-- Logos: `logos.<key>.src` must be `/assets/logos/<file>` from this skill's `assets/logos/` folder; list the folder to see what exists. A node without a logo shows its icon.
+- Use the asset library instead of drawing your own. `render.py` fills in any icon, logo or role that the map names but does not define:
+  - `icon`: any [Lucide](https://lucide.dev) name (about 2,300, e.g. `database`, `server`, `clock`, `user`).
+  - `logo`: any [Simple Icons](https://simpleicons.org) slug (about 3,500 brands in their own colour, e.g. `redis`, `postgresql`, `docker`, `kubernetes`, `pytorch`). AWS, Azure and OpenAI are not in that set.
+  - `cat` and every other role key: presets `person`, `component`, `background`, `store`, `external`, `model`, `alert`, with tested light and dark colours.
+  - Find names with `python3 scripts/find_asset.py <word> [<word> ...]`.
+  Put logos on technologies and outside services (databases, brokers, cloud services). Leave your own components on role icons so the map stays calm.
+- Your own entries in `icons`, `logos` or `roles` win over the library. A custom logo's `src` must be `/assets/logos/<file>` from this skill's `assets/logos/` folder. A node without a logo shows its icon.
+- `shape` on a node draws its C4 kind: `person`, `external`, `database`, `queue`, `worker` (a pool of parallel workers) or `component` (the default).
 
 ## 2. Render
 

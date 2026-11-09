@@ -46,6 +46,57 @@ def asset_file(value):
     return path if ASSETS in path.parents and path.is_file() else None
 
 
+LIBRARY = ASSETS / 'library'
+
+
+def library(name):
+    path = LIBRARY / f'{name}.json'
+    return json.loads(path.read_text(encoding='utf-8'))['items'] if path.is_file() else {}
+
+
+def logo_uri(item):
+    """A Simple Icons mark as a data: URI in its brand colour (near-white marks are drawn dark)."""
+    hexcode = item['hex']
+    r, g, b = (int(hexcode[i:i + 2], 16) for i in (0, 2, 4))
+    fill = '#2b3445' if 0.2126 * r + 0.7152 * g + 0.0722 * b > 225 else f'#{hexcode}'
+    svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{fill}" d="{item["path"]}"/></svg>'
+    return 'data:image/svg+xml;base64,' + base64.b64encode(svg.encode()).decode()
+
+
+def with_library(d):
+    """Fill icons, logos and roles the map names but does not define from assets/library.
+
+    Authored entries always win. Icons are Lucide (24px grid, scaled to the viewer's 20px grid),
+    logos are Simple Icons slugs, roles are presets for C4 kinds. Returns a new dict."""
+    if not isinstance(d, dict):
+        return d
+    d = dict(d)
+    nodes = [n for n in d.get('nodes', []) if isinstance(n, dict)]
+    groups = [g for g in (d.get('groups') or {}).values() if isinstance(g, dict)]
+    icons, wanted = dict(d.get('icons') or {}), {x.get('icon') for x in nodes + groups} - {None}
+    lib = library('icons') if wanted - set(icons) else {}
+    for name in wanted - set(icons):
+        if name in lib:
+            icons[name] = f'<g transform="scale(.8333)">{lib[name]}</g>'
+    d['icons'] = icons
+    logos, wanted = dict(d.get('logos') or {}), {n.get('logo') for n in nodes} - {None}
+    lib = library('logos') if wanted - set(logos) else {}
+    for slug in wanted - set(logos):
+        if slug in lib:
+            logos[slug] = {'name': lib[slug]['name'], 'src': logo_uri(lib[slug]), 'size': 22}
+    d['logos'] = logos
+    roles = dict(d.get('roles') or {})
+    used = {n.get('cat') for n in nodes} | {g.get('huekey') for g in groups}
+    used |= {z.get('hue') for z in d.get('zones', []) if isinstance(z, dict)}
+    used |= {f.get('hue') for f in (d.get('flows') or {}).values() if isinstance(f, dict)}
+    used |= set(((d.get('settings') or {}).get('appearanceRoles') or {}).values())
+    lib = library('roles')
+    for key in [k for k in lib if k in used and k not in roles]:
+        roles[key] = lib[key]
+    d['roles'] = roles
+    return d
+
+
 def problems(d):
     """Return what is wrong with the map; empty means it renders. Mirrors prepareDefinition()."""
     if not isinstance(d, dict):
@@ -188,6 +239,7 @@ def main(argv):
         definition = json.loads(source)
     except json.JSONDecodeError as error:
         sys.exit(f'the map is not valid JSON: {error}')
+    definition = with_library(definition)
     found = problems(definition)
     if found:
         sys.exit('the map needs fixing:\n- ' + '\n- '.join(found))

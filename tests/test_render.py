@@ -49,6 +49,7 @@ BROKEN = {
     'final tour step walks nothing': lambda d: [d['tour'][-1].pop(k, None) for k in ('flow', 'whole')],
     'recap order with unknown group': lambda d: d['settings']['recapOrder'].append('ghost'),
     'missing id': lambda d: d.pop('id'),
+    'unknown node shape': lambda d: d['nodes'][0].update(shape='hexagon'),
 }
 
 
@@ -86,6 +87,18 @@ class RenderTest(unittest.TestCase):
         page = render.render('<body>' + render.PLACEHOLDER + '</body>', d)
         payload = re.search(r'id="map-definition">(.*?)</script>', page).group(1)
         self.assertEqual(json.loads(payload), d)
+
+    def test_library_fills_icons_logos_and_roles_the_map_names(self):
+        def use_library(d):
+            d['nodes'][0].update(icon='database', logo='redis', cat='store')
+            d['icons'].pop('client')
+            d['groups']['request']['icon'] = 'database'
+        d = render.with_library(broken(use_library))
+        self.assertEqual(render.problems(d), [])
+        self.assertIn('<ellipse', d['icons']['database'])
+        self.assertTrue(d['logos']['redis']['src'].startswith('data:image/svg+xml;base64,'))
+        self.assertEqual(d['roles']['store']['label'], 'Data store')
+        self.assertEqual(render.with_library(EXAMPLE)['roles'], EXAMPLE['roles'])  # authored entries win
 
     def test_shipped_template_has_exactly_one_empty_placeholder(self):
         self.assertEqual(render.TEMPLATE.read_text(encoding='utf-8').count(render.PLACEHOLDER), 1)

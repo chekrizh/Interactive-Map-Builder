@@ -1,0 +1,12 @@
+{
+  "source": "interactive-map presets for C4 kinds; checked for contrast in light and dark themes",
+  "items": {
+    "person": {"label": "Person", "light": "#3f6fd8", "dark": "#93b4ff", "fillLight": "#edf2ff", "fillDark": "#24304b"},
+    "component": {"label": "Component", "light": "#1f8a7a", "dark": "#72d3c2", "fillLight": "#e7f5f2", "fillDark": "#1f3b38"},
+    "background": {"label": "Background work", "light": "#b7791f", "dark": "#f0c06a", "fillLight": "#fbf3e4", "fillDark": "#3d3222"},
+    "store": {"label": "Data store", "light": "#7a55c7", "dark": "#c3a8ff", "fillLight": "#f2edfb", "fillDark": "#33294a"},
+    "external": {"label": "External system", "light": "#6b7280", "dark": "#b4bac4", "fillLight": "#f1f2f4", "fillDark": "#2d3036"},
+    "model": {"label": "ML model", "light": "#c2417a", "dark": "#f59ac2", "fillLight": "#fcedf3", "fillDark": "#45263a"},
+    "alert": {"label": "Failure", "light": "#d64545", "dark": "#e77676", "fillLight": "#fbeceb", "fillDark": "#452b33"}
+  }
+}
