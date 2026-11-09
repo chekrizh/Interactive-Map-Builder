@@ -730,7 +730,7 @@ export async function mountEngine(root, definition) {
   /* ---------------- build level 0 ---------------- */
 
   // Settle local typography before measuring either label mode.
-  await Promise.all([document.fonts.load('600 13.5px "Manrope"'), document.fonts.load('400 11px "Manrope"')]).catch(() => {});
+  await Promise.all([document.fonts.load('600 13.5px "Manrope"'), document.fonts.load('400 11px "Manrope"'), document.fonts.load('500 9.5px "Manrope"')]).catch(() => {});
   const canvas = canvasPrimitives;
   const control = controls;
   control.label(document.getElementById("toL0"), "Big picture", "back");
@@ -913,6 +913,17 @@ export async function mountEngine(root, definition) {
      on this: label-width snapping moves its box edges). Longest run wins
      because that is the run a reader follows; lside/ldx/ldy adjust from
      there and lx/ly opt out (see the note above EDGES). */
+  const labelCtx = document.createElement("canvas").getContext("2d");
+  // The middle of a path's longest straight run, and that run's length.
+  function longestRun(d) {
+    const pts = [...d.matchAll(/[ML]([\d.-]+),([\d.-]+)/g)].map(m => ({ x: +m[1], y: +m[2] }));
+    let best = null;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const len = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+      if (!best || len > best.len) best = { len, x: (pts[i].x + pts[i + 1].x) / 2, y: (pts[i].y + pts[i + 1].y) / 2 };
+    }
+    return best;
+  }
   function placeLabel(e) {
     const pts = [];
     e.d.replace(/[ML]([\d.-]+),([\d.-]+)/g, (_, x, y) => {
@@ -958,7 +969,8 @@ export async function mountEngine(root, definition) {
       "marker-end": "url(#arr-base)"
     }, edgeLayer);
     if (e.bidir) p.setAttribute("marker-start", "url(#arr-base)");
-    let lab = null;
+    let lab = null,
+      mid = null;
     if (e.label) {
       const pos = e.lx != null ? {
         lx: e.lx,
@@ -972,11 +984,30 @@ export async function mountEngine(root, definition) {
         "text-anchor": pos.anchor || "middle"
       }, edgeLayer);
       lab.textContent = e.label;
+      /* Labels sit on their line as a small chip (2026-11-09) when the
+         longest straight run has room for one; otherwise the text stays
+         beside the line where placeLabel puts it. */
+      const run = longestRun(e.d);
+      // Measured off-screen: the full map's svg is still hidden here.
+      labelCtx.font = '500 9.5px "Manrope"';
+      const w = labelCtx.measureText(e.label).width + 14;
+      if (run && run.len >= w + 18) {
+        const g = el("g", { class: "elabel echip" }, edgeLayer);
+        el("rect", { x: run.x - w / 2, y: run.y - 8, width: w, height: 16, rx: 8 }, g);
+        lab.setAttribute("x", run.x);
+        lab.setAttribute("y", run.y + 3.4);
+        lab.setAttribute("text-anchor", "middle");
+        lab.removeAttribute("class");
+        g.appendChild(lab);
+        lab = g;
+        mid = run;
+      }
     }
     edgeEls[e.id] = {
       def: e,
       path: p,
-      label: lab
+      label: lab,
+      mid
     };
   });
   const nodeEls = {};

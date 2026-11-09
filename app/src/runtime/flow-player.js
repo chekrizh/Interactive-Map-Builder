@@ -218,7 +218,7 @@ async function playStory(key, opts) {
        reference in, report out). Spread their badges along the path so a
        later number does not land exactly on top of an earlier one. */
     const k = badgeSeen[hop.e] = (badgeSeen[hop.e] || 0) + 1;
-    const mid = ee.path.getPointAtLength(L * 0.5 + (k - (badgeUses[hop.e] + 1) / 2) * 26);
+    const mid = badgeUses[hop.e] === 1 && ee.mid ? ee.mid : ee.path.getPointAtLength(L * 0.5 + (k - (badgeUses[hop.e] + 1) / 2) * 26);
     const bg = ctx.el("g", {
       "data-hop": i,
       class: "fchip"
@@ -249,7 +249,7 @@ async function playStory(key, opts) {
       w = 26 + txt.getComputedTextLength() + 9;
       /* A label that will not fit on a short edge stays where it was and
          the chip keeps only the number. */
-      if (w > L - 28) {
+      if (w > (ee.mid && badgeUses[hop.e] === 1 ? ee.mid.len - 4 : L - 28)) {
         txt.remove();
         txt = null;
         w = 20;

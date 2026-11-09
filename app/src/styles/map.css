@@ -678,3 +678,6 @@
   svg.flowing g.node.fout > :not(.nrect) { opacity: .3; }
   svg.flowing g.node.fout .nrect { filter: none; opacity: .55; }
   svg.flowing :is(.epath, .elabel).fout { opacity: .25; }
+  /* Edge labels as chips on their line. */
+  .ml-canvas g.echip rect { fill: var(--ml-card); stroke: color-mix(in srgb, var(--ml-wire) 70%, transparent); stroke-width: 1; paint-order: normal; }
+  .ml-canvas g.echip text { font: 500 9.5px var(--ml-font); fill: var(--ml-muted); stroke: none; }
