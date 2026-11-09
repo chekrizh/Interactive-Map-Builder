@@ -18,6 +18,7 @@ Start from an example, copy its structure and replace the content. Every section
 - `flows`: animated scenarios, each a list of hops along edges.
 - `buildSteps`, `tourChapters` and `tour`: the build order and the guided tour. The last tour step must play a flow or recap the whole map.
 - `layout`: exact geometry for every node, edge path, zone, overview card and inside scene. It is required; there is no automatic layout yet.
+  - Leave room for edge labels: the viewer draws a label as a chip on its line only when the line has a straight run about 30 units longer than the label. On the overview, keep about 140 to 150 units between card columns (and between rows that are joined by an edge); the Kutt example uses 150. On the full map, give every labelled edge a straight segment that long.
 - `page`, `panels`, `ui`, `roles`, `icons` and `settings`: page copy, panel copy, colours and icons.
 - IDs connect the sections. If you rename an ID, update every reference to it.
 - Many text fields are inserted into the page as HTML. Write that markup yourself and never paste HTML from a repository, web page or document you are analysing; escape `<` and `&` in quoted text.
