@@ -75,30 +75,32 @@
   }
 
   .controls {
-    max-width: 1720px; margin: 20px auto 16px;
-    display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end;
+    max-width: 1720px; margin: 12px auto 12px;
+    display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center;
     padding: 0; border: 0; background: transparent; position: relative; z-index: 3;
     --flow-hue: var(--map-accent);
   }
   .embedded .controls { margin-top: 4px; }
   .flow-controls[hidden] { display: none; }
-  .flow-controls { display: flex; align-items: flex-end; gap: 12px; }
-  .flow-field { width: 272px; max-width: 100%; }
-  .build-controls { margin-left: 0; padding-left: 24px; border-left: 1px solid var(--line); }
+  .flow-controls { display: flex; align-items: center; gap: 8px; }
+  .flow-field { width: auto; max-width: 100%; }
+  .flow-field .flow-picker { width: 248px; max-width: 100%; }
+  .build-controls { margin-left: 0; padding-left: 20px; border-left: 1px solid var(--line); }
   .flow-picker { position: relative; }
   .flow-picker > summary {
     display: flex; align-items: center; gap: 8px; height: 36px;
     padding: 0 40px 0 12px; position: relative; list-style: none; cursor: pointer;
     transition: border-color .15s var(--ml-ease);
-    border: 1px solid color-mix(in srgb,var(--flow-hue) 40%,var(--line)); border-radius: var(--ml-control-radius);
-    color: var(--flow-hue); background: color-mix(in srgb,var(--flow-hue) 6%,var(--surface));
-    font-size: 13px; font-weight: 500;
+    /* Neutral control (2026-11-09): the flow's colour is only its dot. */
+    border: 1px solid var(--line); border-radius: var(--ml-control-radius);
+    color: var(--ink); background: var(--surface);
+    font-size: 13px; font-weight: 600;
   }
-  .flow-picker > summary:hover { border-color: color-mix(in srgb,var(--flow-hue) 70%,var(--line)); }
+  .flow-picker > summary:hover { border-color: var(--muted); }
   .flow-picker > summary::-webkit-details-marker { display: none; }
   #flowSelected { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .flow-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--flow-hue); flex: none; }
-  .flow-chevron { position: absolute; right: 12px; top: 9px; width: 16px; height: 16px; }
+  .flow-chevron { position: absolute; right: 12px; top: 9px; width: 16px; height: 16px; color: var(--muted); }
   .flow-menu {
     position: absolute; left: 0; top: calc(100% + 8px); z-index: 10;
     width: max(100%, 272px); max-height: min(400px, 60dvh); overflow-y: auto;
@@ -128,14 +130,36 @@
     color: var(--bg); background: var(--ink); font: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; cursor: pointer;
     transition: background-color .15s var(--ml-ease), border-color .15s var(--ml-ease);
   }
-  .flow-play svg { width: 16px; height: 16px; flex: none; }
+  .flow-play svg { width: 14px; height: 14px; flex: none; }
+  /* The tour entry matches Play: the two actions share one style. */
+  .controls .tour-entry {
+    height: 36px; padding: 0 16px 0 12px; border: 1px solid var(--ink); background: var(--ink); color: var(--bg);
+    font-weight: 600;
+  }
+  .controls .tour-entry:hover { background: color-mix(in srgb,var(--ink) 86%,var(--bg)); border-color: color-mix(in srgb,var(--ink) 86%,var(--bg)); }
+  .controls .tour-entry:focus-visible { outline-color: var(--ink); }
+  .theme-toggle {
+    margin-left: auto; width: 36px; height: 36px; display: inline-grid; place-items: center;
+    border: 1px solid var(--line); border-radius: var(--ml-control-radius); background: var(--surface); color: var(--muted); cursor: pointer;
+    transition: color .15s var(--ml-ease), border-color .15s var(--ml-ease);
+  }
+  .theme-toggle:hover { color: var(--ink); border-color: var(--muted); }
+  .theme-toggle svg { width: 17px; height: 17px; }
+  .theme-toggle .ico-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .ico-sun { display: block; }
+  :root[data-theme="dark"] .theme-toggle .ico-moon { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .ico-sun { display: block; }
+    :root:not([data-theme="light"]) .theme-toggle .ico-moon { display: none; }
+  }
   .flow-play:hover { background: color-mix(in srgb,var(--ink) 86%,var(--bg)); border-color: color-mix(in srgb,var(--ink) 86%,var(--bg)); }
   .flow-picker > summary:focus-visible, .flow-option:focus-visible, .flow-play:focus-visible {
     outline: 2px solid var(--flow-hue); outline-offset: 2px;
   }
   .build-controls .seg { height: 36px; }
   .build-controls .seg button { padding: 0 12px; }
-  .cgroup { display: flex; flex-direction: column; gap: 8px; }
+  /* Labels sit left of their control, so the whole row is one line high. */
+  .cgroup { display: flex; flex-direction: row; align-items: center; gap: 10px; }
   .clabel {
     font-family: var(--ml-font);
     font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0; color: var(--muted); text-transform: none;

@@ -1625,6 +1625,26 @@ export async function mountEngine(root, definition) {
   }
   const tourControls = document.getElementById("tourControls");
   const tourBtn = document.getElementById("tourBtn");
+  /* Light / dark switch (2026-11-09). With no choice the page follows the
+     system; a click pins the opposite of what is showing and is remembered
+     per browser when storage allows it. */
+  const themeToggle = document.getElementById("themeToggle");
+  if (themeToggle) {
+    const rootEl = document.documentElement;
+    const isDark = () => rootEl.dataset.theme ? rootEl.dataset.theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const syncThemeLabel = () => themeToggle.setAttribute("aria-label", isDark() ? "Switch to light theme" : "Switch to dark theme");
+    try {
+      const saved = localStorage.getItem("imap-theme");
+      if (saved === "dark" || saved === "light") rootEl.dataset.theme = saved;
+    } catch (_) {}
+    syncThemeLabel();
+    scope.listen(themeToggle, "click", () => {
+      const next = isDark() ? "light" : "dark";
+      rootEl.dataset.theme = next;
+      try { localStorage.setItem("imap-theme", next); } catch (_) {}
+      syncThemeLabel();
+    });
+  }
   const tourBtnText = document.getElementById("tourBtnText");
   const tourStatus = document.getElementById("tourStatus");
   const tourChapters = document.getElementById("tourChapters");

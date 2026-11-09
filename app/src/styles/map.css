@@ -281,7 +281,7 @@
     .stagecard.zoomable.zoomed:not(.fs-card) .stage-scroll:not(.panning) { cursor: grab; }
   }
   .stagecard.fs-card .controls { max-width: none; margin: 0; padding: 8px 16px;
-    border: 0; border-bottom: 1px solid var(--line); border-radius: 0; gap: 12px 24px; align-items: flex-end; }
+    border: 0; border-bottom: 1px solid var(--line); border-radius: 0; gap: 10px 20px; align-items: center; }
   .drawer {
     position: absolute; top: var(--drawer-top, 150px); right: var(--drawer-inset); bottom: auto; z-index: 7;
     /* Same width range as the tour card (2026-11-01), so Explore's panel and
@@ -351,7 +351,7 @@
   .tourcard, .tourend { --tour-ease: cubic-bezier(.22, 1, .36, 1); }
 
   /* Controls-row entry: a third group after Build order, same divider. */
-  .tour-controls { padding-left: 24px; border-left: 1px solid var(--line); }
+  .tour-controls { padding-left: 20px; border-left: 1px solid var(--line); }
   .tour-controls[hidden] { display: none; }
   .tour-entry {
     height: 36px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px 0 12px;
