@@ -22,7 +22,7 @@ function resumeStep() {
 function refreshTourEntry() {
   const r = ctx.resumeStep(),
     done = Boolean(ctx.readTour().done);
-  ctx.tourBtnText.textContent = r ? "Resume the tour · step " + r : done ? "Take the tour again" : ctx.definition.ui.tourEntry;
+  ctx.tourBtnText.textContent = r ? "Resume the tour · step " + r : ctx.definition.ui.tourEntry;
   ctx.document.getElementById("tourLabel").textContent = done ? "Guided tour" : "New here?";
 }
 
