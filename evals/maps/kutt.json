@@ -347,8 +347,7 @@
    "what": "Every 30 seconds deletes links whose expiry time has passed.",
    "why": "Runs inside the web process, only on instance 0, so a cluster does not delete twice.",
    "tools": "<code>setInterval</code> in <code>server/cron.js</code>",
-   "zone": "server",
-   "shape": "worker"
+   "zone": "server"
   },
   {
    "id": "mail",
@@ -361,8 +360,7 @@
    "what": "Sends verification, password reset and change-of-email messages from HTML templates.",
    "why": "Accounts are confirmed by email before they can create links (when verification is on).",
    "tools": "nodemailer · <code>server/mail</code>",
-   "zone": "server",
-   "shape": "worker"
+   "zone": "server"
   },
   {
    "id": "redis",

@@ -39,6 +39,7 @@ Flows are C4 dynamic diagrams: one use case as ordered steps over the elements a
 
 - Overview cards: the level-1 picture. External systems and people around the system; the system itself split into 3 to 6 parts by purpose.
 - Map: containers grouped into zones; a container opened to level 3 becomes a zone holding its components.
+- Node `shape` shows the C4 kind: `person` for people, `external` for systems outside the boundary, `database` for SQL and document stores, `queue` for message brokers and streams, `worker` only for a pool of parallel workers. Everything else, including schedulers and single background jobs, stays `component` (the default); give a scheduler a clock icon instead.
 - Edges: verb plus protocol as the label.
 - Panels: `what` is the responsibility, `why` is why it exists or what breaks without it, `tools` is the technology and the key files.
 - Flows: the traced use cases. Tour: context first, then each part, then the most important flow.

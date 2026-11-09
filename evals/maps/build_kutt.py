@@ -355,7 +355,7 @@ d = {
         "annotations": [], "insideMarkers": ""},
 }
 SHAPE = {"visitor": "person", "user": "person", "target": "external", "oidc": "external", "smtp": "external",
-         "visitq": "worker", "cron": "worker", "mail": "worker", "db": "database", "redis": "queue"}
+         "visitq": "worker", "db": "database", "redis": "queue"}
 if "--plain" not in __import__("sys").argv:
     for n in nodes:
         if n["id"] in SHAPE:
