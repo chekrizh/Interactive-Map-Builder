@@ -25,6 +25,7 @@ export function prepareDefinition(input) {
     if (n.logo && !d.logos[n.logo]) fail(`node ${n.id}.logo: ${n.logo}`);
     if (!d.roles[n.cat]) fail(`node ${n.id}.cat: ${n.cat}`);
     if (!d.icons[n.icon]) fail(`node ${n.id}.icon: ${n.icon}`);
+    if (n.shape != null && !['component','person','worker','database','queue','external'].includes(n.shape)) fail(`node ${n.id}.shape: ${n.shape}`);
     if (!d.buildSteps[n.week]) fail(`node ${n.id}.week: ${n.week}`);
   }
   for (const e of d.edges) {
@@ -69,7 +70,15 @@ export function prepareDefinition(input) {
     }
   }
   for (const [id,scene] of Object.entries(d.insides)) {
-    if (!d.layout.insides[id]) fail(`layout.insides.${id} is missing`);
+    if (scene.kind != null) {
+      // Structured scenes are laid out by the viewer; they need data, not geometry.
+      if (scene.kind === 'steps' && !(Array.isArray(scene.steps) && scene.steps.length)) fail(`insides.${id}.steps must be a non-empty list`);
+      else if (scene.kind === 'schema' && !(Array.isArray(scene.tables) && scene.tables.length)) fail(`insides.${id}.tables must be a non-empty list`);
+      else if (!['steps','schema'].includes(scene.kind)) fail(`insides.${id}.kind: ${scene.kind}`);
+      scene.source = d.source;
+      continue;
+    }
+    if (!d.layout.insides?.[id]) fail(`layout.insides.${id} is missing`);
     Object.assign(scene,d.layout.insides[id]);
   }
   for (const e of d.overviewEdges) if (!d.layout.overviewEdges[e.id]) fail(`layout.overviewEdges.${e.id} is missing`);

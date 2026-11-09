@@ -13,7 +13,7 @@ SKILL = ROOT / 'plugins' / 'interactive-map' / 'skills' / 'interactive-map'
 sys.path.insert(0, str(SKILL / 'scripts'))
 import render  # noqa: E402
 
-EXAMPLES = {p.stem: json.loads(p.read_text(encoding='utf-8')) for p in sorted((SKILL / 'examples').glob('*.json'))}
+EXAMPLES = {p.stem: render.with_library(json.loads(p.read_text(encoding='utf-8'))) for p in sorted((SKILL / 'examples').glob('*.json'))}
 EXAMPLE = EXAMPLES['fastapi-service']  # the smallest map; broken variants start from it
 NODE = shutil.which('node')
 
@@ -49,6 +49,10 @@ BROKEN = {
     'final tour step walks nothing': lambda d: [d['tour'][-1].pop(k, None) for k in ('flow', 'whole')],
     'recap order with unknown group': lambda d: d['settings']['recapOrder'].append('ghost'),
     'missing id': lambda d: d.pop('id'),
+    'unknown node shape': lambda d: d['nodes'][0].update(shape='hexagon'),
+    'steps scene without steps': lambda d: d['insides'].update(x={'kind': 'steps', 'title': 'x', 'steps': []}),
+    'schema scene without tables': lambda d: d['insides'].update(x={'kind': 'schema', 'title': 'x'}),
+    'unknown scene kind': lambda d: d['insides'].update(x={'kind': 'movie', 'title': 'x'}),
 }
 
 
@@ -86,6 +90,21 @@ class RenderTest(unittest.TestCase):
         page = render.render('<body>' + render.PLACEHOLDER + '</body>', d)
         payload = re.search(r'id="map-definition">(.*?)</script>', page).group(1)
         self.assertEqual(json.loads(payload), d)
+
+    def test_library_fills_icons_logos_and_roles_the_map_names(self):
+        def use_library(d):
+            d['nodes'][0].update(icon='database', logo='redis', cat='store')
+            d['icons'].pop('client')
+            d['groups']['request']['icon'] = 'database'
+        d = render.with_library(broken(use_library))
+        self.assertEqual(render.problems(d), [])
+        self.assertIn('<ellipse', d['icons']['database'])
+        self.assertTrue(d['logos']['redis']['src'].startswith('data:image/svg+xml;base64,'))
+        self.assertEqual(d['logos']['redis']['tile'], '#FF4438')  # Simple Icons: white mark on brand colour
+        self.assertEqual(d['roles']['store']['label'], 'Data store')
+        aws = render.with_library(broken(lambda d: d['nodes'][0].update(logo='aws')))['logos']['aws']
+        self.assertNotIn('tile', aws)  # not in Simple Icons: full-colour gilbarbara mark
+        self.assertEqual(render.with_library(EXAMPLE)['roles'], EXAMPLE['roles'])  # authored entries win
 
     def test_shipped_template_has_exactly_one_empty_placeholder(self):
         self.assertEqual(render.TEMPLATE.read_text(encoding='utf-8').count(render.PLACEHOLDER), 1)

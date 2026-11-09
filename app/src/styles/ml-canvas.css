@@ -10,6 +10,8 @@
   --ml-group: #f0f3f8;
   --ml-group-border: #bdc8da;
   --ml-icon-surface: #ffffffd9;
+  --ml-card: #ffffff;
+  --ml-tile-ink: #ffffff;
 
 
 
@@ -28,6 +30,8 @@
   --ml-group: #1b2230;
   --ml-group-border: #3e4a61;
   --ml-icon-surface: #ffffff10;
+  --ml-card: #1e2533;
+  --ml-tile-ink: #171c27;
 
 
 
@@ -151,6 +155,8 @@
   --ml-group: #1b2230;
   --ml-group-border: #3e4a61;
   --ml-icon-surface: #ffffff10;
+  --ml-card: #1e2533;
+  --ml-tile-ink: #171c27;
 
 
 
@@ -160,3 +166,27 @@
   --ml-shadow: drop-shadow(0 2px 4px #0000001f);
 }
 }
+
+/* Node style E: white cards with a role-tinted shadow and a solid role tile;
+   the card outline follows the C4 kind (see SHAPES in ml-canvas.js). */
+.ml-canvas g.node .nrect {
+  fill: var(--ml-card); stroke-opacity: .22; stroke-width: 1.2;
+  filter: drop-shadow(0 1px 1px #1018280f) drop-shadow(0 5px 8px color-mix(in srgb, currentColor 20%, transparent));
+}
+.ml-canvas g.node .nrect:is(rect) { rx: 16; }
+.ml-canvas g.node.shape-person .nrect { rx: 36; }
+.ml-canvas g.node .nicon-tile:not(.logo-tile) { fill: currentColor; rx: 10; }
+.ml-canvas g.node.shape-person .nicon-tile { rx: 18; }
+.ml-canvas g.node .nicon { stroke: var(--ml-tile-ink); stroke-width: 1.8; }
+.ml-canvas g.node .nstack {
+  fill: var(--ml-card); stroke: currentColor; stroke-opacity: .28; stroke-width: 1.2; rx: 16;
+}
+.ml-canvas g.node .ncap { fill: var(--ml-node-fill); stroke: currentColor; stroke-opacity: .3; stroke-width: 1.2; }
+.ml-canvas g.node.shape-database .ncap { fill: none; }
+.ml-canvas g.node.shape-external .nrect { fill: transparent; stroke-dasharray: 5 4; stroke-opacity: .6; filter: none; }
+.ml-canvas g.node.shape-external .nicon-tile:not(.logo-tile) { fill: var(--ml-node-fill); }
+.ml-canvas g.node.shape-external .nicon { stroke: currentColor; }
+.ml-canvas g.node:is(.future, .dimmed) :is(.nstack, .ncap) { opacity: .25; }
+.ml-canvas g.node .nicon-tile.logo-tile { rx: 10; }
+.ml-canvas g.node.shape-person .nicon-tile.logo-tile { rx: 18; }
+.ml-canvas g.node .nicon-tile.logo-tile:not(.brand-tile) { fill: #fff; stroke: #10182824; stroke-width: 1; }

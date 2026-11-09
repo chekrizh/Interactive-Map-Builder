@@ -993,12 +993,13 @@ export async function mountEngine(root, definition) {
       x: n.x,
       y: n.y,
       width: n.w,
-      height: n.h
+      height: n.h,
+      shape: n.shape
     });
     const logo = n.logo && logos?.[n.logo];
     if (logo) canvas.brandTile(g, n.x + 12, n.y + (n.h - 36) / 2, 36, ICONS[n.icon], logo);else canvas.iconTile(g, n.x + 12, n.y + (n.h - 36) / 2, 36, ICONS[n.icon]);
     const tx = n.x + 59,
-      cy = n.y + n.h / 2;
+      cy = n.y + n.h / 2 + (n.shape === "database" ? 4 : 0);
     const l1 = el("text", {
       x: tx,
       y: cy - 5,

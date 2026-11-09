@@ -1,4 +1,5 @@
 /** panels: extracted original behavior; dependencies supplied by the instance controller. */
+import { renderInsideScene, wireInsideScene } from "../rendering/inside-scenes.js";
 export function createPanels(ctx) {
 /* ---------------- inside overlay ---------------- */
 
@@ -9,7 +10,18 @@ function openInside(nodeId) {
   ctx.T()?.step("inside", nodeId);
   ctx.document.getElementById("insideTitle").textContent = sc.title;
   ctx.document.getElementById("insideSub").textContent = sc.sub;
-  ctx.document.getElementById("insideCap").textContent = sc.cap;
+  ctx.document.getElementById("insideCap").textContent = sc.cap || "";
+  if (sc.kind) {
+    // Structured scenes take authored markup in their copy, like every other text field.
+    ctx.document.getElementById("insideSub").innerHTML = sc.sub || "";
+    ctx.document.getElementById("insideCap").innerHTML = sc.cap || "";
+    const box = ctx.document.getElementById("insideScene");
+    box.innerHTML = renderInsideScene(sc, sc.source);
+    box.firstElementChild.style.setProperty("--ins-hue", `var(--h-${n.cat})`);
+    wireInsideScene(box);
+    ctx.insideBox.hidden = false;
+    return;
+  }
   ctx.document.getElementById("insideScene").innerHTML = `<svg class="iscene ml-canvas" viewBox="0 0 ${sc.w} ${sc.h}" role="img" aria-label="${sc.title}">${ctx.IMARK}${sc.svg}</svg>`;
   const scene = ctx.document.querySelector("#insideScene svg");
   ctx.canvas.setRole(scene, n.cat);

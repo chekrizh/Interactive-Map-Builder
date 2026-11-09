@@ -1,0 +1,76 @@
+/* Structured inside scenes (rendering/inside-scenes.js). Colours come from shared tokens:
+   --surface, --ink, --muted, --line, --edge, and --ins-hue (the node's role hue, set by panels.js). */
+.ins { width: 100%; box-sizing: border-box; --ins-gap: 14px; font-family: var(--ml-font); color: var(--ink); max-width: 1020px; }
+.ins .ins-t { font-weight: 600; font-size: 14px; line-height: 1.35; }
+.ins .ins-d { font-size: 13px; line-height: 1.5; color: var(--muted); margin-top: 3px; }
+.ins .ins-code {
+  display: inline-block; margin-top: 7px; font: 500 11.5px ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color: var(--ink); text-decoration: none; padding: 2px 7px; border-radius: 6px;
+  background: color-mix(in srgb, var(--ins-hue) 9%, transparent);
+}
+.ins a.ins-code:hover { background: color-mix(in srgb, var(--ins-hue) 16%, transparent); }
+
+/* steps: one column of cards joined by a line; early exits branch to the right */
+.ins-steps { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: var(--ins-gap); }
+.ins-step { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 300px); gap: 0 44px; align-items: center; position: relative; }
+.ins-step:not(.is-last)::before {
+  content: ""; position: absolute; left: 27px; top: 50%; height: calc(100% + var(--ins-gap)); width: 0;
+  border-left: 1.5px solid var(--edge); z-index: 0;
+}
+.ins-step.is-async + .ins-step::before, .ins-step.is-async::before { border-left-style: dashed; }
+.ins-card {
+  position: relative; z-index: 1; display: flex; gap: 12px; align-items: flex-start;
+  background: var(--surface); border: 1px solid color-mix(in srgb, var(--ins-hue) 22%, var(--line));
+  border-radius: 14px; padding: 12px 14px;
+  box-shadow: 0 1px 1px #1018280d, 0 5px 10px -4px color-mix(in srgb, var(--ins-hue) 22%, transparent);
+}
+.ins-n {
+  flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+  background: var(--ins-hue); color: var(--surface); font: 600 12px var(--ml-font); font-variant-numeric: tabular-nums;
+}
+.ins-main { min-width: 0; color: var(--ink); }
+.ins-step .ins-main .ins-code { color: var(--muted); }
+.ins-exit { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.ins-exit::before {
+  content: ""; position: absolute; left: -44px; width: 40px; top: 50%; border-top: 1.5px dashed var(--edge);
+}
+.ins-exit::after {
+  content: ""; position: absolute; left: -9px; top: calc(50% - 4px); border: 4px solid transparent; border-left: 6px solid var(--edge);
+}
+.ins-when { position: absolute; left: -44px; bottom: calc(50% + 4px); width: 44px; text-align: center; font-size: 10.5px; color: var(--muted); line-height: 1.2; }
+.ins-exit-card {
+  border: 1.5px dashed var(--line); border-radius: 12px; padding: 9px 12px; background: var(--surface);
+  color: var(--ink);
+}
+.ins-exit-card .ins-t { font-weight: 500; font-size: 13px; }
+.ins-exit-card .ins-code { color: var(--muted); margin-top: 5px; }
+@media (max-width: 720px) {
+  .ins-step { grid-template-columns: 1fr; gap: 8px; }
+  .ins-exit { margin-left: 52px; }
+  .ins-exit::before, .ins-exit::after { display: none; }
+  .ins-when { position: static; width: auto; text-align: left; }
+}
+
+/* schema: table cards; hovering a reference lights the table it points to */
+.ins-schema { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; align-items: start; }
+.ins-table {
+  background: var(--surface); border: 1px solid color-mix(in srgb, var(--ins-hue) 22%, var(--line)); border-radius: 14px;
+  overflow: hidden; color: var(--ink); transition: box-shadow .15s var(--ml-ease), border-color .15s var(--ml-ease);
+  box-shadow: 0 1px 1px #1018280d, 0 5px 10px -4px color-mix(in srgb, var(--ins-hue) 22%, transparent);
+}
+.ins-table.is-lit { border-color: var(--ins-hue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ins-hue) 22%, transparent); }
+.ins-table header {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px;
+  background: color-mix(in srgb, var(--ins-hue) 10%, var(--surface)); border-bottom: 1px solid color-mix(in srgb, var(--ins-hue) 15%, var(--line));
+}
+.ins-name { font: 600 13.5px ui-monospace, "SFMono-Regular", Menlo, monospace; color: var(--ink); }
+.ins-ttl { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.ins-note { margin: 10px 14px 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.ins-table ul { list-style: none; margin: 8px 0 10px; padding: 0 14px; display: grid; gap: 5px; }
+.ins-table li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 12.5px; color: var(--ink); }
+.ins-f { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-weight: 500; }
+.ins-type { color: var(--muted); font-size: 11.5px; }
+.ins-ref { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: color-mix(in srgb, var(--ins-hue) 10%, transparent); cursor: default; }
+.ins-fnote { flex-basis: 100%; color: var(--muted); font-size: 11.5px; }
+.ins-table footer { padding: 0 14px 12px; }
+.ins-table footer .ins-code { color: var(--muted); margin-top: 0; }

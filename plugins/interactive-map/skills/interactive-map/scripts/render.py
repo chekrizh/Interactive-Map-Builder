@@ -18,6 +18,7 @@ ASSETS = SKILL / 'assets'
 TEMPLATE = ASSETS / 'template.html'
 PLACEHOLDER = '<script type="application/json" id="map-definition"></script>'
 NUMBER = (int, float)
+SHAPES = ('component', 'person', 'worker', 'database', 'queue', 'external')
 # Sections the viewer reads, with the JSON type each must have.
 SECTIONS = {
     'id': str, 'page': dict, 'panels': dict, 'ui': dict, 'roles': dict, 'logos': dict, 'settings': dict,
@@ -43,6 +44,71 @@ def asset_file(value):
     """The file behind an /assets/... path, only if it really sits inside the skill's assets/."""
     path = (SKILL / value.lstrip('/')).resolve()
     return path if ASSETS in path.parents and path.is_file() else None
+
+
+LIBRARY = ASSETS / 'library'
+
+
+def library(name):
+    path = LIBRARY / f'{name}.json'
+    return json.loads(path.read_text(encoding='utf-8'))['items'] if path.is_file() else {}
+
+
+def svg_uri(svg):
+    return 'data:image/svg+xml;base64,' + base64.b64encode(svg.encode()).decode()
+
+
+def library_logo(slug, simple, color):
+    """A logo entry for the viewer. Simple Icons first: a white mark on a tile in the brand colour
+    (a dark mark when the brand colour is very light). gilbarbara/logos in full colour as the fallback."""
+    if slug in simple:
+        item = simple[slug]
+        r, g, b = (int(item['hex'][i:i + 2], 16) for i in (0, 2, 4))
+        mark = '#1d2330' if 0.2126 * r + 0.7152 * g + 0.0722 * b > 200 else '#ffffff'
+        svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{mark}" d="{item["path"]}"/></svg>'
+        return {'name': item['name'], 'src': svg_uri(svg), 'size': 20, 'tile': f'#{item["hex"]}'}
+    for name in (slug, f'{slug}-icon'):
+        if name in color:
+            item = color[name]
+            svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{item["box"]}">{item["body"]}</svg>'
+            return {'name': slug, 'src': svg_uri(svg), 'size': 24}
+    return None
+
+
+def with_library(d):
+    """Fill icons, logos and roles the map names but does not define from assets/library.
+
+    Authored entries always win. Icons are Lucide (24px grid, scaled to the viewer's 20px grid),
+    logos are Simple Icons slugs (gilbarbara/logos names as a fallback), roles are presets for C4 kinds. Returns a new dict."""
+    if not isinstance(d, dict):
+        return d
+    d = dict(d)
+    nodes = [n for n in d.get('nodes', []) if isinstance(n, dict)]
+    groups = [g for g in (d.get('groups') or {}).values() if isinstance(g, dict)]
+    icons, wanted = dict(d.get('icons') or {}), {x.get('icon') for x in nodes + groups} - {None}
+    lib = library('icons') if wanted - set(icons) else {}
+    for name in wanted - set(icons):
+        if name in lib:
+            icons[name] = f'<g transform="scale(.8333)">{lib[name]}</g>'
+    d['icons'] = icons
+    logos, wanted = dict(d.get('logos') or {}), {n.get('logo') for n in nodes} - {None}
+    if wanted - set(logos):
+        simple, color = library('logos'), library('logos-color')
+        for slug in wanted - set(logos):
+            entry = library_logo(slug, simple, color)
+            if entry:
+                logos[slug] = entry
+    d['logos'] = logos
+    roles = dict(d.get('roles') or {})
+    used = {n.get('cat') for n in nodes} | {g.get('huekey') for g in groups}
+    used |= {z.get('hue') for z in d.get('zones', []) if isinstance(z, dict)}
+    used |= {f.get('hue') for f in (d.get('flows') or {}).values() if isinstance(f, dict)}
+    used |= set(((d.get('settings') or {}).get('appearanceRoles') or {}).values())
+    lib = library('roles')
+    for key in [k for k in lib if k in used and k not in roles]:
+        roles[key] = lib[key]
+    d['roles'] = roles
+    return d
 
 
 def problems(d):
@@ -86,6 +152,8 @@ def problems(d):
                 ref(d[section], n[field], f'node {nid}.{field}')
         ref(d['roles'], n.get('cat'), f'node {nid}.cat')
         ref(d['icons'], n.get('icon'), f'node {nid}.icon')
+        if n.get('shape') is not None and n['shape'] not in SHAPES:
+            found.append(f'node {nid}.shape: {n["shape"]!r} is not one of {", ".join(SHAPES)}')
         week = n.get('week')
         if not (isinstance(week, int) and 0 <= week < len(steps) and steps[week]):
             found.append(f'node {nid}.week: no build step {week!r}')
@@ -143,9 +211,24 @@ def problems(d):
         for item in listed(section):
             if item.get(key) not in layout.get(section, {}):
                 found.append(f'layout.{section}.{item.get(key)} is missing')
-    for iid in d['insides']:
-        if iid not in layout.get('insides', {}):
-            found.append(f'layout.insides.{iid} is missing')
+    for iid, scene in d['insides'].items():
+        kind = scene.get('kind') if isinstance(scene, dict) else None
+        if kind is None:  # a hand-drawn SVG scene needs its geometry
+            if iid not in layout.get('insides', {}):
+                found.append(f'layout.insides.{iid} is missing')
+        elif kind == 'steps':
+            if not (isinstance(scene.get('steps'), list) and scene['steps']
+                    and all(isinstance(s, dict) and s.get('t') for s in scene['steps'])):
+                found.append(f'insides.{iid}.steps must be a non-empty list of steps, each with "t"')
+        elif kind == 'schema':
+            if not (isinstance(scene.get('tables'), list) and scene['tables']
+                    and all(isinstance(t, dict) and t.get('name') for t in scene['tables'])):
+                found.append(f'insides.{iid}.tables must be a non-empty list of tables, each with "name"')
+        else:
+            found.append(f'insides.{iid}.kind: {kind!r} is not steps or schema')
+    source = d.get('source')
+    if source is not None and not (isinstance(source, dict) and str(source.get('repo', '')).startswith('https://')):
+        found.append('source.repo must be an https:// repository URL')
     for e in listed('overviewEdges'):
         if e.get('id') not in layout.get('overviewEdges', {}):
             found.append(f'layout.overviewEdges.{e.get("id")} is missing')
@@ -185,6 +268,7 @@ def main(argv):
         definition = json.loads(source)
     except json.JSONDecodeError as error:
         sys.exit(f'the map is not valid JSON: {error}')
+    definition = with_library(definition)
     found = problems(definition)
     if found:
         sys.exit('the map needs fixing:\n- ' + '\n- '.join(found))

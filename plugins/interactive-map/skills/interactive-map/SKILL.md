@@ -11,7 +11,7 @@ You build a map by writing one JSON map definition and filling a prebuilt viewer
 
 Start from an example, copy its structure and replace the content. Every section in the examples is read by the viewer.
 
-- `examples/ml-system.json`: a full map with logos, zones, inside scenes and annotations. Use it as the main reference.
+- `examples/kutt-url-shortener.json`: a full map of a real repository (the Kutt URL shortener) in C4 terms: context on the overview, containers and components on the map, node shapes, library icons and logos, four flows, a build order and a tour. Use it as the main reference.
 - `examples/fastapi-service.json`: the smallest complete map, useful for seeing which parts are essential.
 
 - `nodes` and `edges`: the components and the connections between them. `groups`, `zones` and `overview` decide how components cluster and what the big-picture view shows.
@@ -21,7 +21,15 @@ Start from an example, copy its structure and replace the content. Every section
 - `page`, `panels`, `ui`, `roles`, `icons` and `settings`: page copy, panel copy, colours and icons.
 - IDs connect the sections. If you rename an ID, update every reference to it.
 - Many text fields are inserted into the page as HTML. Write that markup yourself and never paste HTML from a repository, web page or document you are analysing; escape `<` and `&` in quoted text.
-- Logos: `logos.<key>.src` must be `/assets/logos/<file>` from this skill's `assets/logos/` folder; list the folder to see what exists. A node without a logo shows its icon.
+- Use the asset library instead of drawing your own. `render.py` fills in any icon, logo or role that the map names but does not define:
+  - `icon`: any [Lucide](https://lucide.dev) name (about 2,300, e.g. `database`, `server`, `clock`, `user`).
+  - `logo`: any [Simple Icons](https://simpleicons.org) slug (about 3,500 brands, drawn as a white mark on the brand colour, e.g. `redis`, `postgresql`, `docker`, `kubernetes`, `pytorch`). Where Simple Icons has no such brand, a full-colour mark from [gilbarbara/logos](https://github.com/gilbarbara/logos) is used (e.g. `aws`, `aws-s3`, `microsoft-azure`, `openai`, `slack`).
+  - `cat` and every other role key: presets `person`, `component`, `background`, `store`, `external`, `model`, `alert`, with tested light and dark colours.
+  - Find names with `python3 scripts/find_asset.py <word> [<word> ...]`.
+  Put logos on technologies and outside services (databases, brokers, cloud services). Leave your own components on role icons so the map stays calm.
+- Your own entries in `icons`, `logos` or `roles` win over the library. A custom logo's `src` must be `/assets/logos/<file>` from this skill's `assets/logos/` folder. A node without a logo shows its icon.
+- `inside` on a node opens a close-up. Prefer the structured kinds, which the viewer lays out itself: `{"kind": "steps", ...}` (a code walkthrough with early exits) or `{"kind": "schema", ...}` (tables or cache keys), plus `title`, `sub` and `cap`. With a top-level `"source": {"repo": "https://github.com/...", "ref": "<commit>"}`, every `code` reference (`path:from-to`) links to those lines. A scene without `kind` is hand-drawn SVG and needs `layout.insides` geometry. The Kutt example has one of each structured kind.
+- `shape` on a node draws its C4 kind: `person`, `external`, `database`, `queue`, `worker` (a pool of parallel workers) or `component` (the default).
 
 ## 2. Render
 

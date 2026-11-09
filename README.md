@@ -18,10 +18,13 @@ plugins/interactive-map/
   skills/interactive-map/           the skill itself, self-contained; Node is not needed here
     SKILL.md
     assets/template.html            built from app/, committed
-    assets/logos/                   logos a map can use as /assets/logos/<file>
-    examples/ml-system.json         a full map with logos, zones and inside scenes; the dev map
-    examples/fastapi-service.json   the smallest complete map (dev: ?map=fastapi-service)
-    scripts/render.py               map JSON -> HTML, Python 3 stdlib only
+    assets/logos/                   custom logos a map can use as /assets/logos/<file>
+    assets/library/                 icons (Lucide), logos (Simple Icons, gilbarbara/logos), role presets
+    examples/kutt-url-shortener.json  the main example: a C4 map of a real repo, using the library
+    examples/fastapi-service.json   the smallest complete, self-contained map; the dev map
+    scripts/render.py               map JSON -> HTML, Python 3 stdlib only; fills names from the library
+    scripts/find_asset.py           search the library for icon, logo and role names
+  skills/interactive-map-repo/      repo mode: how to read a repository and model it in C4 terms
 tests/test_render.py                render.py checks, incl. agreement with the page's own validator
 ```
 
@@ -30,7 +33,8 @@ tests/test_render.py                render.py checks, incl. agreement with the p
 ```bash
 cd app
 npm install
-npm run dev              # examples/ml-system.json, live; add ?map=fastapi-service for the other
+npm run dev              # examples/fastapi-service.json, live. Maps that rely on the library
+                         # (the Kutt example) need render.py, which fills icons, logos and roles
 npm run build:template   # rebuilds plugins/interactive-map/skills/interactive-map/assets/template.html
 ```
 
@@ -40,7 +44,7 @@ Rebuild the template only when viewer code or styles change. New maps never need
 
 ```bash
 python3 plugins/interactive-map/skills/interactive-map/scripts/render.py \
-  plugins/interactive-map/skills/interactive-map/examples/ml-system.json /tmp/map.html
+  plugins/interactive-map/skills/interactive-map/examples/kutt-url-shortener.json /tmp/map.html
 open /tmp/map.html
 python3 -m unittest discover tests
 ```
