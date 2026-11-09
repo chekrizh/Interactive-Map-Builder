@@ -13,7 +13,8 @@ SKILL = ROOT / 'plugins' / 'interactive-map' / 'skills' / 'interactive-map'
 sys.path.insert(0, str(SKILL / 'scripts'))
 import render  # noqa: E402
 
-EXAMPLE = json.loads((SKILL / 'examples' / 'fastapi-service.json').read_text(encoding='utf-8'))
+EXAMPLES = {p.stem: json.loads(p.read_text(encoding='utf-8')) for p in sorted((SKILL / 'examples').glob('*.json'))}
+EXAMPLE = EXAMPLES['fastapi-service']  # the smallest map; broken variants start from it
 NODE = shutil.which('node')
 
 
@@ -52,8 +53,10 @@ BROKEN = {
 
 
 class RenderTest(unittest.TestCase):
-    def test_example_map_is_valid(self):
-        self.assertEqual(render.problems(EXAMPLE), [])
+    def test_example_maps_are_valid(self):
+        for name, example in EXAMPLES.items():
+            with self.subTest(name):
+                self.assertEqual(render.problems(example), [])
 
     def test_python_rejects_every_broken_map(self):
         for name, change in BROKEN.items():
@@ -62,7 +65,9 @@ class RenderTest(unittest.TestCase):
 
     @unittest.skipUnless(NODE, 'node is needed to run the page validator')
     def test_page_validator_agrees(self):
-        self.assertEqual(js_error(EXAMPLE), '')
+        for name, example in EXAMPLES.items():
+            with self.subTest(name):
+                self.assertEqual(js_error(example), '')
         for name, change in BROKEN.items():
             with self.subTest(name):
                 self.assertTrue(js_error(broken(change)))

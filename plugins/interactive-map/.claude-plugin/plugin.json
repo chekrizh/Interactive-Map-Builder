@@ -1,7 +1,9 @@
 {
   "name": "interactive-map",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Build an interactive system map and deliver it as a single self-contained HTML file.",
-  "author": { "name": "chekrizh" },
+  "author": {
+    "name": "chekrizh"
+  },
   "repository": "https://github.com/chekrizh/Interactive-Map-Builder"
 }

@@ -9,7 +9,10 @@ You build a map by writing one JSON map definition and filling a prebuilt viewer
 
 ## 1. Write the map definition
 
-Start from `examples/fastapi-service.json`. It is a complete small map and every section in it is read by the viewer: copy its structure and replace the content.
+Start from an example, copy its structure and replace the content. Every section in the examples is read by the viewer.
+
+- `examples/ml-system.json`: a full map with logos, zones, inside scenes and annotations. Use it as the main reference.
+- `examples/fastapi-service.json`: the smallest complete map, useful for seeing which parts are essential.
 
 - `nodes` and `edges`: the components and the connections between them. `groups`, `zones` and `overview` decide how components cluster and what the big-picture view shows.
 - `flows`: animated scenarios, each a list of hops along edges.

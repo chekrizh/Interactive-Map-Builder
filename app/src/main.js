@@ -7,12 +7,13 @@ import { mount } from './app.js';
 
 const root = document.getElementById('app');
 
-/** A rendered page carries its map inline; dev shows the skill's example map. */
+/** A rendered page carries its map inline; dev shows a skill example (?map=fastapi-service). */
 async function loadDefinition() {
   const inline = document.getElementById('map-definition')?.textContent.trim();
   if (inline) return JSON.parse(inline);
   if (import.meta.env.MODE === 'template') throw new Error('This page has no map. Fill it with scripts/render.py.');
-  const response = await fetch('/examples/fastapi-service.json');
+  const name = new URLSearchParams(location.search).get('map') || 'ml-system';
+  const response = await fetch(`/examples/${encodeURIComponent(name)}.json`);
   if (!response.ok) throw new Error(`Example map not found (HTTP ${response.status}).`);
   return response.json();
 }

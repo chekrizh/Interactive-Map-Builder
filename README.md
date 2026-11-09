@@ -8,7 +8,7 @@ An interactive system-map viewer (components, connections, animated flows, build
 .claude-plugin/marketplace.json     Claude Code marketplace: lists the plugin below
 app/                                viewer source (Vite): dev server + template build
   index.html                        contains an empty <script type="application/json" id="map-definition">
-  src/main.js                       reads that tag; in dev loads the skill's example map
+  src/main.js                       reads that tag; in dev loads a skill example map
   src/app.js, src/runtime/, src/rendering/, src/styles/, src/template.html
   src/app.d.ts                      the map format as TypeScript types
   src/assets/fonts/                 Manrope (SIL Open Font License), inlined into the template
@@ -19,7 +19,8 @@ plugins/interactive-map/
     SKILL.md
     assets/template.html            built from app/, committed
     assets/logos/                   logos a map can use as /assets/logos/<file>
-    examples/fastapi-service.json   a complete small map; also the dev map
+    examples/ml-system.json         a full map with logos, zones and inside scenes; the dev map
+    examples/fastapi-service.json   the smallest complete map (dev: ?map=fastapi-service)
     scripts/render.py               map JSON -> HTML, Python 3 stdlib only
 tests/test_render.py                render.py checks, incl. agreement with the page's own validator
 ```
@@ -29,7 +30,7 @@ tests/test_render.py                render.py checks, incl. agreement with the p
 ```bash
 cd app
 npm install
-npm run dev              # the example map, live
+npm run dev              # examples/ml-system.json, live; add ?map=fastapi-service for the other
 npm run build:template   # rebuilds plugins/interactive-map/skills/interactive-map/assets/template.html
 ```
 
@@ -39,7 +40,7 @@ Rebuild the template only when viewer code or styles change. New maps never need
 
 ```bash
 python3 plugins/interactive-map/skills/interactive-map/scripts/render.py \
-  plugins/interactive-map/skills/interactive-map/examples/fastapi-service.json /tmp/map.html
+  plugins/interactive-map/skills/interactive-map/examples/ml-system.json /tmp/map.html
 open /tmp/map.html
 python3 -m unittest discover tests
 ```
