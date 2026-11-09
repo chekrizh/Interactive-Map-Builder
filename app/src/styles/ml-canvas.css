@@ -61,19 +61,38 @@
 }
 .ml-canvas g.block:is(:hover, :focus-visible) .brect,
 .ml-canvas g.node:is(:hover, :focus-visible, .sel, .lit, .future, .dimmed, .justbuilt, .broken) .nrect { stroke-opacity: 1; }
-.ml-canvas .brect { rx: 24; }
+.ml-canvas .brect { rx: 18; }
 .ml-canvas .nrect { rx: 20; }
 .ml-canvas .nicon-tile { fill: var(--ml-icon-surface); }
 .ml-canvas .nicon-tile.logo-tile { fill: #fff; }
 .ml-canvas .nlogo { pointer-events: none; }
 .ml-canvas .nicon { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.ml-canvas .btitle { font: 600 23px var(--ml-font); letter-spacing: -.01em; fill: var(--ml-ink); }
-.ml-canvas .bline { font: 400 15px var(--ml-font); fill: var(--ml-muted); }
+/* Overview cards share the full map's style E (2026-11-09). */
+.ml-canvas .brect {
+  fill: var(--ml-card); stroke-opacity: .24; stroke-width: 1.3;
+  filter: drop-shadow(0 1px 1px #1018280f) drop-shadow(0 6px 10px color-mix(in srgb, currentColor 20%, transparent));
+}
+.ml-canvas .brect.b-person { rx: 34; }
+.ml-canvas .brect.b-external { fill: transparent; stroke-dasharray: 6 5; stroke-opacity: .6; filter: none; }
+.ml-canvas g.block:is(:hover, :focus-visible) .brect:not(.b-external) {
+  filter: drop-shadow(0 1px 1px #1018280f) drop-shadow(0 10px 18px color-mix(in srgb, currentColor 30%, transparent));
+}
+.ml-canvas g.block .nicon-tile { fill: currentColor; rx: 12; }
+.ml-canvas g.block .nicon { stroke: var(--ml-tile-ink); stroke-width: 1.8; }
+.ml-canvas g.block:has(.b-person) .nicon-tile { rx: 22; }
+.ml-canvas g.block:has(.b-external) .nicon-tile { fill: var(--ml-node-fill); }
+.ml-canvas g.block:has(.b-external) .nicon { stroke: currentColor; }
+.ml-canvas .btitle { font: 700 19px var(--ml-font); letter-spacing: -.01em; fill: var(--ml-ink); }
+.ml-canvas .bkind { font: 500 12.5px var(--ml-font); fill: var(--ml-muted); }
+.ml-canvas .bline { font: 400 14.5px var(--ml-font); fill: var(--ml-muted); }
+.ml-canvas .brule { stroke: currentColor; stroke-opacity: .16; stroke-width: 1; }
 .ml-canvas .btools { font: 400 12px var(--ml-font); fill: var(--ml-muted); }
-.ml-canvas .bgo { font: 600 12px var(--ml-font); fill: currentColor; }
-.ml-canvas .bstep-c { fill: var(--ml-node-fill); stroke: currentColor; stroke-opacity: .35; stroke-width: 1.2; }
-.ml-canvas .bstep { font: 600 11px var(--ml-font); fill: currentColor; text-anchor: middle; font-variant-numeric: tabular-nums; }
-.ml-canvas .baction { fill: var(--ml-icon-surface); rx: 8; }
+.ml-canvas .bgo { font: 700 12.5px var(--ml-font); fill: currentColor; opacity: 0; transition: opacity .15s var(--ml-ease); }
+.ml-canvas g.block:is(:hover, :focus-visible) .bgo { opacity: 1; }
+.ml-canvas .bstep { font: 600 13px var(--ml-font); fill: var(--ml-muted); opacity: .8; font-variant-numeric: tabular-nums; }
+.ml-canvas .l0start { fill: var(--ml-canvas); stroke: var(--ml-wire); stroke-width: 1.5; }
+.ml-canvas g.l0chip rect { fill: var(--ml-card); stroke: color-mix(in srgb, var(--ml-wire) 75%, transparent); stroke-width: 1; }
+.ml-canvas g.l0chip text { font: 600 12px var(--ml-font); fill: var(--ml-muted); }
 .ml-canvas .l1 { font: 600 13.5px var(--ml-font); fill: var(--ml-ink); text-anchor: start; }
 .ml-canvas .l2 { font: 400 11px var(--ml-font); fill: var(--ml-muted); text-anchor: start; }
 .ml-canvas .zone-r, .ml-canvas .igrp {

@@ -7,14 +7,16 @@ export function createFlowplayer(ctx) {
 function clearStory() {
   ctx.storyToken++;
   ctx.storyLayer.innerHTML = "";
-  ctx.svg.classList.remove("tfocus"); // the tour's focus pass (syncFocus)
+  ctx.svg.classList.remove("tfocus", "flowing"); // the tour's focus pass (syncFocus)
   if (ctx.dot) {
     ctx.dot.remove();
     ctx.dot = null;
   }
+  ctx.svg.querySelectorAll(".fout, .inchip").forEach(x => x.classList.remove("fout", "inchip"));
   ctx.EDGES.forEach(e => {
     const ee = ctx.edgeEls[e.id];
     ee.path.classList.remove("eactive", "tcur", "eglow");
+    if (ee.start) { ee.start.remove(); ee.start = null; }
     ee.path.style.stroke = "";
     ee.path.setAttribute("marker-end", "url(#arr-base)");
     if (e.bidir) ee.path.setAttribute("marker-start", "url(#arr-base)");
@@ -37,10 +39,13 @@ function animateDot(pathEl, rev, hueKey) {
       ctx.setTimeout(resolve, 350);
       return;
     }
-    if (!ctx.dot) ctx.dot = ctx.el("circle", {
-      r: 5.5
-    }, ctx.svg);
-    ctx.dot.setAttribute("fill", ctx.hue(hueKey));
+    /* The travelling dot: a solid core inside a soft halo of the same hue. */
+    if (!ctx.dot) {
+      ctx.dot = ctx.el("g", { class: "fdot" }, ctx.svg);
+      ctx.el("circle", { r: 11, class: "fdot-halo" }, ctx.dot);
+      ctx.el("circle", { r: 5, class: "fdot-core" }, ctx.dot);
+    }
+    ctx.dot.style.setProperty("--story-hue", ctx.hue(hueKey));
     const dur = Math.min(3200, Math.max(1200, L * 5.2));
     const t0 = performance.now();
     function step(t) {
@@ -52,8 +57,7 @@ function animateDot(pathEl, rev, hueKey) {
       const ease = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
       const at = rev ? L * (1 - ease) : L * ease;
       const pt = pathEl.getPointAtLength(at);
-      ctx.dot.setAttribute("cx", pt.x);
-      ctx.dot.setAttribute("cy", pt.y);
+      ctx.dot.setAttribute("transform", `translate(${pt.x} ${pt.y})`);
       if (k < 1) ctx.requestAnimationFrame(step);else resolve();
     }
     ctx.requestAnimationFrame(step);
@@ -148,6 +152,27 @@ async function playStory(key, opts) {
     badgeUses[h.e] = (badgeUses[h.e] || 0) + 1;
   });
   const end = Math.min(s.hops.length, opts && opts.to || s.hops.length);
+  /* Everything the flow never touches steps back, so the path reads on
+     its own; each edge's label moves onto its step chip once it lands. */
+  const inFlow = new Set(), flowEdges = new Set();
+  s.hops.slice(0, end).forEach(h => {
+    const d = ctx.edgeEls[h.e].def;
+    flowEdges.add(h.e); inFlow.add(d.from); inFlow.add(d.to);
+  });
+  ctx.svg.classList.add("flowing");
+  ctx.NODES.forEach(n => { if (!inFlow.has(n.id)) ctx.nodeEls[n.id].g.classList.add("fout"); });
+  ctx.EDGES.forEach(e => {
+    if (flowEdges.has(e.id)) return;
+    const ee = ctx.edgeEls[e.id];
+    ee.path.classList.add("fout");
+    ee.label?.classList.add("fout");
+  });
+  if (s.hops.length) {
+    const h0 = s.hops[0], d0 = ctx.edgeEls[h0.e].def;
+    const first = ctx.nodeEls[h0.rev ? d0.to : d0.from].g;
+    first.style.setProperty("--story-hue", ctx.hue(h0.bad || !s.ok ? s.hue : s.ok));
+    first.classList.add("lit");
+  }
   for (let i = 0; i < end; i++) {
     if (token !== ctx.storyToken) return;
     const hop = s.hops[i];
@@ -176,6 +201,11 @@ async function playStory(key, opts) {
       ee.path.removeAttribute("marker-end");
     }
     if (hop.rev && ee.def.bidir) ee.path.setAttribute("marker-start", "url(#arr-" + hk + ")");else ee.path.setAttribute("marker-end", "url(#arr-" + hk + ")");
+    if (!ee.start) {
+      const p0 = ee.path.getPointAtLength(hop.rev ? ee.path.getTotalLength() : 0);
+      ee.start = ctx.el("circle", { cx: p0.x, cy: p0.y, r: 3.2, class: "fstart" }, ctx.storyLayer);
+      ee.start.style.setProperty("--story-hue", ctx.hue(hk));
+    }
     if (landed || wide) {/* no camera; a landed hop has no dot either */} else ctx.focusHop(ee.path);
     if (!landed) {
       ee.path.classList.add("eglow");
@@ -188,23 +218,52 @@ async function playStory(key, opts) {
        reference in, report out). Spread their badges along the path so a
        later number does not land exactly on top of an earlier one. */
     const k = badgeSeen[hop.e] = (badgeSeen[hop.e] || 0) + 1;
-    const mid = ee.path.getPointAtLength(L * 0.5 + (k - (badgeUses[hop.e] + 1) / 2) * 26);
+    const mid = badgeUses[hop.e] === 1 && ee.mid ? ee.mid : ee.path.getPointAtLength(L * 0.5 + (k - (badgeUses[hop.e] + 1) / 2) * 26);
     const bg = ctx.el("g", {
-      "data-hop": i
+      "data-hop": i,
+      class: "fchip"
     }, ctx.storyLayer);
     bg.style.setProperty("--story-hue", ctx.hue(hk));
-    if (!landed) ctx.popBadge(bg);
+    /* A step chip sits on the line: the hop number in a filled disc, then
+       the edge's own label, which leaves its usual spot while the flow
+       runs. The latest landed step is filled with the flow's hue. */
+    const label = badgeUses[hop.e] === 1 && ee.label ? ee.def.label : "";
+    const pill = ctx.el("rect", { class: "fchip-r", y: mid.y - 10, height: 20, rx: 10 }, bg);
     ctx.el("circle", {
-      cx: mid.x,
+      cx: 0,
       cy: mid.y,
-      r: 9,
+      r: 7,
       class: "badge-c"
     }, bg);
-    ctx.el("text", {
-      x: mid.x,
-      y: mid.y + 3.5,
+    const num = ctx.el("text", {
+      x: 0,
+      y: mid.y + 3.4,
       class: "badge-t"
-    }, bg).textContent = String(i + 1);
+    }, bg);
+    num.textContent = String(i + 1);
+    let w = 20;
+    let txt = null;
+    if (label) {
+      txt = ctx.el("text", { y: mid.y + 3.4, class: "fchip-t" }, bg);
+      txt.textContent = label;
+      w = 26 + txt.getComputedTextLength() + 9;
+      /* A label that will not fit on a short edge stays where it was and
+         the chip keeps only the number. */
+      if (w > (ee.mid && badgeUses[hop.e] === 1 ? ee.mid.len - 4 : L - 28)) {
+        txt.remove();
+        txt = null;
+        w = 20;
+      } else ee.label.classList.add("inchip");
+    }
+    const x0 = mid.x - w / 2;
+    pill.setAttribute("x", x0);
+    pill.setAttribute("width", w);
+    bg.querySelector(".badge-c").setAttribute("cx", x0 + 10);
+    num.setAttribute("x", x0 + 10);
+    if (txt) txt.setAttribute("x", x0 + 22);
+    ctx.storyLayer.querySelectorAll("g.fchip.now").forEach(g => g.classList.remove("now"));
+    bg.classList.add("now");
+    if (!landed) ctx.popBadge(bg);
     const endNode = hop.rev ? ee.def.from : ee.def.to;
     const eg = ctx.nodeEls[endNode].g;
     eg.style.setProperty("--story-hue", ctx.hue(hk));
@@ -225,6 +284,7 @@ async function playStory(key, opts) {
     ctx.dot.remove();
     ctx.dot = null;
   }
+  ctx.storyLayer.querySelectorAll("g.fchip.now").forEach(g => g.classList.remove("now"));
   /* The tour holds the camera where the slice ended; its step card says
      what comes next. */
   if (quiet) return;

@@ -207,16 +207,16 @@ for g in groups.values():
     pass
 
 overview = [{"g": g} for g in ["people", "redirect", "outside", "manage", "data", "background"]]
-OP = {"people": (60, 40), "redirect": (400, 40), "outside": (740, 40),
-      "manage": (60, 380), "data": (400, 380), "background": (740, 380)}
+OP = {"people": (60, 40), "redirect": (480, 40), "outside": (900, 40),
+      "manage": (60, 340), "data": (480, 340), "background": (900, 340)}
 oedges = [
-    ("o1", "people", "redirect", "open links", "M336,160 L395,160", 365, 147, "middle"),
-    ("o2", "redirect", "outside", "302", "M676,160 L735,160", 705, 147, "middle"),
-    ("o3", "people", "manage", "create links", "M195,286 L195,375", 209, 335, "start"),
-    ("o4", "redirect", "data", "find link", "M535,286 L535,375", 549, 335, "start"),
-    ("o5", "manage", "data", "read / write", "M336,500 L395,500", 365, 487, "middle"),
-    ("o6", "background", "data", "visits", "M735,500 L676,500", 705, 487, "middle"),
-    ("o7", "background", "outside", "email", "M875,375 L875,286", 889, 335, "start"),
+    ("o1", "people", "redirect", "open links", "M336,140 L475,140", 365, 127, "middle"),
+    ("o2", "redirect", "outside", "302", "M756,140 L895,140", 785, 127, "middle"),
+    ("o3", "people", "manage", "create links", "M195,246 L195,335", 209, 295, "start"),
+    ("o4", "redirect", "data", "find link", "M615,246 L615,335", 629, 295, "start"),
+    ("o5", "manage", "data", "read / write", "M336,440 L475,440", 365, 427, "middle"),
+    ("o6", "background", "data", "visits", "M895,440 L756,440", 785, 427, "middle"),
+    ("o7", "background", "outside", "email", "M1035,335 L1035,246", 1049, 295, "start"),
 ]
 
 
@@ -323,8 +323,8 @@ d = {
     "links": {"projectStructure": "https://github.com/thedevs-network/kutt"},
     "source": {"repo": "https://github.com/thedevs-network/kutt", "ref": "029da42b2459693681886665589fd9512d6b473c"},
     "layout": {
-        "viewBoxes": {"map": [1510, 740], "map0": [1070, 680]},
-        "overviewCard": {"width": 270, "height": 240}, "scale": {"x": 1, "y": 1},
+        "viewBoxes": {"map": [1510, 740], "map0": [1230, 580]},
+        "overviewCard": {"width": 270, "height": 200}, "scale": {"x": 1, "y": 1},
         "nodes": pos, "edges": LE,
         "zones": {"outside": {"x": 30, "y": 60, "w": 250, "h": 650},
                   "server": {"x": 310, "y": 60, "w": 870, "h": 650},

@@ -730,12 +730,23 @@ export async function mountEngine(root, definition) {
   /* ---------------- build level 0 ---------------- */
 
   // Settle local typography before measuring either label mode.
-  await Promise.all([document.fonts.load('600 13.5px "Manrope"'), document.fonts.load('400 11px "Manrope"')]).catch(() => {});
+  await Promise.all([document.fonts.load('600 13.5px "Manrope"'), document.fonts.load('400 11px "Manrope"'), document.fonts.load('500 9.5px "Manrope"'), document.fonts.load('700 19px "Manrope"'), document.fonts.load('600 12px "Manrope"')]).catch(() => {});
   const canvas = canvasPrimitives;
   const control = controls;
   control.label(document.getElementById("toL0"), "Big picture", "back");
   control.label(document.getElementById("fsBtn"), "Full screen", "expand");
   control.label(document.getElementById("insideBack"), "Back to the map", "back");
+  const labelCtx = document.createElement("canvas").getContext("2d");
+  // The middle of a path's longest straight run, and that run's length.
+  function longestRun(d) {
+    const pts = [...d.matchAll(/[ML]([\d.-]+),([\d.-]+)/g)].map(m => ({ x: +m[1], y: +m[2] }));
+    let best = null;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const len = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+      if (!best || len > best.len) best = { len, horiz: Math.abs(pts[i + 1].y - pts[i].y) < 1, x: (pts[i].x + pts[i + 1].x) / 2, y: (pts[i].y + pts[i + 1].y) / 2 };
+    }
+    return best;
+  }
   const BW = definition.layout.overviewCard.width,
     BH = definition.layout.overviewCard.height;
   L0.forEach((b, i) => {
@@ -748,60 +759,48 @@ export async function mountEngine(root, definition) {
       "aria-label": G.title + ". " + G.line1 + " " + G.line2
     }, svg0);
     canvas.setRole(g, G.huekey);
-    canvas.card(g, {
+    /* Overview cards follow the full map's node style (2026-11-09): a light
+       card with a role-tinted shadow, a solid role tile, the title wrapped
+       to fit beside it, the role and step number, a description and the
+       tools along a footer rule. "Open" shows on hover. */
+    const role = definition.roles?.[G.huekey];
+    const rect = canvas.card(g, {
       x: b.x,
       y: BY,
       width: BW,
       height: BH,
       overview: true
     });
-    canvas.iconTile(g, b.x + 22, BY + 24, 40, ICONS[G.icon]);
-    const badge = el("g", {
-      class: "bindex",
-      "aria-hidden": "true"
-    }, g);
-    // The step number sits outside the card, left of it, its top level with the card's top edge (2026-11-01).
-    el("circle", {
-      cx: b.x - 28,
-      cy: BY + 14,
-      r: 14,
-      class: "bstep-c"
-    }, badge);
+    if (G.huekey === "person") rect.classList.add("b-person");
+    if (G.huekey === "external") rect.classList.add("b-external");
+    const pad = 22,
+      tile = 44;
+    canvas.iconTile(g, b.x + pad, BY + pad, tile, ICONS[G.icon]);
     el("text", {
-      x: b.x - 28,
-      y: BY + 18,
+      x: b.x + BW - pad,
+      y: BY + pad + 14,
       class: "bstep",
-      "text-anchor": "middle"
-    }, badge).textContent = "0" + (i + 1);
-    el("text", {
-      x: b.x + 75,
-      y: BY + 50,
-      class: "btitle"
-    }, g).textContent = G.title;
-    canvas.wrapText(G.line1 + " " + G.line2, BW - 44, '400 15px "Manrope"').forEach((line, row) => {
-      el("text", {
-        x: b.x + 22,
-        y: BY + 98 + row * 22,
-        class: "bline"
-      }, g).textContent = line;
+      "text-anchor": "end"
+    }, g).textContent = String(i + 1).padStart(2, "0");
+    const tx = b.x + pad + tile + 14;
+    const titleLines = canvas.wrapText(G.title, b.x + BW - pad - 30 - tx, '700 19px "Manrope"').slice(0, 2);
+    const head = titleLines.length * 23 + 18;
+    const hy = BY + pad + Math.max(0, (tile - head) / 2);
+    titleLines.forEach((line, row) => {
+      el("text", { x: tx, y: hy + 17 + row * 23, class: "btitle" }, g).textContent = line;
     });
-    el("text", {
-      x: b.x + 22,
-      y: BY + 173,
-      class: "btools"
-    }, g).textContent = G.chips;
-    el("rect", {
-      x: b.x + 22,
-      y: BY + 192,
-      width: 137,
-      height: 29,
-      class: "baction"
-    }, g);
-    el("text", {
-      x: b.x + 33,
-      y: BY + 211,
-      class: "bgo"
-    }, g).textContent = "Open this stage →";
+    el("text", { x: tx, y: hy + titleLines.length * 23 + 13, class: "bkind" }, g).textContent = role?.label || "";
+    const top = BY + pad + Math.max(tile, head) + 22;
+    const footY = BY + BH - 42;
+    const maxLines = Math.max(1, Math.floor((footY - 10 - top) / 21) + 1);
+    let desc = canvas.wrapText(G.line1 + " " + G.line2, BW - 2 * pad, '400 14.5px "Manrope"');
+    if (desc.length > maxLines) desc = desc.slice(0, maxLines).map((l, k) => k === maxLines - 1 ? l.replace(/\s*\S*$/, "") + "…" : l);
+    desc.forEach((line, row) => {
+      el("text", { x: b.x + pad, y: top + row * 21, class: "bline" }, g).textContent = line;
+    });
+    el("line", { x1: b.x + pad, x2: b.x + BW - pad, y1: footY, y2: footY, class: "brule" }, g);
+    el("text", { x: b.x + pad, y: footY + 24, class: "btools" }, g).textContent = G.chips;
+    el("text", { x: b.x + BW - pad, y: footY + 24, class: "bgo", "text-anchor": "end" }, g).textContent = "Open →";
     const act = () => focusGroup(b.g);
     scope.listen(g, "click", act);
     scope.listen(g, "keydown", ev => {
@@ -835,6 +834,20 @@ export async function mountEngine(root, definition) {
       }, dashed ? {
         "stroke-dasharray": "5 4"
       } : {}), svg0);
+      const start = d.match(/M([\d.-]+),([\d.-]+)/);
+      if (start) el("circle", { cx: start[1], cy: start[2], r: 3, class: "l0start" }, svg0);
+      /* The label rides on the line as a chip when the line has room;
+         otherwise it stays at its authored spot beside the line. */
+      labelCtx.font = '600 12px "Manrope"';
+      const w = labelCtx.measureText(text).width + 20;
+      const run = longestRun(d);
+      if (!text) return;
+      if (run && (run.horiz ? run.len >= w + 24 : run.len >= 40)) {
+        const chip = el("g", { class: "l0chip" }, svg0);
+        el("rect", { x: run.x - w / 2, y: run.y - 11, width: w, height: 22, rx: 11 }, chip);
+        el("text", { x: run.x, y: run.y + 4.2, "text-anchor": "middle" }, chip).textContent = text;
+        return;
+      }
       // Inline style: the shared .l0lab rule centres labels and would beat an attribute.
       const lab = el("text", {
         x,
@@ -958,7 +971,8 @@ export async function mountEngine(root, definition) {
       "marker-end": "url(#arr-base)"
     }, edgeLayer);
     if (e.bidir) p.setAttribute("marker-start", "url(#arr-base)");
-    let lab = null;
+    let lab = null,
+      mid = null;
     if (e.label) {
       const pos = e.lx != null ? {
         lx: e.lx,
@@ -972,11 +986,30 @@ export async function mountEngine(root, definition) {
         "text-anchor": pos.anchor || "middle"
       }, edgeLayer);
       lab.textContent = e.label;
+      /* Labels sit on their line as a small chip (2026-11-09) when the
+         longest straight run has room for one; otherwise the text stays
+         beside the line where placeLabel puts it. */
+      const run = longestRun(e.d);
+      // Measured off-screen: the full map's svg is still hidden here.
+      labelCtx.font = '500 9.5px "Manrope"';
+      const w = labelCtx.measureText(e.label).width + 14;
+      if (run && run.len >= w + 18) {
+        const g = el("g", { class: "elabel echip" }, edgeLayer);
+        el("rect", { x: run.x - w / 2, y: run.y - 8, width: w, height: 16, rx: 8 }, g);
+        lab.setAttribute("x", run.x);
+        lab.setAttribute("y", run.y + 3.4);
+        lab.setAttribute("text-anchor", "middle");
+        lab.removeAttribute("class");
+        g.appendChild(lab);
+        lab = g;
+        mid = run;
+      }
     }
     edgeEls[e.id] = {
       def: e,
       path: p,
-      label: lab
+      label: lab,
+      mid
     };
   });
   const nodeEls = {};
@@ -1518,12 +1551,32 @@ export async function mountEngine(root, definition) {
   const firstFlow = flowPicker.querySelector("[data-flow]");
   if (firstFlow) chooseFlow(firstFlow.dataset.flow);else flowControls.hidden = true;
   const weekSeg = document.getElementById("weekSeg");
+  /* Hover hint naming each build step; .seg clips overflow, so the hint is
+     one fixed element placed under the hovered button. */
+  const stepTip = document.createElement("div");
+  stepTip.className = "steptip";
+  stepTip.hidden = true;
+  weekSeg.closest(".controls").appendChild(stepTip);
+  function showStepTip(b) {
+    stepTip.textContent = b.dataset.tip;
+    stepTip.hidden = false;
+    const r = b.getBoundingClientRect(), w = stepTip.offsetWidth;
+    stepTip.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px";
+    stepTip.style.top = r.bottom + 8 + "px";
+  }
+  function hideStepTip() { stepTip.hidden = true; }
   /* Pinned mode: students can revisit earlier steps but never look ahead,
      and "Full system" (= everything, including the future) is not offered. */
   WEEKS.map((_, i) => [String(i), i === 0 ? definition.ui.fullSystem : String(i)]).filter(([v]) => !PINNED || Number(v) >= 1 && Number(v) <= PINNED).forEach(([v, t]) => {
     const b = document.createElement("button");
     b.dataset.w = v;
     b.textContent = t;
+    if (v !== "0" && WEEKS[v]?.title) {
+      b.dataset.tip = v + " · " + WEEKS[v].title;
+      b.setAttribute("aria-label", "Step " + b.dataset.tip);
+      for (const ev of ["mouseenter", "focus"]) scope.listen(b, ev, () => showStepTip(b));
+      for (const ev of ["mouseleave", "blur", "click"]) scope.listen(b, ev, hideStepTip);
+    }
     scope.listen(b, "click", () => {
       if (level !== 1) showLevel(1);
       /* The inside overlay covers the map without changing level, so
@@ -1592,6 +1645,26 @@ export async function mountEngine(root, definition) {
   }
   const tourControls = document.getElementById("tourControls");
   const tourBtn = document.getElementById("tourBtn");
+  /* Light / dark switch (2026-11-09). With no choice the page follows the
+     system; a click pins the opposite of what is showing and is remembered
+     per browser when storage allows it. */
+  const themeToggle = document.getElementById("themeToggle");
+  if (themeToggle) {
+    const rootEl = document.documentElement;
+    const isDark = () => rootEl.dataset.theme ? rootEl.dataset.theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const syncThemeLabel = () => themeToggle.setAttribute("aria-label", isDark() ? "Switch to light theme" : "Switch to dark theme");
+    try {
+      const saved = localStorage.getItem("imap-theme");
+      if (saved === "dark" || saved === "light") rootEl.dataset.theme = saved;
+    } catch (_) {}
+    syncThemeLabel();
+    scope.listen(themeToggle, "click", () => {
+      const next = isDark() ? "light" : "dark";
+      rootEl.dataset.theme = next;
+      try { localStorage.setItem("imap-theme", next); } catch (_) {}
+      syncThemeLabel();
+    });
+  }
   const tourBtnText = document.getElementById("tourBtnText");
   const tourStatus = document.getElementById("tourStatus");
   const tourChapters = document.getElementById("tourChapters");

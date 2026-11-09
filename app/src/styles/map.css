@@ -53,8 +53,8 @@
   /* Fast clicks never select a button's label (2026-11-01). */
   button, [role="button"] { -webkit-user-select: none; user-select: none; }
   svg.mapsvg { display: block; width: 100%; height: auto; }
-  /* The big picture is a 2x2 loop: cap its width so it stays a picture, not a poster. */
-  svg#map0 { max-width: 640px; margin: 0 auto; }
+  /* The big picture fills the stage up to a reading size (2026-11-09; was 640px, which shrank card text to ~8px). */
+  svg#map0 { max-width: 1000px; margin: auto; }
   @media (max-width: 980px) {
     svg.mapsvg:not(#map0) { min-width: 1000px; }
     main.wrap { flex-direction: column; }
@@ -281,7 +281,7 @@
     .stagecard.zoomable.zoomed:not(.fs-card) .stage-scroll:not(.panning) { cursor: grab; }
   }
   .stagecard.fs-card .controls { max-width: none; margin: 0; padding: 8px 16px;
-    border: 0; border-bottom: 1px solid var(--line); border-radius: 0; gap: 12px 24px; align-items: flex-end; }
+    border: 0; border-bottom: 1px solid var(--line); border-radius: 0; gap: 10px 20px; align-items: center; }
   .drawer {
     position: absolute; top: var(--drawer-top, 150px); right: var(--drawer-inset); bottom: auto; z-index: 7;
     /* Same width range as the tour card (2026-11-01), so Explore's panel and
@@ -351,7 +351,7 @@
   .tourcard, .tourend { --tour-ease: cubic-bezier(.22, 1, .36, 1); }
 
   /* Controls-row entry: a third group after Build order, same divider. */
-  .tour-controls { padding-left: 24px; border-left: 1px solid var(--line); }
+  .tour-controls { padding-left: 20px; border-left: 1px solid var(--line); }
   .tour-controls[hidden] { display: none; }
   .tour-entry {
     height: 36px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px 0 12px;
@@ -657,3 +657,27 @@
     .tb-fill, .tour-entry, .tc-back, .tc-next, .tc-list li, .te-links :is(button, a) { transition: none; }
     .panelhead, .panel-action { transition: none; }
   }
+
+  /* Flow playback on the map (2026-11-09, after the Stripe-style mockup).
+     Each landed hop gets a step chip on its line (number + the edge's
+     label), the latest one filled with the flow's hue; a small dot marks
+     where each hop starts; whatever the flow never touches steps back. */
+  .ml-canvas g.fchip .fchip-r {
+    fill: var(--surface); stroke: var(--story-hue); stroke-width: 1.3;
+    filter: drop-shadow(0 1px 2px rgba(50, 50, 93, .16));
+  }
+  .ml-canvas g.fchip .fchip-t { font: 600 10px var(--ml-font); fill: var(--ml-ink, var(--ink)); }
+  .ml-canvas g.fchip.now .fchip-r { fill: var(--story-hue); filter: drop-shadow(0 3px 6px color-mix(in srgb, var(--story-hue) 45%, transparent)); }
+  .ml-canvas g.fchip.now .fchip-t { fill: var(--ml-tile-ink, #fff); }
+  .ml-canvas g.fchip.now .badge-c { fill: var(--ml-tile-ink, #fff); }
+  .ml-canvas g.fchip.now .badge-t { fill: var(--story-hue); }
+  .ml-canvas .elabel.inchip { display: none; }
+  .ml-canvas .fstart { fill: var(--story-hue); }
+  .ml-canvas g.fdot .fdot-core { fill: var(--story-hue); }
+  .ml-canvas g.fdot .fdot-halo { fill: var(--story-hue); opacity: .2; }
+  svg.flowing g.node.fout > :not(.nrect) { opacity: .3; }
+  svg.flowing g.node.fout .nrect { filter: none; opacity: .55; }
+  svg.flowing :is(.epath, .elabel).fout { opacity: .25; }
+  /* Edge labels as chips on their line. */
+  .ml-canvas g.echip rect { fill: var(--ml-card); stroke: color-mix(in srgb, var(--ml-wire) 70%, transparent); stroke-width: 1; paint-order: normal; }
+  .ml-canvas g.echip text { font: 500 9.5px var(--ml-font); fill: var(--ml-muted); stroke: none; }
