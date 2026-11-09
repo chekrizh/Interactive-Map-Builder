@@ -13,7 +13,7 @@ SKILL = ROOT / 'plugins' / 'interactive-map' / 'skills' / 'interactive-map'
 sys.path.insert(0, str(SKILL / 'scripts'))
 import render  # noqa: E402
 
-EXAMPLES = {p.stem: json.loads(p.read_text(encoding='utf-8')) for p in sorted((SKILL / 'examples').glob('*.json'))}
+EXAMPLES = {p.stem: render.with_library(json.loads(p.read_text(encoding='utf-8'))) for p in sorted((SKILL / 'examples').glob('*.json'))}
 EXAMPLE = EXAMPLES['fastapi-service']  # the smallest map; broken variants start from it
 NODE = shutil.which('node')
 

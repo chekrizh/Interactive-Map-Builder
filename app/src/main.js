@@ -12,7 +12,7 @@ async function loadDefinition() {
   const inline = document.getElementById('map-definition')?.textContent.trim();
   if (inline) return JSON.parse(inline);
   if (import.meta.env.MODE === 'template') throw new Error('This page has no map. Fill it with scripts/render.py.');
-  const name = new URLSearchParams(location.search).get('map') || 'ml-system';
+  const name = new URLSearchParams(location.search).get('map') || 'fastapi-service';
   const response = await fetch(`/examples/${encodeURIComponent(name)}.json`);
   if (!response.ok) throw new Error(`Example map not found (HTTP ${response.status}).`);
   return response.json();

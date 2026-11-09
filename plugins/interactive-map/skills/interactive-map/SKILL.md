@@ -11,7 +11,7 @@ You build a map by writing one JSON map definition and filling a prebuilt viewer
 
 Start from an example, copy its structure and replace the content. Every section in the examples is read by the viewer.
 
-- `examples/ml-system.json`: a full map with logos, zones, inside scenes and annotations. Use it as the main reference.
+- `examples/kutt-url-shortener.json`: a full map of a real repository (the Kutt URL shortener) in C4 terms: context on the overview, containers and components on the map, node shapes, library icons and logos, four flows, a build order and a tour. Use it as the main reference.
 - `examples/fastapi-service.json`: the smallest complete map, useful for seeing which parts are essential.
 
 - `nodes` and `edges`: the components and the connections between them. `groups`, `zones` and `overview` decide how components cluster and what the big-picture view shows.

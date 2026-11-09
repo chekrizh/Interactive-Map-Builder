@@ -1,6 +1,6 @@
 """Generate the Kutt (URL shortener) map definition as a first C4-style repo map.
 
-Run: python3 evals/maps/build_kutt.py > evals/maps/kutt.json
+Run: python3 evals/maps/build_kutt.py > plugins/interactive-map/skills/interactive-map/examples/kutt-url-shortener.json
 """
 import json
 
