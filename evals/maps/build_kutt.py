@@ -3,6 +3,9 @@
 Run: python3 evals/maps/build_kutt.py > plugins/interactive-map/skills/interactive-map/examples/kutt-url-shortener.json
 """
 import json
+import pathlib
+
+exec((pathlib.Path(__file__).parent / "kutt_insides.py").read_text())  # INSIDES
 
 W, H = 210, 58
 C = {1: 340, 2: 630, 3: 920, 4: 1240, 0: 50}
@@ -311,13 +314,14 @@ d = {
               {"id": "outside-mail", "label": "Outside · email", "hue": "external"}],
     "edges": E, "flows": flows, "buildSteps": build,
     "tourChapters": tour_chapters, "tour": tour,
-    "beatSeconds": 15, "flowBeatSeconds": 15, "insides": {}, "insideMarkers": "",
+    "beatSeconds": 15, "flowBeatSeconds": 15, "insides": INSIDES, "insideMarkers": "",
     "roles": {}, "icons": {}, "logos": {},
     "settings": {"embedded": True, "zoomable": True, "linkTarget": "_top",
                  "recapOrder": ["people", "redirect", "outside", "manage", "data", "background"],
                  "pinnedFlowFraction": 0.5,
                  "appearanceRoles": {"accent": "component", "artifact": "store", "error": "external"}},
     "links": {"projectStructure": "https://github.com/thedevs-network/kutt"},
+    "source": {"repo": "https://github.com/thedevs-network/kutt", "ref": "029da42b2459693681886665589fd9512d6b473c"},
     "layout": {
         "viewBoxes": {"map": [1510, 740], "map0": [1070, 680]},
         "overviewCard": {"width": 270, "height": 240}, "scale": {"x": 1, "y": 1},
@@ -337,6 +341,9 @@ LOGO = {
 for n in nodes:
     if n["id"] in LOGO:
         n["logo"] = LOGO[n["id"]]
+for n in nodes:
+    if n["id"] in INSIDES:
+        n["inside"] = n["id"]
 if "--plain" not in __import__("sys").argv:
     for n in nodes:
         if n["id"] in SHAPE:

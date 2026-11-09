@@ -70,7 +70,15 @@ export function prepareDefinition(input) {
     }
   }
   for (const [id,scene] of Object.entries(d.insides)) {
-    if (!d.layout.insides[id]) fail(`layout.insides.${id} is missing`);
+    if (scene.kind != null) {
+      // Structured scenes are laid out by the viewer; they need data, not geometry.
+      if (scene.kind === 'steps' && !(Array.isArray(scene.steps) && scene.steps.length)) fail(`insides.${id}.steps must be a non-empty list`);
+      else if (scene.kind === 'schema' && !(Array.isArray(scene.tables) && scene.tables.length)) fail(`insides.${id}.tables must be a non-empty list`);
+      else if (!['steps','schema'].includes(scene.kind)) fail(`insides.${id}.kind: ${scene.kind}`);
+      scene.source = d.source;
+      continue;
+    }
+    if (!d.layout.insides?.[id]) fail(`layout.insides.${id} is missing`);
     Object.assign(scene,d.layout.insides[id]);
   }
   for (const e of d.overviewEdges) if (!d.layout.overviewEdges[e.id]) fail(`layout.overviewEdges.${e.id} is missing`);

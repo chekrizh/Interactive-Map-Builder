@@ -28,6 +28,7 @@ Start from an example, copy its structure and replace the content. Every section
   - Find names with `python3 scripts/find_asset.py <word> [<word> ...]`.
   Put logos on technologies and outside services (databases, brokers, cloud services). Leave your own components on role icons so the map stays calm.
 - Your own entries in `icons`, `logos` or `roles` win over the library. A custom logo's `src` must be `/assets/logos/<file>` from this skill's `assets/logos/` folder. A node without a logo shows its icon.
+- `inside` on a node opens a close-up. Prefer the structured kinds, which the viewer lays out itself: `{"kind": "steps", ...}` (a code walkthrough with early exits) or `{"kind": "schema", ...}` (tables or cache keys), plus `title`, `sub` and `cap`. With a top-level `"source": {"repo": "https://github.com/...", "ref": "<commit>"}`, every `code` reference (`path:from-to`) links to those lines. A scene without `kind` is hand-drawn SVG and needs `layout.insides` geometry. The Kutt example has one of each structured kind.
 - `shape` on a node draws its C4 kind: `person`, `external`, `database`, `queue`, `worker` (a pool of parallel workers) or `component` (the default).
 
 ## 2. Render

@@ -42,6 +42,9 @@ Flows are C4 dynamic diagrams: one use case as ordered steps over the elements a
 - Node `shape` shows the C4 kind (see the `interactive-map` skill): `person` for people, `external` for systems outside the boundary, `database` for SQL and document stores, `queue` for message brokers and streams, `worker` only for a pool of parallel workers. Everything else, including schedulers and single background jobs, stays `component` (the default); give a scheduler a clock icon instead.
 - Edges: verb plus protocol as the label.
 - Panels: `what` is the responsibility, `why` is why it exists or what breaks without it, `tools` is the technology and the key files.
+- Inside scenes for 2 to 4 key nodes only: the hot path, the core logic, the main data store. Set top-level `source` to the repository URL and the commit you read, so every code reference links to the exact lines.
+  - `kind: "steps"` for a component with logic: its main function as ordered steps, each with `t`, an optional `d`, `code` as `path:from-to`, `async: true` for hand-offs, and `exit` (`when`, `t`, optional `code`) for early returns and error branches. Read the function before writing steps; one step per decision or side effect, not per line.
+  - `kind: "schema"` for a data store: `tables`, each with `name`, `note`, `code`, optional `ttl`, and `fields` (`n`, `type`, `ref` to another table, `note`). For a cache or key-value store, use key patterns as table names and say what each key holds. Pick the fields a reader needs to follow the flows, and say what is surprising about the data (aggregates, denormalised copies, soft deletes).
 - Flows: the traced use cases. Tour: context first, then each part, then the most important flow.
 
 Then follow the `interactive-map` skill to write the JSON, render and deliver it.

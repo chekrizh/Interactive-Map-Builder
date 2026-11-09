@@ -50,6 +50,9 @@ BROKEN = {
     'recap order with unknown group': lambda d: d['settings']['recapOrder'].append('ghost'),
     'missing id': lambda d: d.pop('id'),
     'unknown node shape': lambda d: d['nodes'][0].update(shape='hexagon'),
+    'steps scene without steps': lambda d: d['insides'].update(x={'kind': 'steps', 'title': 'x', 'steps': []}),
+    'schema scene without tables': lambda d: d['insides'].update(x={'kind': 'schema', 'title': 'x'}),
+    'unknown scene kind': lambda d: d['insides'].update(x={'kind': 'movie', 'title': 'x'}),
 }
 
 

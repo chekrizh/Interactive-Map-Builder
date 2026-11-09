@@ -2,6 +2,7 @@ import './styles/map.css';
 import './styles/ml-chrome.css';
 import './styles/ml-canvas.css';
 import './styles/ml-panel.css';
+import './styles/inside-scenes.css';
 import './styles/local.css';
 import { mount } from './app.js';
 

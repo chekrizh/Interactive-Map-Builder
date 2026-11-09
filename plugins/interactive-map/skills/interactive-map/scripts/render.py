@@ -211,9 +211,24 @@ def problems(d):
         for item in listed(section):
             if item.get(key) not in layout.get(section, {}):
                 found.append(f'layout.{section}.{item.get(key)} is missing')
-    for iid in d['insides']:
-        if iid not in layout.get('insides', {}):
-            found.append(f'layout.insides.{iid} is missing')
+    for iid, scene in d['insides'].items():
+        kind = scene.get('kind') if isinstance(scene, dict) else None
+        if kind is None:  # a hand-drawn SVG scene needs its geometry
+            if iid not in layout.get('insides', {}):
+                found.append(f'layout.insides.{iid} is missing')
+        elif kind == 'steps':
+            if not (isinstance(scene.get('steps'), list) and scene['steps']
+                    and all(isinstance(s, dict) and s.get('t') for s in scene['steps'])):
+                found.append(f'insides.{iid}.steps must be a non-empty list of steps, each with "t"')
+        elif kind == 'schema':
+            if not (isinstance(scene.get('tables'), list) and scene['tables']
+                    and all(isinstance(t, dict) and t.get('name') for t in scene['tables'])):
+                found.append(f'insides.{iid}.tables must be a non-empty list of tables, each with "name"')
+        else:
+            found.append(f'insides.{iid}.kind: {kind!r} is not steps or schema')
+    source = d.get('source')
+    if source is not None and not (isinstance(source, dict) and str(source.get('repo', '')).startswith('https://')):
+        found.append('source.repo must be an https:// repository URL')
     for e in listed('overviewEdges'):
         if e.get('id') not in layout.get('overviewEdges', {}):
             found.append(f'layout.overviewEdges.{e.get("id")} is missing')
