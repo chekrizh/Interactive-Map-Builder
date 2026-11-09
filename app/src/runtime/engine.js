@@ -1551,12 +1551,32 @@ export async function mountEngine(root, definition) {
   const firstFlow = flowPicker.querySelector("[data-flow]");
   if (firstFlow) chooseFlow(firstFlow.dataset.flow);else flowControls.hidden = true;
   const weekSeg = document.getElementById("weekSeg");
+  /* Hover hint naming each build step; .seg clips overflow, so the hint is
+     one fixed element placed under the hovered button. */
+  const stepTip = document.createElement("div");
+  stepTip.className = "steptip";
+  stepTip.hidden = true;
+  weekSeg.closest(".controls").appendChild(stepTip);
+  function showStepTip(b) {
+    stepTip.textContent = b.dataset.tip;
+    stepTip.hidden = false;
+    const r = b.getBoundingClientRect(), w = stepTip.offsetWidth;
+    stepTip.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px";
+    stepTip.style.top = r.bottom + 8 + "px";
+  }
+  function hideStepTip() { stepTip.hidden = true; }
   /* Pinned mode: students can revisit earlier steps but never look ahead,
      and "Full system" (= everything, including the future) is not offered. */
   WEEKS.map((_, i) => [String(i), i === 0 ? definition.ui.fullSystem : String(i)]).filter(([v]) => !PINNED || Number(v) >= 1 && Number(v) <= PINNED).forEach(([v, t]) => {
     const b = document.createElement("button");
     b.dataset.w = v;
     b.textContent = t;
+    if (v !== "0" && WEEKS[v]?.title) {
+      b.dataset.tip = v + " · " + WEEKS[v].title;
+      b.setAttribute("aria-label", "Step " + b.dataset.tip);
+      for (const ev of ["mouseenter", "focus"]) scope.listen(b, ev, () => showStepTip(b));
+      for (const ev of ["mouseleave", "blur", "click"]) scope.listen(b, ev, hideStepTip);
+    }
     scope.listen(b, "click", () => {
       if (level !== 1) showLevel(1);
       /* The inside overlay covers the map without changing level, so
