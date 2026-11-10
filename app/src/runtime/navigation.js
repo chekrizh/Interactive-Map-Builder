@@ -235,6 +235,15 @@ function setWeek(w, opts) {
    tools live only in the hub). */
 function setTheme(t) {
   document.documentElement.dataset.theme = t;
+  syncThemeLabel();
+}
+/* The switch says what a click will do, so it follows every change of theme, not only its own. */
+function syncThemeLabel() {
+  const toggle = document.getElementById("themeToggle");
+  if (!toggle) return;
+  const rootEl = document.documentElement;
+  const dark = rootEl.dataset.theme ? rootEl.dataset.theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  toggle.setAttribute("aria-label", dark ? t("themeToLight") : t("themeToDark"));
 }
 /* ---------------- controls ---------------- */
 
@@ -308,7 +317,6 @@ const themeToggle = document.getElementById("themeToggle");
 if (themeToggle) {
   const rootEl = document.documentElement;
   const isDark = () => rootEl.dataset.theme ? rootEl.dataset.theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const syncThemeLabel = () => themeToggle.setAttribute("aria-label", isDark() ? t("themeToLight") : t("themeToDark"));
   const saved = env.store.get("imap-theme");
   if (saved === "dark" || saved === "light") rootEl.dataset.theme = saved;
   syncThemeLabel();
