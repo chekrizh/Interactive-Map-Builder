@@ -142,7 +142,7 @@ The skill triggers on its own. It is also available as `/interactive-map:interac
 npx skills add chekrizh/Interactive-Map-Builder --skill '*'
 ```
 
-Install both skills: `interactive-map-repo` reads the repository and `interactive-map` renders the map. Run the same command again to update.
+Install both skills: `interactive-map-repo` reads the repository and `interactive-map` renders the map. `npx skills check` shows whether a newer version is out and `npx skills update` installs it; there is no automatic update.
 
 <details>
 <summary><b>Other clients</b> (no automatic updates; install the new copy again)</summary>
