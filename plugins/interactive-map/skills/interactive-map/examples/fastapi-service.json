@@ -7,39 +7,12 @@
       "mapDescription": "A request reaches FastAPI, Pydantic validates it, and the service returns either a greeting or a validation error.",
       "legend": "<span class=\"lg\"><span class=\"sw\" style=\"--legend-hue:var(--h-input)\"></span>Request</span><span class=\"lg\"><span class=\"sw\" style=\"--legend-hue:var(--h-service)\"></span>Service</span><span class=\"lg\"><span class=\"sw\" style=\"--legend-hue:var(--h-output)\"></span>Response</span><span class=\"lg\"><span class=\"sw\" style=\"--legend-hue:var(--h-error)\"></span>Error</span>",
       "completionLessons": "<li>How a request becomes a response</li><li>Why validation runs before greeting code</li>",
-      "tourEntry": "Take the guided tour · 2 min",
-      "completionCount": "Tour complete · 3 steps",
       "completionIntro": "You followed a valid request from the client to the response."
     }
   },
   "panels": {
     "introHtml": "<div class=\"p-eyebrow\">Start here</div><h2>A tiny API, one request at a time</h2><p style=\"margin-top:8px\">This map follows a small FastAPI service with one endpoint: <code>POST /greet</code>.</p><p>A valid name gets a greeting. A missing name gets a validation error before the greeting function runs.</p><h3>Try it</h3><ul class=\"newlist\"><li>Choose a flow to read all its steps.</li><li>Press Play to watch the request move.</li><li>Open a component to see what it does.</li></ul><div class=\"panel-actions\"><button type=\"button\" class=\"panel-action\" id=\"gofull\">Open full map</button></div>",
-    "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>One endpoint, two outcomes</h2><p style=\"margin-top:8px\">The service validates a JSON body and returns either a greeting or an HTTP 422 error.</p><h3>How to read it</h3><p>Follow the arrows from left to right. The two flows show valid and invalid requests.</p>",
-    "stageEyebrow": "Part",
-    "stageMembers": "Components in this part",
-    "stageNote": "The flow follows the connections between these parts.",
-    "decision": "Why this choice",
-    "repository": "Example code location",
-    "course": "Learning note",
-    "what": "What it does",
-    "why": "Why it matters",
-    "tools": "Technology",
-    "newNodes": "Components added",
-    "runnable": "Example command",
-    "pinnedNote": "This view shows the service at this step.",
-    "buildNote": "The steps build the service from request model to endpoint.",
-    "fileSuffix": " · File",
-    "nodeBuildLabel": "Build step {step} of {total}",
-    "nodeCourseLabel": "Example step {step}",
-    "buildLabel": "Build order · Step {step} of {total}",
-    "courseLabel": "Service · Step {step}",
-    "buildRole": "service"
-  },
-  "ui": {
-    "fullSystem": "Full service",
-    "pinnedTitle": "Step {step}: {title}",
-    "tourEntry": "Take the guided tour · 2 min",
-    "flowComplete": "Flow complete. Choose another request or inspect a component."
+    "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>One endpoint, two outcomes</h2><p style=\"margin-top:8px\">The service validates a JSON body and returns either a greeting or an HTTP 422 error.</p><h3>How to read it</h3><p>Follow the arrows from left to right. The two flows show valid and invalid requests.</p>"
   },
   "groups": {
     "request": {
@@ -112,7 +85,7 @@
       "id": "client",
       "group": "request",
       "cat": "input",
-      "week": 1,
+      "step": 1,
       "icon": "client",
       "tool": "Browser or curl",
       "concept": "API client",
@@ -124,7 +97,7 @@
       "id": "endpoint",
       "group": "service",
       "cat": "service",
-      "week": 1,
+      "step": 1,
       "icon": "endpoint",
       "tool": "FastAPI",
       "concept": "POST /greet",
@@ -136,7 +109,7 @@
       "id": "validation",
       "group": "service",
       "cat": "service",
-      "week": 2,
+      "step": 2,
       "icon": "validation",
       "tool": "Pydantic",
       "concept": "Input validation",
@@ -148,7 +121,7 @@
       "id": "greeting",
       "group": "service",
       "cat": "service",
-      "week": 3,
+      "step": 3,
       "icon": "greeting",
       "tool": "greet(name)",
       "concept": "Greeting function",
@@ -160,7 +133,7 @@
       "id": "success",
       "group": "response",
       "cat": "output",
-      "week": 3,
+      "step": 3,
       "icon": "success",
       "tool": "HTTP 200 · JSON",
       "concept": "Greeting response",
@@ -172,7 +145,7 @@
       "id": "invalid",
       "group": "response",
       "cat": "error",
-      "week": 2,
+      "step": 2,
       "icon": "invalid",
       "tool": "HTTP 422",
       "concept": "Validation response",
@@ -181,7 +154,6 @@
       "tools": "FastAPI request validation."
     }
   ],
-  "zones": [],
   "edges": [
     {
       "id": "client-endpoint",
@@ -350,9 +322,6 @@
       "why": "The client can now use the response in its own interface."
     }
   ],
-  "beatSeconds": 15,
-  "flowBeatSeconds": 15,
-  "insides": {},
   "roles": {
     "input": {
       "label": "Request",
@@ -391,26 +360,6 @@
     "success": "<path d=\"M4 3h8l4 4v10H4zM12 3v5h4\"/>",
     "invalid": "<path d=\"M10 2 19 18H1z\"/><path d=\"M10 7v5m0 3h.1\"/>"
   },
-  "logos": {},
-  "settings": {
-    "embedded": true,
-    "zoomable": true,
-    "linkTarget": "_top",
-    "recapOrder": [
-      "request",
-      "service",
-      "response"
-    ],
-    "pinnedFlowFraction": 0.5,
-    "appearanceRoles": {
-      "accent": "service",
-      "artifact": "input",
-      "error": "error"
-    }
-  },
-  "links": {
-    "projectStructure": "#"
-  },
   "layout": {
     "viewBoxes": {
       "map": [
@@ -425,10 +374,6 @@
     "overviewCard": {
       "width": 260,
       "height": 220
-    },
-    "scale": {
-      "x": 1,
-      "y": 1
     },
     "nodes": {
       "client": {
@@ -513,8 +458,6 @@
         "y": 147,
         "anchor": "middle"
       }
-    },
-    "annotations": [],
-    "insideMarkers": ""
+    }
   }
 }

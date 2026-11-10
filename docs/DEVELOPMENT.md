@@ -16,7 +16,8 @@ plugins/interactive-map/
     assets/library/                 icons, logos and role presets, split into files under 256 KB
     examples/kutt-url-shortener.json  the main example: a C4 map of a real repo
     examples/fastapi-service.json   the smallest complete map; the dev map
-    scripts/render.py               map JSON -> HTML; fills names from the library
+    scripts/render.py               map JSON -> HTML; fills defaults and names from the library
+    scripts/defaults.py             what a map may leave out: every interface string (English), settings, timings
     scripts/contract.py             fields the viewer reads, the text contract and the HTML sanitizer
     scripts/find_asset.py           search the library for icon, logo and role names
   skills/interactive-map-repo/      repo mode: how to read a repository and model it in C4 terms
@@ -32,8 +33,9 @@ docs/readme/                        images for the README
 ```bash
 cd app
 npm install
-npm run dev              # examples/fastapi-service.json, live. Maps that rely on the library
-                         # (the Kutt example) need render.py, which fills icons, logos and roles
+npm run dev              # examples/fastapi-service.json, live (?map=kutt-url-shortener for Kutt).
+                         # Examples are served through render.py --json, so defaults, library
+                         # assets and the sanitizer apply exactly as in a rendered page
 npm run build:template   # rebuilds plugins/interactive-map/skills/interactive-map/assets/viewer/
 ```
 
@@ -67,4 +69,4 @@ Ask for a map, for example "Draw an interactive map of how this repository works
 - **Prototype.** Only the repository mode is implemented, and its method is still being tuned. The modes for a pile of sources and for a research question are planned.
 - **Geometry is manual.** Every node, edge path, zone and overview card needs exact coordinates; there is no automatic layout yet.
 - **Text is sanitised at build time, not in the page.** `scripts/contract.py` holds the text contract: labels are plain text (rejected if they carry markup), every other text field keeps a small HTML subset and loses the rest, SVG fields keep drawing elements only, and URLs, colours and ids are checked for their shape. The page trusts what `render.py` wrote, so a definition mounted without `render.py` (the dev server) is not sanitised.
-- **Size.** A rendered page is about 450 KB, of which the font is about 220 KB. A model cannot retype it into a chat artifact, so the client has to show the file itself.
+- **Size.** A rendered page is about 340 KB, of which the font (WOFF2, all glyphs) is about 72 KB. A model cannot retype it into a chat artifact, so the client has to show the file itself.

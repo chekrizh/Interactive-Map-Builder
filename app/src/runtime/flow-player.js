@@ -120,7 +120,6 @@ async function playStory(key, opts) {
   const quiet = Boolean(opts && opts.quiet);
   const wide = Boolean(opts && opts.wide);
   const from = opts && opts.from || 0;
-  if (!quiet) ctx.T()?.step("flow", key);
   if (ctx.level !== 1) ctx.showLevel(1);
   ctx.closeInside();
   ctx.clearStory();
@@ -137,7 +136,7 @@ async function playStory(key, opts) {
   if (!quiet) {
     ctx.chooseFlow(key);
     ctx.panelHTML(`
-        <div class="p-eyebrow">${s.kind === "failure" ? "Failure flow" : "Flow"}</div>
+        <div class="p-eyebrow">${ctx.t(s.kind === "failure" ? "failureFlowEyebrow" : "flowEyebrow")}</div>
         <h2>${s.title}</h2>
         <p class="p-sub">${s.desc}</p>
         <ol class="steps" id="stepList"></ol>
@@ -178,10 +177,6 @@ async function playStory(key, opts) {
     const hop = s.hops[i];
     const landed = i < from; // part of an earlier slice: draw it, no motion
 
-    if (ctx.PINNED) {
-      const d = ctx.edgeEls[hop.e].def;
-      if (ctx.nodeEls[d.from].def.week > ctx.PINNED || ctx.nodeEls[d.to].def.week > ctx.PINNED) break;
-    }
     /* One hue per flow, except where a flow turns: a hop marked bad drops
        the healthy hue for the flow's own, which is how the failure flow
        goes from routine blue to alert red at the step where the system
@@ -293,12 +288,9 @@ async function playStory(key, opts) {
   } else {
     const note = ctx.document.createElement("p");
     note.className = "p-note";
-    note.textContent = ctx.definition.ui.flowComplete;
+    note.textContent = ctx.t("flowComplete");
     ctx.panelBody.appendChild(note);
   }
-  ctx.T()?.done("flow", key);
-  ctx.T()?.milestone(s.completionMilestone || "flow_complete");
-  if (s.markSeenOnComplete) ctx.T()?.seen();
   /* The panel scrolls inside a fixed-height column now, so the ending lands
      below the fold; bring it up the same way each step does. */
   ctx.revealInPanel(ctx.panelBody.lastElementChild);
@@ -319,7 +311,7 @@ function chooseFlow(key, { preview = false } = {}) {
   });
   if (preview) {
     const story = ctx.STORIES[key];
-    const label = story.kind === "failure" ? "Failure flow" : "Flow";
+    const label = ctx.t(story.kind === "failure" ? "failureFlowEyebrow" : "flowEyebrow");
     const steps = story.hops.map((hop, index) => `<li><span class="n">${index + 1}</span>${hop.t}${hop.note ? `<span class="note">${hop.note}</span>` : ""}</li>`).join("");
     ctx.panelHTML(`<div class="p-eyebrow">${label}</div><h2>${story.title}</h2><p class="p-sub">${story.desc}</p><ol class="steps">${steps}</ol>`, story.hue);
     ctx.openPanel();

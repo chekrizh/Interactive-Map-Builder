@@ -9,7 +9,6 @@ function openInside(nodeId) {
   const n = ctx.nodeEls[nodeId].def;
   const sc = ctx.INSIDES[n.inside];
   if (!sc) return;
-  ctx.T()?.step("inside", nodeId);
   ctx.document.getElementById("insideTitle").textContent = sc.title;
   // Subtitle and caption are rich text, like every other text field that is not a label.
   ctx.document.getElementById("insideSub").innerHTML = sc.sub || "";
@@ -134,36 +133,33 @@ function renderGroup(g) {
     return `<li><strong>${n.concept}</strong>: ${n.tool}</li>`;
   }).join("");
   ctx.panelHTML(`
-      <div class="p-eyebrow">${ctx.definition.panels.stageEyebrow}</div>
+      <div class="p-eyebrow">${ctx.t("stageEyebrow")}</div>
       <h2>${G.title}</h2>
       <p style="margin-top:8px">${G.text}</p>
-      <h3>${ctx.definition.panels.stageMembers}</h3><ul class="newlist">${items}</ul>
-      <p class="p-note" style="margin-top:12px">${ctx.definition.panels.stageNote}</p>
+      <h3>${ctx.t("stageMembers")}</h3><ul class="newlist">${items}</ul>
+      <p class="p-note" style="margin-top:12px">${ctx.t("stageNote")}</p>
     `, G.huekey);
   ctx.openPanel();
 }
 
 function renderNode(id) {
   const n = ctx.nodeEls[id].def;
-  const decision = n.decision ? `<h3>${ctx.definition.panels.decision}</h3><div class="decision">${n.decision}</div>` : "";
-  const look = n.inside ? `<div class="panel-actions"><button type="button" class="panel-action" id="lookInside">Look inside<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button></div>` : "";
+  const decision = n.decision ? `<h3>${ctx.t("decision")}</h3><div class="decision">${n.decision}</div>` : "";
+  const look = n.inside ? `<div class="panel-actions"><button type="button" class="panel-action" id="lookInside">${ctx.t("lookInside")}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button></div>` : "";
 
   const paths = ctx.filesView?.available ? ctx.filesView.pathsFor(id) : [];
-  const repo = paths.length ? `<h3>${ctx.definition.panels.repository}</h3>
-      <div class="panel-actions xrepo">${paths.map(p => `<button type="button" class="panel-action" data-files-path="${attr(p)}" aria-label="Show ${attr(p)} in the project files"><span class="mono">${p}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>`).join("")}</div>` : n.structure ? `<h3>${ctx.definition.panels.repository}</h3>
-      <div class="panel-actions xrepo"><a class="panel-action" href="${attr(ctx.structureHref(n.structure))}"${ctx.LINK_TARGET} aria-label="Open ${attr(n.structure)} in the project layout"><span class="mono">${n.structure}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a></div>` : "";
+  const repo = paths.length ? `<h3>${ctx.t("repository")}</h3>
+      <div class="panel-actions xrepo">${paths.map(p => `<button type="button" class="panel-action" data-files-path="${attr(p)}" aria-label="${attr(ctx.t("showInFiles", { path: p }))}"><span class="mono">${p}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>`).join("")}</div>` : "";
 
-  const bnote = ctx.BOOTCAMP && n.bootcampNote ? `<h3>${ctx.definition.panels.course}</h3><div class="bnote">${n.bootcampNote}</div>` : "";
   ctx.panelHTML(`
-      <div class="p-eyebrow">${ctx.catName(n.cat)}${n.art ? ctx.definition.panels.fileSuffix : ""}</div>
+      <div class="p-eyebrow">${ctx.catName(n.cat)}${n.art ? ctx.t("fileSuffix") : ""}</div>
       <h2>${ctx.viewMode === "tools" ? n.tool : n.concept}</h2>
       <p class="p-sub">${ctx.viewMode === "tools" ? n.concept : n.tool}</p>
-      <div class="p-chips"><span class="pchip">${ctx.format(ctx.BOOTCAMP ? ctx.definition.panels.nodeCourseLabel : ctx.definition.panels.nodeBuildLabel, {step: n.week, total: ctx.WEEKS.length - 1})}</span></div>
-      <h3>${ctx.definition.panels.what}</h3><p>${n.what}</p>
-      <h3>${ctx.definition.panels.why}</h3><p>${n.why}</p>
-      ${bnote}
+      <div class="p-chips"><span class="pchip">${ctx.t("nodeBuildStep", {step: n.step, total: ctx.WEEKS.length - 1})}</span></div>
+      <h3>${ctx.t("what")}</h3><p>${n.what}</p>
+      <h3>${ctx.t("why")}</h3><p>${n.why}</p>
       ${decision}
-      <h3>${ctx.definition.panels.tools}</h3><p class="toolline">${n.tools}</p>
+      <h3>${ctx.t("tools")}</h3><p class="toolline">${n.tools}</p>
       ${repo}
       ${look}
     `, n.cat);
@@ -180,14 +176,14 @@ function renderWeek(w) {
     return `<li><strong>${n.concept}</strong>: ${n.tool}</li>`;
   }).join("");
   ctx.panelHTML(`
-      <div class="p-eyebrow">${ctx.format(ctx.BOOTCAMP ? ctx.definition.panels.courseLabel : ctx.definition.panels.buildLabel, {step: w, total: ctx.WEEKS.length - 1})}</div>
+      <div class="p-eyebrow">${ctx.t("buildStepTitle", {step: w, total: ctx.WEEKS.length - 1})}</div>
       <h2>${d.title}</h2>
-      <p style="margin-top:8px">${ctx.BOOTCAMP && d.you ? d.you : d.text}</p>
-      <h3>${ctx.definition.panels.newNodes}</h3><ul class="newlist">${items}</ul>
-      <h3>${ctx.definition.panels.decision}</h3><div class="decision">${d.decision}</div>
-      <h3>${ctx.definition.panels.runnable}</h3><pre class="cmd"><code>${d.runnable}</code></pre>
-      <p class="p-note">${ctx.PINNED ? ctx.definition.panels.pinnedNote : ctx.definition.panels.buildNote}</p>
-    `, ctx.definition.panels.buildRole);
+      <p style="margin-top:8px">${d.text}</p>
+      <h3>${ctx.t("newNodes")}</h3><ul class="newlist">${items}</ul>
+      <h3>${ctx.t("decision")}</h3><div class="decision">${d.decision}</div>
+      <h3>${ctx.t("runnable")}</h3><pre class="cmd"><code>${d.runnable}</code></pre>
+      <p class="p-note">${ctx.t("buildNote")}</p>
+    `, ctx.definition.settings.buildRole);
   ctx.openPanel();
 }
 

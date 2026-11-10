@@ -22,13 +22,13 @@ function resumeStep() {
 function refreshTourEntry() {
   const r = ctx.resumeStep(),
     done = Boolean(ctx.readTour().done);
-  ctx.tourBtnText.textContent = r ? "Resume the tour · step " + r : ctx.definition.ui.tourEntry;
-  ctx.document.getElementById("tourLabel").textContent = done ? "Guided tour" : "New here?";
+  ctx.tourBtnText.textContent = r ? ctx.t("tourResume", { step: r }) : ctx.t("tourEntry");
+  ctx.document.getElementById("tourLabel").textContent = ctx.t(done ? "tourTitle" : "tourNew");
 }
 
 function timeLeft(n) {
   const secs = ctx.TOUR.slice(n - 1).reduce((t, b) => t + (b.flow ? ctx.FLOW_BEAT_SECONDS : ctx.BEAT_SECONDS), 0);
-  return secs < 60 ? "less than a minute left" : "about " + Math.round(secs / 60) + " min left";
+  return secs < 60 ? ctx.t("tourLessThanMinute") : ctx.t("tourMinutesLeft", { minutes: Math.round(secs / 60) });
 }
 
 
@@ -44,13 +44,13 @@ function renderTourBar(n) {
     fill.style.width = i < cur ? "100%" : now ? pos / ctx.TOUR_CHAPTERS[i].span * 100 + "%" : "0%";
     fill.style.background = now ? ctx.beatHue(b) : "";
   });
-  ctx.tourStatus.textContent = b ? `Step ${n} of ${ctx.TOUR_TOTAL} · ${ctx.timeLeft(n)}` : "Complete";
+  ctx.tourStatus.textContent = b ? ctx.t("tourStatus", { step: n, total: ctx.TOUR_TOTAL, left: ctx.timeLeft(n) }) : ctx.t("tourComplete");
 }
 
 function renderTourCard(n) {
   const b = ctx.TOUR[n - 1];
   ctx.tourCard.style.setProperty("--tc-hue", ctx.beatHue(b));
-  ctx.tcEyebrow.textContent = `${ctx.TOUR_CHAPTERS[b.ch].name} · ${n} of ${ctx.TOUR_TOTAL}`;
+  ctx.tcEyebrow.textContent = ctx.t("tourCardCount", { chapter: ctx.TOUR_CHAPTERS[b.ch].name, step: n, total: ctx.TOUR_TOTAL });
   ctx.tcTitle.textContent = b.title;
   ctx.renderTourText(b);
   ctx.tcScroll.scrollTop = 0;
@@ -197,7 +197,7 @@ function renderPlayer() {
     preventScroll: true
   });
   const last = Boolean(b) && ctx.tour.step >= ctx.TOUR.length && !(b.flow && ctx.tour.phase <= ctx.edgeCount(b)) && ctx.tour.phase >= ctx.stageCount(b);
-  ctx.tcNext.textContent = ctx.tour.step === 1 ? "Begin" : last ? "Finish" : "Next";
+  ctx.tcNext.textContent = ctx.t(ctx.tour.step === 1 ? "tourBegin" : last ? "tourFinish" : "tourNext");
   // One segment per Next in this step (and one for "Why it matters"), filled as the visitor goes.
   const total = !b ? 0 : b.flow ? ctx.edgeCount(b) + 1 : ctx.stageCount(b);
   const done = Math.min(ctx.tour.phase, total);
@@ -210,7 +210,7 @@ function renderPlayer() {
   }));
   if (total) {
     ctx.tcCount.setAttribute("role", "progressbar");
-    ctx.tcCount.setAttribute("aria-label", "Progress in this step");
+    ctx.tcCount.setAttribute("aria-label", ctx.t("tourProgress"));
     ctx.tcCount.setAttribute("aria-valuemin", "0");
     ctx.tcCount.setAttribute("aria-valuemax", String(total));
     ctx.tcCount.setAttribute("aria-valuenow", String(done));
@@ -465,7 +465,6 @@ function showBeat(n, opts) {
   ctx.renderTourCard(n);
   ctx.renderPlayer();
   ctx.sizeTourCard();
-  ctx.T()?.step("tour", "step-" + n, n);
   ctx.selected = null;
   ctx.NODES.forEach(x => ctx.nodeEls[x.id].g.classList.remove("sel"));
   if (b.level === 0) {
@@ -492,7 +491,7 @@ function showBeat(n, opts) {
    Esc later leaves native full screen, the tour simply carries on in-frame
    on the same beat. Deep links (?tour=1) have no gesture and stay in-frame. */
 function startTour(n, opts) {
-  if (ctx.tour.active || ctx.PINNED || ctx.BOOTCAMP) return;
+  if (ctx.tour.active) return;
   const wantNative = Boolean(opts && opts.native) && Boolean(ctx.stagecard.requestFullscreen);
   const wasNative = ctx.document.fullscreenElement === ctx.stagecard;
   if (ctx.exploreNudge) ctx.exploreNudge.hide();
@@ -513,7 +512,6 @@ function startTour(n, opts) {
     wasFs
   };
   ctx.tour.active = true;
-  ctx.T()?.milestone("tour_started");
   ctx.clearStory();
   ctx.stagecard.classList.add("touring", "fs-fixed");
   ctx.applyFsDom(true);
@@ -616,8 +614,6 @@ function showEnding() {
   }
   ctx.tourEnd.hidden = false;
   ctx.tourEnd.scrollTop = 0;
-  ctx.T()?.milestone("tour_complete");
-  ctx.T()?.seen();
   ctx.teTitle.focus({
     preventScroll: true
   });
@@ -629,12 +625,6 @@ function showEnding() {
 function exitTour(toFullMap) {
   if (!ctx.tour.active) return;
   const atEnd = ctx.tour.atEnd;
-  // Where the visitor left: the step travels with the milestone.
-  if (!atEnd) ctx.T()?.track("tool_milestone", {
-    milestone: "tour_exit",
-    tool_area: "tour",
-    tool_step: "step-" + ctx.tour.step
-  });
   ctx.clearStory();
   ctx.tour.camToken++;
   if (ctx.document.fullscreenElement) ctx.document.exitFullscreen().catch(() => {});

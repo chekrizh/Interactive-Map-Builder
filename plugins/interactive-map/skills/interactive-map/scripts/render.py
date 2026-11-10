@@ -3,7 +3,9 @@
 
 usage: python3 render.py MAP.json OUT.html [--repo-dir DIR]
        python3 render.py - OUT.html [--repo-dir DIR]  < map.json
-Checks that the map holds together (the same rules the page applies before drawing),
+       python3 render.py MAP.json - --json  (the checked, filled-in definition, for the viewer's dev server)
+Fills in what the map leaves out (interface strings, settings, timings: see defaults.py), checks
+that the map holds together (the same rules the page applies before drawing),
 applies the text contract (labels are plain text; other text may use a small HTML subset,
 anything else is removed), turns /assets/... paths into data: URIs, builds one self-contained
 page from the viewer in assets/viewer/ (its script, styles and font inlined, so the page needs
@@ -21,6 +23,7 @@ import pathlib
 import sys
 
 import contract
+import defaults
 
 SKILL = pathlib.Path(__file__).resolve().parent.parent
 ASSETS = SKILL / 'assets'
@@ -28,13 +31,15 @@ VIEWER = ASSETS / 'viewer'
 PLACEHOLDER = '<script type="application/json" id="map-definition"></script>'
 NUMBER = (int, float)
 SHAPES = ('component', 'person', 'worker', 'database', 'queue', 'external')
-# Sections the viewer reads, with the JSON type each must have.
+# Sections the viewer reads, with the JSON type each must have (after defaults are filled in).
 SECTIONS = {
     'id': str, 'page': dict, 'panels': dict, 'ui': dict, 'roles': dict, 'logos': dict, 'settings': dict,
     'layout': dict, 'nodes': list, 'edges': list, 'zones': list, 'groups': dict, 'overview': list,
     'overviewEdges': list, 'flows': dict, 'buildSteps': list, 'insides': dict, 'icons': dict,
-    'tourChapters': list, 'tour': list, 'beatSeconds': NUMBER, 'flowBeatSeconds': NUMBER, 'links': dict,
+    'tourChapters': list, 'tour': list, 'beatSeconds': NUMBER, 'flowBeatSeconds': NUMBER,
 }
+PLUGIN = SKILL.parent.parent / '.claude-plugin' / 'plugin.json'
+
 
 
 def assets_in(value):
@@ -119,6 +124,7 @@ def with_library(d):
     used |= {z.get('hue') for z in d.get('zones', []) if isinstance(z, dict)}
     used |= {f.get('hue') for f in (d.get('flows') or {}).values() if isinstance(f, dict)}
     used |= set(((d.get('settings') or {}).get('appearanceRoles') or {}).values())
+    used.add((d.get('settings') or {}).get('buildRole'))
     lib = library('roles')
     for key in [k for k in lib if k in used and k not in roles]:
         roles[key] = lib[key]
@@ -169,9 +175,12 @@ def problems(d):
         ref(d['icons'], n.get('icon'), f'node {nid}.icon')
         if n.get('shape') is not None and n['shape'] not in SHAPES:
             found.append(f'node {nid}.shape: {n["shape"]!r} is not one of {", ".join(SHAPES)}')
-        week = n.get('week')
-        if not (isinstance(week, int) and 0 <= week < len(steps) and steps[week]):
-            found.append(f'node {nid}.week: no build step {week!r}')
+        if 'week' in n and 'step' not in n:
+            found.append(f'node {nid}.week was renamed: write "step": {n["week"]!r}')
+            continue
+        step = n.get('step')
+        if not (isinstance(step, int) and 0 <= step < len(steps) and steps[step]):
+            found.append(f'node {nid}.step: no build step {step!r}')
     for e in listed('edges'):
         ref(nodes, e.get('from'), f'edge {e.get("id")}.from')
         ref(nodes, e.get('to'), f'edge {e.get("id")}.to')
@@ -214,8 +223,9 @@ def problems(d):
             found.append(f'tourChapters[{index}]: must contain at least one tour step')
     for g in d['settings'].get('recapOrder', []):
         ref(groups, g, 'settings.recapOrder')
-    if not isinstance(d['settings'].get('appearanceRoles'), dict):
-        found.append('settings.appearanceRoles is missing')
+    for key, role in d['settings'].get('appearanceRoles', {}).items():
+        ref(d['roles'], role, f'settings.appearanceRoles.{key}')
+    ref(d['roles'], d['settings'].get('buildRole'), 'settings.buildRole')
 
     layout = d['layout']
     for box in ('map', 'map0'):
@@ -267,19 +277,10 @@ def problems(d):
     if source is not None and not (isinstance(source, dict) and contract.SAFE_HREF.match(str(source.get('repo', '')))
                                    and str(source['repo']).startswith('https://')):
         found.append('source.repo must be an https:// repository URL')
-    for key, url in d['links'].items():
-        if not (isinstance(url, str) and contract.SAFE_HREF.match(url)):
-            found.append(f'links.{key} must be an https:// URL, got {url!r}')
-    next_url = d['page'].get('slots', {}).get('nextToolUrl') if isinstance(d['page'].get('slots'), dict) else None
-    if next_url is not None and not (isinstance(next_url, str) and contract.SAFE_HREF.match(next_url)):
-        found.append(f'page.slots.nextToolUrl must be an https:// URL or #, got {next_url!r}')
     for key, logo in d['logos'].items():
         src = logo.get('src') if isinstance(logo, dict) else None
         if not (isinstance(src, str) and (src.startswith('/assets/') or src.startswith('data:image/'))):
             found.append(f'logos.{key}.src must be /assets/logos/<file> from this skill, got {str(src)[:40]!r}')
-    target = d['settings'].get('linkTarget')
-    if target is not None and target not in contract.LINK_TARGETS:
-        found.append(f'settings.linkTarget must be one of {", ".join(contract.LINK_TARGETS)}, got {target!r}')
     # Ids end up in attributes, CSS variables and selectors, so they keep to a safe alphabet.
     for section in contract.ID_LISTS:
         for item in listed(section):
@@ -303,8 +304,14 @@ def problems(d):
 
 def warnings(d):
     """What render.py changes or the viewer ignores: worth fixing, but the page still builds."""
-    notes = [f'{path} is not read by the viewer and is dropped; remove it or move its content to a field the viewer shows'
-             for path in contract.unknown_fields(d)]
+    def note(path):
+        key = path.split('.')[-1]
+        if path.startswith('panels.') and key in defaults.UI:
+            return f'{path} moved to ui.{key}; drop it unless you want different wording'
+        if contract.retired(path):
+            return f'{path} is no longer used ({contract.retired(path)}); remove it'
+        return f'{path} is not read by the viewer and is dropped; remove it or move its content to a field the viewer shows'
+    notes = [note(path) for path in contract.unknown_fields(d)]
     return notes + contract.check_text(d)[1]
 
 
@@ -391,8 +398,8 @@ def viewer_page():
     page = (VIEWER / 'index.html').read_text(encoding='utf-8')
     script = (VIEWER / 'viewer.js').read_text(encoding='utf-8').replace('</script', '<\\/script')
     styles = (VIEWER / 'viewer.css').read_text(encoding='utf-8')
-    for font in VIEWER.glob('*.ttf'):
-        uri = 'data:font/ttf;base64,' + base64.b64encode(font.read_bytes()).decode()
+    for font in VIEWER.glob('*.woff2'):
+        uri = 'data:font/woff2;base64,' + base64.b64encode(font.read_bytes()).decode()
         styles = styles.replace(f'url("./{font.name}")', f'url("{uri}")')
     for tag, inline in (('<script type="module" crossorigin src="./viewer.js"></script>', f'<script type="module">{script}</script>'),
                         ('<link rel="stylesheet" crossorigin href="./viewer.css">', f'<style>{styles}</style>')):
@@ -402,9 +409,28 @@ def viewer_page():
     return page
 
 
+def plugin_version():
+    try:
+        return json.loads(PLUGIN.read_text(encoding='utf-8')).get('version', 'unknown')
+    except (OSError, ValueError):
+        return 'unknown'
+
+
+def complete(definition):
+    """The authored map plus everything render.py fills in: defaults, library assets, interface roles."""
+    d = defaults.with_defaults(definition)
+    d = with_library(d)
+    if isinstance(d, dict) and isinstance(d.get('settings'), dict) and isinstance(d.get('roles'), dict):
+        d = defaults.with_appearance(d, d['roles'])
+        d = with_library(d)  # the interface roles may name a library preset no node uses
+    return d
+
+
 def render(template, definition):
     if template.count(PLACEHOLDER) != 1:
         raise ValueError('template must contain exactly one empty map-definition placeholder')
+    # Which plugin built the page, so a map file can be traced back to its viewer.
+    template = template.replace('<meta charset="UTF-8">', f'<meta charset="UTF-8"><meta name="generator" content="interactive-map {plugin_version()}">', 1)
     # < keeps "</script>" and "<!--" inside authored strings from closing the tag early.
     payload = json.dumps(with_data_uris(definition), ensure_ascii=False).replace('<', '\\u003c')
     return template.replace(PLACEHOLDER, PLACEHOLDER.replace('></', f'>{payload}</'))
@@ -415,13 +441,14 @@ def main(argv):
     parser.add_argument('map')
     parser.add_argument('out')
     parser.add_argument('--repo-dir', help='checkout of the mapped repository; code references must exist in it')
+    parser.add_argument('--json', action='store_true', help='write the definition the page would carry, as JSON, instead of the page')
     args = parser.parse_args(argv[1:])
     source = sys.stdin.read() if args.map == '-' else pathlib.Path(args.map).read_text(encoding='utf-8')
     try:
         definition = json.loads(source)
     except json.JSONDecodeError as error:
         sys.exit(f'the map is not valid JSON: {error}')
-    definition = with_library(definition)
+    definition = complete(definition)
     found = problems(definition)
     if not found and args.repo_dir:
         found = repo_problems(definition, args.repo_dir)
@@ -431,6 +458,13 @@ def main(argv):
     if notes:
         print('warnings (the page was built anyway):\n- ' + '\n- '.join(notes), file=sys.stderr)
     definition = contract.check_text(definition)[2]
+    if args.json:
+        text = json.dumps(with_data_uris(definition), ensure_ascii=False)
+        if args.out == '-':
+            sys.stdout.write(text)
+        else:
+            pathlib.Path(args.out).write_text(text, encoding='utf-8')
+        return
     out = pathlib.Path(args.out)
     out.write_text(render(viewer_page(), definition), encoding='utf-8')
     print(out.resolve())

@@ -1,6 +1,6 @@
 {
   "name": "interactive-map",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Build an interactive map of a repository or a topic (C4 overview, drill-down, animated flows, guided tour) as one self-contained HTML file.",
   "author": {
     "name": "chekrizh"
