@@ -37,7 +37,7 @@
   "fullSystem": "Full system",
   "pinnedTitle": "Step {step}: {title}",
   "tourEntry": "Take the guided tour · 4 min",
-  "filesEntry": "Browse the code",
+  "filesEntry": "Project structure",
   "flowComplete": "Flow complete. Choose another flow or open a component."
  },
  "groups": {

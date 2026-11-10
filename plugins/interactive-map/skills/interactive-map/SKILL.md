@@ -11,7 +11,7 @@ You build a map by writing one JSON map definition and filling a prebuilt viewer
 
 Start from an example, copy its structure and replace the content. Every section in the examples is read by the viewer.
 
-- `examples/kutt-url-shortener.json`: a full map of a real repository (the Kutt URL shortener) in C4 terms: context on the overview, containers and components on the map, node shapes, library icons and logos, four flows, a build order and a tour. Use it as the main reference.
+- `examples/kutt-url-shortener.json`: a full map of a real repository (the Kutt URL shortener) in C4 terms: context on the overview, containers and components on the map, node shapes, library icons and logos, four flows, a build order, a tour and the project structure. Use it as the main reference.
 - `examples/fastapi-service.json`: the smallest complete map, useful for seeing which parts are essential.
 
 - `nodes` and `edges`: the components and the connections between them. `groups`, `zones` and `overview` decide how components cluster and what the big-picture view shows.
@@ -30,6 +30,12 @@ Start from an example, copy its structure and replace the content. Every section
   Put logos on technologies and outside services (databases, brokers, cloud services). Leave your own components on role icons so the map stays calm.
 - Your own entries in `icons`, `logos` or `roles` win over the library. A custom logo's `src` must be `/assets/logos/<file>` from this skill's `assets/logos/` folder. A node without a logo shows its icon.
 - `inside` on a node opens a close-up. Prefer the structured kinds, which the viewer lays out itself: `{"kind": "steps", ...}` (a code walkthrough with early exits) or `{"kind": "schema", ...}` (tables or cache keys), plus `title`, `sub` and `cap`. With a top-level `"source": {"repo": "https://github.com/...", "ref": "<commit>"}`, every `code` reference (`path:from-to`) links to those lines. A scene without `kind` is hand-drawn SVG and needs `layout.insides` geometry. The Kutt example has one of each structured kind.
+- `files` (optional) adds a **Project structure** button beside the tour: the repository as an annotated folder tree tied to the map. `{"entries": [{"path": "server/handlers/", "t": "...", "why": "...", "nodes": ["links"], "tag": "entry point", "open": true, "more": "10 migrations"}]}`.
+  - List only the 15 to 35 paths a reader needs, not the whole repository. A path ending in `/` is a folder; parent folders you skip are added without a note.
+  - `t` (required) is one line on what lives there; `why` is why it exists or what breaks without it, shown when the row is clicked.
+  - `nodes` ties the path to components on the map: their tags appear on the row, the folder takes their role colour, and each component's panel links back to its paths. Leave plumbing (config, docs, tooling) without `nodes`; it stays grey.
+  - `tag` is a short label such as `entry point`, `config` or `deploy`. `open: true` unfolds a deeper folder at start; `more` describes what a folder holds besides the listed paths.
+  - The tree is titled from `source.repo`, or from `files.title`. The Kutt example has a complete `files` section.
 - `shape` on a node draws its C4 kind: `person`, `external`, `database`, `queue`, `worker` (a pool of parallel workers) or `component` (the default).
 
 ## 2. Render

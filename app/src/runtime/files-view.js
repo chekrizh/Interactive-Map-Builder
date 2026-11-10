@@ -13,7 +13,6 @@ const KINDS = [
 const fileGlyph = name => SHEET + (KINDS.find(([re]) => re.test(name))?.[1] || "");
 const CHEVRON = '<path d="m9 6 6 6-6 6"/>';
 const ARROW = '<path d="M4 12h16m-6-6 6 6-6 6"/>';
-const OUT = '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>';
 const svg = (paths, cls = "") => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 
@@ -61,10 +60,11 @@ export function createFilesView(ctx) {
   let selected = null;
 
   btn.hidden = false;
-  ctx.document.getElementById("filesBtnText").textContent = ui.filesEntry || "Browse the code";
+  const label = ui.filesEntry || "Project structure";
+  ctx.document.getElementById("filesBtnText").textContent = label;
   const repoName = files.title || (source ? source.repo.replace(/^https:\/\/github\.com\//, "").replace(/\/$/, "") : "project");
   root.name = repoName.split("/").pop();
-  box.querySelector("#filesTitle").innerHTML = `${esc(ui.filesTitle || "Project files")} · ${esc(repoName)}` +
+  box.querySelector("#filesTitle").innerHTML = `${esc(label)} · ${esc(repoName)}` +
     (source?.ref ? ` at <span class="mono">${esc(source.ref.slice(0, 7))}</span>` : "");
 
   const nodeOf = id => ctx.nodeEls[id]?.def;
@@ -81,10 +81,6 @@ export function createFilesView(ctx) {
   const hueOf = n => {
     const role = roleOf(n);
     return role ? `var(--h-${role})` : "var(--muted)";
-  };
-  const href = n => {
-    if (!source?.repo?.startsWith("https://github.com/")) return null;
-    return `${source.repo.replace(/\/$/, "")}/${n.dir ? "tree" : "blob"}/${source.ref || "HEAD"}/${n.path.split("/").map(encodeURIComponent).join("/")}`;
   };
   const chip = id => {
     const n = nodeOf(id);
@@ -145,7 +141,6 @@ export function createFilesView(ctx) {
       `${esc(d.concept)}${svg(ARROW)}</button>`).join("");
     const kids = n.dir ? n.kids.filter(k => k.entry).map(k =>
       `<li><button type="button" class="ft-link" data-path="${esc(k.path)}">${esc(k.name + (k.dir ? "/" : ""))}</button> ${k.entry.t}</li>`).join("") : "";
-    const link = href(n);
     const hue = nodes[0]?.[1].cat || null;
     ctx.panelHTML(`
       <div class="p-eyebrow">${n.dir ? "Folder" : "File"}</div>
@@ -156,7 +151,6 @@ export function createFilesView(ctx) {
       ${e.why ? `<h3>Why it exists</h3><p>${e.why}</p>` : ""}
       ${onMap ? `<h3>On the map</h3><div class="panel-actions">${onMap}</div>` : ""}
       ${kids ? `<h3>Inside</h3><ul class="newlist ft-toplist">${kids}</ul>` : ""}
-      ${link ? `<div class="panel-actions"><a class="panel-action" href="${esc(link)}" target="_blank" rel="noopener">Open on GitHub${svg(OUT)}</a></div>` : ""}
     `, hue);
     ctx.panelBody.querySelectorAll("[data-node]").forEach(b => ctx.scope.listen(b, "click", () => goToNode(b.dataset.node)));
     ctx.panelBody.querySelectorAll(".ft-link").forEach(b => ctx.scope.listen(b, "click", () => select(b.dataset.path, { reveal: true })));

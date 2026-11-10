@@ -334,7 +334,7 @@ d = {
         "nodeCourseLabel": "Step {step}", "buildLabel": "Build order · Step {step} of {total}",
         "courseLabel": "Kutt · Step {step}", "buildRole": "component"},
     "ui": {"fullSystem": "Full system", "pinnedTitle": "Step {step}: {title}",
-           "tourEntry": "Take the guided tour · 4 min", "filesEntry": "Browse the code",
+           "tourEntry": "Take the guided tour · 4 min", "filesEntry": "Project structure",
            "flowComplete": "Flow complete. Choose another flow or open a component."},
     "groups": groups, "overview": overview,
     "overviewEdges": [{"id": i, "from": f, "to": t, "label": l} for i, f, t, l, *_ in oedges],

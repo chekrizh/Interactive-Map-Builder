@@ -35,6 +35,7 @@ Levels you drill into, animated flows, step-by-step code walkthroughs, a guided 
 - [**Look inside**](#look-inside): open one component and see how it works step by step.
 - [**Guided tour**](#guided-tour): a short walk through the map, good for a first visit.
 - [**Build order**](#build-order): how the system is put together, piece by piece.
+- [**Project structure**](#project-structure): the repository's folders and files, each tied to its part of the map.
 
 Every map is one HTML file. It opens offline, in light or dark, and every claim points to its source.
 
@@ -83,6 +84,12 @@ For someone who opens the map for the first time and does not know where to star
 How you would build the system from scratch. Switch from *Full system* to step 1, 2, 3: each step adds a few components and says why they come now. Good for seeing what is the core and what was added on top.
 
 <img alt="Build order, step 2 of 4: the components added in this step are highlighted" src="docs/readme/build-light.png" width="100%">
+
+### Project structure
+
+What the repository is made of. The folders and files that matter, each with a line on what lives there and why it exists, coloured by the part of the map it belongs to. Tags on a row jump to the component on the map, and a component's panel leads back to its folders.
+
+<img alt="Project structure: an annotated folder tree with coloured component tags and a side panel for the selected file" src="docs/readme/structure-light.png" width="100%">
 
 
 ## Install
