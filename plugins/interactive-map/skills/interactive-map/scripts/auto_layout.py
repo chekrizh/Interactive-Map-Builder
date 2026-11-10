@@ -29,6 +29,7 @@ every card; writing all of them keeps your hand layout and only fills in what el
 import heapq
 import json
 import math
+import random
 import pathlib
 import sys
 
@@ -36,14 +37,16 @@ import layout_check
 
 STEP = 10                 # routing lattice, in map units
 CARD_H = layout_check.CARD_H
-ROW_GAP = 86              # between rows of cards: room for a run with a label chip
-COL_GAP = 80              # least room between columns of one zone
+ROW_GAP = 70              # between rows of cards: room for a run with a label chip
+COL_GAP = 64              # least room between columns of one zone
 ZONE_PAD = 22             # zone frame around its cards
 ZONE_TOP = 44             # zone title band
 ZONE_GAP = 30             # between zone frames
 MARGIN = 30               # around the whole map
 CLEAR = 10                # edges keep this far from cards
 OVERVIEW_CARD = {'width': 270, 'height': 200}
+COMPACT = 8.0             # weight of the map's size in the grid cost
+STAGE_RATIO = 2.2         # width / height of the stage the map is shown in
 
 
 # ---------------------------------------------------------------- ordering
@@ -178,7 +181,7 @@ def place_cards(d, hints):
     for z in zorder:
         layer = zlayer[z]
         span[z] = (start[layer], start[layer] + width[layer])
-    column, row = improve(ids, pairs, column, row, zone_of, zorder, zlayer, span, hints)
+    column, row = improve(ids, pairs, column, row, zone_of, zorder, zlayer, span, hints, Sizer(d))
     return column, row, zorder, zlayer
 
 
@@ -189,7 +192,7 @@ def segments_cross(p, q, r, s):
     return (orient(p, q, r) * orient(p, q, s) < 0) and (orient(r, s, p) * orient(r, s, q) < 0)
 
 
-def grid_cost(pairs, column, row):
+def grid_cost(pairs, column, row, sizer=None):
     """How hard the grid is to read: long and bent edges, edges against the reading
     direction, straight edges blocked by a card, crossings, and a sprawling grid."""
     cell = {(column[i], row[i]): i for i in column}
@@ -213,11 +216,17 @@ def grid_cost(pairs, column, row):
         for r, s, c, d in lines[k + 1:]:
             if len({a, b, c, d}) == 4 and segments_cross(p, q, r, s):
                 cost += 1.5
-    cost += 0.3 * (len(set(column.values())) + len(set(row.values())))
+    cols, rows = len(set(column.values())), len(set(row.values()))
+    if sizer:
+        # The map has to fit a wide stage: whichever side is longer for that shape sets
+        # how small the text gets at "Fit", so it costs the most.
+        _, _, width, height = sizer.lines(column, row)
+        cost += COMPACT * max(width / STAGE_RATIO, height) / (CARD_H + ROW_GAP)
+    cost += 0.3 * (cols + rows)
     return cost
 
 
-def improve(ids, pairs, column, row, zone_of, zorder, zlayer, span, hints):
+def improve(ids, pairs, column, row, zone_of, zorder, zlayer, span, hints, sizer=None):
     """Hill climbing on the grid: move a card to a free cell of its zone's columns, or swap
     two cards of one zone, while that makes the map easier to read. Stacked zones keep
     their order; cards placed with layout.grid stay put."""
@@ -236,7 +245,9 @@ def improve(ids, pairs, column, row, zone_of, zorder, zlayer, span, hints):
                     return False
         return True
 
-    best = grid_cost(pairs, column, row)
+    cost = lambda: grid_cost(pairs, column, row, sizer)
+    best = cost()
+    column, row, best = anneal(ids, pairs, column, row, zone_of, span, hints, rows, valid, best, sizer)
     for _ in range(12):
         improved = False
         for i in ids:
@@ -253,9 +264,9 @@ def improve(ids, pairs, column, row, zone_of, zorder, zlayer, span, hints):
                     column[i], row[i] = c, r
                     if other:
                         column[other], row[other] = old
-                    cost = grid_cost(pairs, column, row) if valid() else math.inf
-                    if cost < best - 1e-9:
-                        best, improved = cost, True
+                    now = grid_cost(pairs, column, row, sizer) if valid() else math.inf
+                    if now < best - 1e-9:
+                        best, improved = now, True
                         cell = {(column[j], row[j]): j for j in ids}
                     else:
                         if other:
@@ -270,6 +281,40 @@ def improve(ids, pairs, column, row, zone_of, zorder, zlayer, span, hints):
         for i in axis:
             axis[i] = squeeze[axis[i]]
     return column, row
+
+
+def anneal(ids, pairs, column, row, zone_of, span, hints, rows, valid, cost, sizer=None, steps=6000):
+    """Simulated annealing over the same moves as the hill climb, with a fixed seed so the
+    same map always gets the same layout. Escapes the local optima a one-card move cannot
+    leave, such as a whole column that could be folded into its neighbours."""
+    rng = random.Random(7)
+    free = [i for i in ids if i not in hints]
+    if not free:
+        return column, row, cost
+    best = (cost, dict(column), dict(row))
+    for k in range(steps):
+        heat = 2.0 * (1 - k / steps) + 0.02
+        i = rng.choice(free)
+        lo, hi = span[zone_of[i]]
+        c, r = rng.randrange(lo, hi), rng.randrange(rows)
+        cell = {(column[j], row[j]): j for j in ids}
+        other = cell.get((c, r))
+        if other == i or (other and (other in hints or zone_of[other] != zone_of[i])):
+            continue
+        old = column[i], row[i]
+        column[i], row[i] = c, r
+        if other:
+            column[other], row[other] = old
+        new = grid_cost(pairs, column, row, sizer) if valid() else math.inf
+        if new <= cost or rng.random() < math.exp((cost - new) / heat):
+            cost = new
+            if new < best[0]:
+                best = (new, dict(column), dict(row))
+        else:
+            if other:
+                column[other], row[other] = c, r
+            column[i], row[i] = old
+    return best[1], best[2], best[0]
 
 
 def align_rows(columns, neighbours, zone_of, zorder, column, hints):
@@ -326,46 +371,70 @@ def chip_room(label, size=9.5, weight=500, pad=layout_check.CHIP_PAD, room=layou
     return layout_check.text_width(label, weight, size) + pad + room if label else 0
 
 
+class Sizer:
+    """Turns grid cells into map units: column widths from the cards' text, gaps wide enough
+    for the labels that cross them, extra room where zones meet. Cheap enough to run inside
+    the grid search, so the search can weigh the map's real size."""
+
+    def __init__(self, d):
+        nodes = {n['id']: n for n in d['nodes']}
+        self.size = {i: card_size(n) for i, n in nodes.items()}
+        self.zone_of = {i: n.get('zone') or '' for i, n in nodes.items()}
+        self.labelled = [(e['from'], e['to'], chip_room(e['label'])) for e in d['edges']
+                         if e.get('label') and e['from'] in nodes and e['to'] in nodes]
+        self.has_zones = any(self.zone_of.values())
+
+    def lines(self, column, row):
+        cols, rows = sorted(set(column.values())), sorted(set(row.values()))
+        ci, ri = {c: k for k, c in enumerate(cols)}, {r: k for k, r in enumerate(rows)}
+        colw, zcol = [168] * len(cols), [set() for _ in cols]
+        for i, c in column.items():
+            colw[ci[c]] = max(colw[ci[c]], self.size[i][0])
+            zcol[ci[c]].add(self.zone_of[i])
+        gaps = [COL_GAP] * len(cols)
+        for k in range(len(cols) - 1):
+            if zcol[k] != zcol[k + 1] and (zcol[k] - {''} or zcol[k + 1] - {''}):
+                gaps[k] = max(gaps[k], 2 * ZONE_PAD + ZONE_GAP)
+        extra = [0] * len(rows)
+        for a, b, room in self.labelled:
+            ka, kb = ci[column[a]], ci[column[b]]
+            if row[a] == row[b] and abs(ka - kb) == 1:
+                gaps[min(ka, kb)] = max(gaps[min(ka, kb)], room + STEP)
+            ra, rb = ri[row[a]], ri[row[b]]
+            if ka == kb and abs(ra - rb) == 1:
+                extra[max(ra, rb)] = max(extra[max(ra, rb)], room + STEP - ROW_GAP)
+        # Zones stacked in one column: room for the frame, a gap and the next title.
+        stacked = ZONE_PAD + ZONE_GAP + ZONE_TOP - ROW_GAP
+        if stacked > 0:
+            above = {}
+            for i, r in row.items():
+                above.setdefault((ci[column[i]], ri[r]), self.zone_of[i])
+            for (k, r), z in above.items():
+                if r and (k, r - 1) in above and above[(k, r - 1)] != z:
+                    extra[r] = max(extra[r], stacked)
+        x, colx = MARGIN + ZONE_PAD, []
+        for k in range(len(cols)):
+            colx.append(x)
+            x += colw[k] + (gaps[k] if k < len(cols) - 1 else 0)
+        y, rowy = MARGIN + (ZONE_TOP if self.has_zones else 0), []
+        for k in range(len(rows)):
+            y += max(0, extra[k])
+            rowy.append(y)
+            y += CARD_H + ROW_GAP
+        width = x + ZONE_PAD + MARGIN
+        height = y - ROW_GAP + ZONE_PAD + MARGIN
+        return (ci, colx, colw), (ri, rowy), width, height
+
+
 def pixels(d, column, row, zorder, zlayer):
     """Card boxes and zone frames in map units."""
     nodes = {n['id']: n for n in d['nodes']}
     zone_of = {i: n.get('zone') or '' for i, n in nodes.items()}
-    size = {i: card_size(n) for i, n in nodes.items()}
-    ncols = max(column.values()) + 1
-    colw = [max([size[i][0] for i in nodes if column[i] == c], default=168) for c in range(ncols)]
-    zone_col = {c: {zone_of[i] for i in nodes if column[i] == c} for c in range(ncols)}
-    # The gap after each column: room for the labels that cross it, wider between zones.
-    gaps = []
-    for c in range(ncols - 1):
-        need = COL_GAP
-        for e in d['edges']:
-            if {column.get(e['from']), column.get(e['to'])} == {c, c + 1} and row.get(e['from']) == row.get(e['to']):
-                need = max(need, chip_room(e.get('label', '')) + 2 * CLEAR)
-        if zone_col[c] != zone_col[c + 1] and (zone_col[c] - {''} or zone_col[c + 1] - {''}):
-            need = max(need, 2 * ZONE_PAD + ZONE_GAP + 24)
-        gaps.append(need)
-    x0, colx = MARGIN + ZONE_PAD, []
-    for c in range(ncols):
-        colx.append(x0)
-        x0 += colw[c] + (gaps[c] if c < ncols - 1 else 0)
-    # Rows: extra room where one zone ends and another starts below it.
-    nrows = max(row.values()) + 1
-    extra = [0] * (nrows + 1)
-    for e in d['edges']:
-        a, b = e['from'], e['to']
-        if a in column and b in column and column[a] == column[b] and abs(row[a] - row[b]) == 1 and e.get('label'):
-            r = max(row[a], row[b])
-            extra[r] = max(extra[r], chip_room(e['label']) + 2 * CLEAR - ROW_GAP)
-    for r in range(1, nrows):
-        if any(zone_of[i] != zone_of[j] and column[i] == column[j]
-               for i in nodes if row[i] == r - 1 for j in nodes if row[j] == r):
-            extra[r] = max(extra[r], ZONE_PAD * 2 + ZONE_GAP + ZONE_TOP - ROW_GAP + 40)
-    has_zones = any(zone_of.values())
-    y0 = MARGIN + (ZONE_TOP if has_zones else 0)
-    rowy, acc = [], 0
-    for r in range(nrows):
-        acc += max(0, extra[r])
-        rowy.append(y0 + r * (CARD_H + ROW_GAP) + acc)
+    sizer = Sizer(d)
+    size = sizer.size
+    (ci, colx, colw), (ri, rowy), _, _ = sizer.lines(column, row)
+    column = {i: ci[c] for i, c in column.items()}
+    row = {i: ri[r] for i, r in row.items()}
     cards = {}
     for i in nodes:
         w, h = size[i]
@@ -558,9 +627,16 @@ def chip_box(label, pts, overview=False):
     return layout_check.Box(run[2] - w / 2, run[3] - h / 2, w, h)
 
 
-def route_all(router, edges, overview=False, rounds=3):
-    """Route every edge, then rip up and reroute the ones that cross another edge's label
-    chip, with the chips marked as costly ground."""
+def cells_of(box, grow=0.0):
+    return {(ix, iy) for ix in range(math.floor((box.x - grow) / STEP), math.ceil((box.r + grow) / STEP) + 1)
+            for iy in range(math.floor((box.y - grow) / STEP), math.ceil((box.b + grow) / STEP) + 1)}
+
+
+def route_all(router, edges, overview=False, rounds=4):
+    """Route every edge, then rip up and reroute the ones whose label would be unreadable:
+    an edge drawn through another edge's label chip, or an edge whose own chip would sit on a
+    card (its longest run passes too close to it). Chips and the ground beside such cards
+    become costly for the rerouted edge."""
     paths = {}
     for e in edges:
         pts = router.route(e['from'], e['to'], e['id'])
@@ -569,29 +645,23 @@ def route_all(router, edges, overview=False, rounds=3):
     byid = {e['id']: e for e in edges}
     for _ in range(rounds):
         chips = {k: chip_box(byid[k].get('label'), pts, overview) for k, pts in paths.items()}
-        bad = [k for k, pts in paths.items()
-               if any(b and o != k and any(b.shrink(1).hits(p, q) for p, q in zip(pts, pts[1:]))
-                      for o, b in chips.items())]
+        crossing = {k for k, pts in paths.items()
+                    if any(b and o != k and any(b.shrink(1).hits(p, q) for p, q in zip(pts, pts[1:]))
+                           for o, b in chips.items())}
+        covering = {k: [n for n, box in router.boxes.items() if chips[k].overlaps(box.shrink(1))]
+                    for k in paths if chips[k]}
+        covering = {k: v for k, v in covering.items() if v}
+        bad = sorted(crossing | set(covering))
         if not bad:
             break
-        router.avoid = set()
-        for k, b in chips.items():
-            if b:
-                for ix in range(math.floor(b.x / STEP), math.ceil(b.r / STEP) + 1):
-                    for iy in range(math.floor(b.y / STEP), math.ceil(b.b / STEP) + 1):
-                        router.avoid.add((ix, iy))
+        taken = set().union(*(cells_of(b) for b in chips.values() if b))
         for k in bad:
             router.remove(k)
-            # The edge's own chip is not in its way.
-            own = chips[k]
-            mine = set()
-            if own:
-                mine = {(ix, iy) for ix in range(math.floor(own.x / STEP), math.ceil(own.r / STEP) + 1)
-                        for iy in range(math.floor(own.y / STEP), math.ceil(own.b / STEP) + 1)}
-            saved = router.avoid
-            router.avoid = saved - mine
+            avoid = taken - (cells_of(chips[k]) if chips[k] else set())
+            for n in covering.get(k, ()):
+                avoid |= cells_of(router.boxes[n], chips[k].w / 2 + 4) - router.blocked
+            router.avoid = avoid
             pts = router.route(byid[k]['from'], byid[k]['to'], k)
-            router.avoid = saved
             if pts:
                 paths[k] = pts
     router.avoid = set()
