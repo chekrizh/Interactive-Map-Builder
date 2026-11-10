@@ -2,37 +2,36 @@
 
 # Interactive Map Builder
 
-**Turn a repository or a tricky topic into an interactive map you can explore, click through and share as one HTML file.**
+**Deep dives into how a system works: from the big picture down to a line of code, as one interactive map.**
 
-A skill for Claude Code (and other agents) that reads the subject, designs the map and hands it to a prebuilt viewer.<br>
-The agent spends its effort on explaining, not on drawing boxes.
+Any model can draw a diagram as an HTML page. This skill is for understanding: it gives the agent a method for studying a repository or a topic and a ready-made viewer built for going deep.<br>
+Levels you drill into, animated flows, step-by-step code walkthroughs, a guided tour, and every claim linked to its source. The agent spends its effort on the explanation instead of building the page.
 
-[Install](#install) · [What you get](#what-you-get) · [How it works](#how-it-works) · [Develop](#develop-the-viewer)
+[Features](#features) · [Modes](#three-modes) · [Install](#install) · [How it works](#how-it-works) · [Develop](#develop-the-viewer)
 
 <br>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/overview-dark.png">
-  <img alt="The big picture of a repository: six cards, labelled connections and a side panel" src="docs/readme/overview-light.png" width="100%">
-</picture>
+<img alt="An animated flow on a repository map: a request travels from the visitor through the redirect handler, cache and database, while the side panel explains each step" src="docs/readme/hero-flow.gif" width="100%">
 
-<sub>A map of the <a href="https://github.com/thedevs-network/kutt">Kutt</a> URL shortener, made by the skill. It opens offline from disk, in light or dark.</sub>
+<sub>The flow "Open a short link" on a map of the <a href="https://github.com/thedevs-network/kutt">Kutt</a> URL shortener, made by the skill.</sub>
 
 </div>
 
 ---
 
+## Features
+
+- **Overview.** The big picture in a handful of cards: who uses the system, what it is made of, what it depends on. A newcomer takes it in at once.
+- **Full map.** Every container and component with labelled connections. Click a card to drill into its part, click a component for what it does and where it lives in the code, open *Look inside* for a code walkthrough or a schema.
+- **Main flows.** Animated scenarios such as "a visitor opens a link". The path lights up hop by hop while the panel explains each step.
+- **Step-by-step tour.** A guided tour in chapters that walks a newcomer through the whole map in a few minutes.
+- **Build order.** Switch from the full system to how it is assembled, one step at a time: what has to exist first and what builds on it.
+
+And on every map: links from each claim to the source (exact lines on GitHub for a repository), light and dark themes, full screen, zoom. The result is **one HTML file that works offline**: open it from disk, send it in a chat, put it on a website.
+
 ## Why
 
-Understanding how something works usually means reading a lot and keeping the whole picture in your head. A static diagram helps, but it shows one level at once, does not move, and goes stale the moment it is drawn.
-
-This skill gives you the picture you would draw on a whiteboard, with the depth behind it:
-
-- **Start with the big picture**, a handful of cards a newcomer can take in at once.
-- **Drill in** to the parts and components inside each card, then **look inside** a single component: its code path step by step, or its tables.
-- **Watch flows**: animated scenarios such as "a visitor opens a link" walk along the connections, one numbered step at a time.
-- **Every claim points at the source.** For a repository, panels name the files and link to exact lines on GitHub.
-- **One file, no server.** The result is a single HTML page. Open it from disk, send it in a chat, put it on a website.
+Understanding how something works usually means reading a lot and keeping the whole picture in your head. A static diagram helps, but it shows one level at once, does not move, and goes stale the moment it is drawn. This skill gives you the picture you would draw on a whiteboard, with the depth behind it.
 
 It was built for situations like these:
 
@@ -45,15 +44,51 @@ It was built for situations like these:
 
 The viewer is not tied to software: anything with parts, relationships and flows fits, from a microservice to a mortgage.
 
-## What you get
+## Three modes
 
-**Overview → parts → components → inside.** Click a card on the big picture to see its components on the full map, click a component for what it does and where it lives in the code, then open *Look inside*.
+The skill takes three kinds of input. Each one ends in the same kind of map.
+
+<details open>
+<summary><b>1 · Deep dive into a repository</b> &nbsp;·&nbsp; available</summary>
+
+<br>
+
+Point the agent at a codebase. It finds the evidence (deployment files, entry points, routes, queues, dependencies), models the system in [C4](https://c4model.com) terms and picks the flows worth animating: the big picture on the overview, containers and components on the full map, code walkthroughs and schemas inside. Every panel names the files it is based on.
+
+> Draw an interactive map of how this repository works.
+
+</details>
+
+<details>
+<summary><b>2 · A pile of sources</b> &nbsp;·&nbsp; planned</summary>
+
+<br>
+
+Links, notes, PDFs, articles, JSON: the agent reads what you give it and maps the topic, with citations in the panels. For book chapters, lectures and anything that is not code.
+
+</details>
+
+<details>
+<summary><b>3 · A research question</b> &nbsp;·&nbsp; planned</summary>
+
+<br>
+
+Ask about a topic you do not have sources for. The agent researches it first, then maps what it found as in mode 2.
+
+</details>
+
+## A closer look
+
+**Overview.** The map opens on the big picture.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/overview-dark.png">
+  <img alt="The big picture of a repository: six cards, labelled connections and a side panel" src="docs/readme/overview-light.png" width="100%">
+</picture>
+
+**Overview → part → component → inside.** Click a card to see its components on the full map, click a component for what it does and where it lives in the code, then open *Look inside*.
 
 <img alt="Clicking from the big picture to a component and into its code walkthrough" src="docs/readme/drill.gif" width="100%">
-
-**Flows.** Pick a scenario and press *Play flow*. The path lights up hop by hop while the panel explains each step.
-
-<img alt="An animated flow: a request travels from the visitor through the redirect handler, cache and database" src="docs/readme/flow.gif" width="100%">
 
 **Inside a component.** Close-ups the viewer lays out by itself: a code walkthrough with early exits, or a database schema with relations.
 
@@ -63,8 +98,6 @@ The viewer is not tied to software: anything with parts, relationships and flows
     <td width="50%"><img alt="Database tables and the relations between them, in the dark theme" src="docs/readme/inside-db-dark.png"></td>
   </tr>
 </table>
-
-Also on every map: **build order** (switch between "full system" and the system as it is assembled step by step), a **guided tour** with chapters, full screen, zoom, and a light / dark theme switch.
 
 ## Install
 
@@ -177,7 +210,7 @@ Ask for a map, for example "Draw an interactive map of how this repository works
 
 ## Known limits
 
-- **Prototype.** The method for choosing what goes on a map is still being designed. Repository mode comes first; modes for a pile of sources and for a research question are planned.
+- **Prototype.** Only the repository mode is implemented, and its method is still being tuned. The modes for a pile of sources and for a research question are planned.
 - **Geometry is manual.** Every node, edge path, zone and overview card needs exact coordinates; there is no automatic layout yet.
 - **Authored HTML is trusted.** Many text fields are inserted as HTML. `SKILL.md` tells the model not to paste markup from sources it analyses, but nothing sanitises it yet.
 - **Size.** The template is about 340 KB, of which the font is about 214 KB. A model cannot retype it into a chat artifact, so the client has to show the file itself.
