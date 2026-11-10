@@ -12,6 +12,7 @@ You build a map by writing one JSON map definition and filling a prebuilt viewer
 Start from an example, copy its structure and replace the content. Write only the content: `render.py` fills in the interface strings, settings and timings (see `scripts/defaults.py`), and icons, logos and roles from the library.
 
 - `examples/kutt-url-shortener.json`: a full map of a real repository (the Kutt URL shortener) in C4 terms: context on the overview, containers and components on the map, node shapes, library icons and logos, four flows, a build order, a tour and the project structure. Use it as the main reference.
+- `examples/privatebin-pastebin.json`: a second repository map (the PrivateBin pastebin) written with no `layout` at all; render.py places everything. Start from it when you let the layout be automatic.
 - `examples/fastapi-service.json`: the smallest complete map, showing what a map must contain.
 
 - `nodes` and `edges`: the components and the connections between them. A node's `step` is the build step that adds it. `groups`, `zones` and `overview` decide how components cluster and what the big-picture view shows.
