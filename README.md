@@ -5,6 +5,7 @@
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757?logo=claude&logoColor=white)](#install)
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fchekrizh%2FInteractive-Map-Builder%2Fmain%2Fplugins%2Finteractive-map%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version&color=4F46E5)](plugins/interactive-map/.claude-plugin/plugin.json)
 [![Agent Skills](https://img.shields.io/badge/Agent_Skills-compatible-6E56CF)](#install)
+[![skills.sh](https://skills.sh/b/chekrizh/Interactive-Map-Builder)](https://skills.sh/chekrizh/Interactive-Map-Builder)
 
 [![Output](https://img.shields.io/badge/output-one_offline_HTML-0F766E)](#how-it-works)
 [![License: MIT](https://img.shields.io/badge/license-MIT-64748B)](LICENSE)
