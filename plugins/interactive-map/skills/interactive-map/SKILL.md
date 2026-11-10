@@ -21,7 +21,7 @@ Start from an example, copy its structure and replace the content. Write only th
   - Leave room for edge labels: the viewer draws a label as a chip on its line only when the line has a straight run about 30 units longer than the label. On the overview, keep about 140 to 150 units between card columns (and between rows that are joined by an edge); the Kutt example uses 150. On the full map, give every labelled edge a straight segment that long.
 - `page` and `panels`: the title, the page descriptions, the end-of-tour text and the two start panels (`introHtml` on the big picture, `overviewHtml` on the full map).
 - Optional, only to change what render.py fills in:
-  - `ui`: any interface string, e.g. `{"tourEntry": "Take the guided tour · 4 min"}`. The keys and English defaults are in `scripts/defaults.py`; the interface is English unless the map overrides them.
+  - `ui`: any interface string, e.g. `{"tourEntry": "Start the tour"}`. The keys and English defaults are in `scripts/defaults.py`; the interface is English unless the map overrides them.
   - `settings`: `recapOrder` (the order the final recap sweeps the parts; defaults to the overview order), `appearanceRoles` (which role colours links, files in close-ups and failure marks; picked from the roles in use) and `buildRole` (the colour of the build-step panel; defaults to the accent).
   - `roles`, `icons` and `logos`: your own colours and marks (see the asset library below). `beatSeconds` and `flowBeatSeconds`: how long the tour estimates a step takes (15).
 - IDs connect the sections. If you rename an ID, update every reference to it.

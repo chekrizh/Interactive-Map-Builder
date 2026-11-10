@@ -14,7 +14,6 @@
   "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>One container does almost everything</h2><p style=\"margin-top:8px\">docker-compose runs three containers: the Node server, a SQL database and Redis. The server zone is opened up into its components.</p><h3>How to read it</h3><p>People and outside services on the left, the server in the middle, data on the right.</p>"
  },
  "ui": {
-  "tourEntry": "Take the guided tour · 4 min",
   "buildNote": "The steps build the shortener up from the bare redirect."
  },
  "groups": {
