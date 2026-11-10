@@ -19,7 +19,7 @@ import re
 
 METRICS = json.loads((pathlib.Path(__file__).parent / 'metrics.json').read_text(encoding='utf-8'))
 
-# The viewer's sizes (app/src/rendering/ml-canvas.js prepareLayout and engine.js), in map units.
+# The viewer's sizes (app/src/rendering/ml-canvas.js prepareLayout and app/src/runtime/scene.js), in map units.
 CARD_MIN_W, CARD_PAD_W, CARD_H, QUEUE_EXTRA = 168, 76, 72, 26
 CHIP_PAD, CHIP_ROOM, CHIP_H = 14, 18, 16            # full-map edge label chip
 OV_CHIP_PAD, OV_CHIP_ROOM, OV_CHIP_H = 20, 24, 22   # overview edge label chip
@@ -155,7 +155,7 @@ def longest_run(pts):
 
 
 def bare_label_box(e, pts):
-    """Where the viewer puts a label that does not fit on its line (engine.js placeLabel)."""
+    """Where the viewer puts a label that does not fit on its line (app/src/runtime/scene.js placeLabel)."""
     w = text_width(e['label'], 500, 10)
     if e.get('lx') is not None:
         x, y, anchor = e['lx'], e['ly'], e.get('anchor') or 'middle'
