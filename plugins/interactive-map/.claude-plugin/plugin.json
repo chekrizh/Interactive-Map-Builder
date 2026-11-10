@@ -1,10 +1,11 @@
 {
   "name": "interactive-map",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Build an interactive map of a repository or a topic (C4 overview, drill-down, animated flows, guided tour) as one self-contained HTML file.",
   "author": {
     "name": "chekrizh"
   },
   "repository": "https://github.com/chekrizh/Interactive-Map-Builder",
-  "license": "MIT"
+  "license": "MIT",
+  "icon": "./icon.svg"
 }

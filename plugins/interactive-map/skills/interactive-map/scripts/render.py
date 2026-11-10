@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 """Fill the single-file map template with a map definition. Python 3 standard library only.
 
-usage: python3 render.py MAP.json OUT.html
-       python3 render.py - OUT.html  < map.json
+usage: python3 render.py MAP.json OUT.html [--repo-dir DIR]
+       python3 render.py - OUT.html [--repo-dir DIR]  < map.json
 Checks that the map holds together (the same rules the page applies before drawing),
-turns /assets/... paths into data: URIs, builds one self-contained page from the viewer
-in assets/viewer/ (its script, styles and font inlined, so the page needs no network) and
-prints the absolute path of OUT.html.
+applies the text contract (labels are plain text; other text may use a small HTML subset,
+anything else is removed), turns /assets/... paths into data: URIs, builds one self-contained
+page from the viewer in assets/viewer/ (its script, styles and font inlined, so the page needs
+no network) and prints the absolute path of OUT.html.
+With --repo-dir, every code reference (path:from-to) and every files entry must exist in that
+checkout, and line ranges must fit inside their files.
+Warnings (fields the viewer ignores, markup that was removed) go to stderr and do not stop the build.
 On problems it lists what to fix and exits with status 1.
 """
+import argparse
 import base64
 import json
 import mimetypes
 import pathlib
 import sys
+
+import contract
 
 SKILL = pathlib.Path(__file__).resolve().parent.parent
 ASSETS = SKILL / 'assets'
@@ -257,8 +264,32 @@ def problems(d):
                 if n not in node_ids:
                     found.append(f'files.entries[{i}] ({path}).nodes: unknown node {n!r}')
     source = d.get('source')
-    if source is not None and not (isinstance(source, dict) and str(source.get('repo', '')).startswith('https://')):
+    if source is not None and not (isinstance(source, dict) and contract.SAFE_HREF.match(str(source.get('repo', '')))
+                                   and str(source['repo']).startswith('https://')):
         found.append('source.repo must be an https:// repository URL')
+    for key, url in d['links'].items():
+        if not (isinstance(url, str) and contract.SAFE_HREF.match(url)):
+            found.append(f'links.{key} must be an https:// URL, got {url!r}')
+    next_url = d['page'].get('slots', {}).get('nextToolUrl') if isinstance(d['page'].get('slots'), dict) else None
+    if next_url is not None and not (isinstance(next_url, str) and contract.SAFE_HREF.match(next_url)):
+        found.append(f'page.slots.nextToolUrl must be an https:// URL or #, got {next_url!r}')
+    for key, logo in d['logos'].items():
+        src = logo.get('src') if isinstance(logo, dict) else None
+        if not (isinstance(src, str) and (src.startswith('/assets/') or src.startswith('data:image/'))):
+            found.append(f'logos.{key}.src must be /assets/logos/<file> from this skill, got {str(src)[:40]!r}')
+    target = d['settings'].get('linkTarget')
+    if target is not None and target not in contract.LINK_TARGETS:
+        found.append(f'settings.linkTarget must be one of {", ".join(contract.LINK_TARGETS)}, got {target!r}')
+    # Ids end up in attributes, CSS variables and selectors, so they keep to a safe alphabet.
+    for section in contract.ID_LISTS:
+        for item in listed(section):
+            if isinstance(item.get('id'), str) and not contract.ID.match(item['id']):
+                found.append(f'{section}: id {item["id"]!r} may use only letters, digits, "-", "_" and "."')
+    for section in contract.ID_MAPS:
+        for key in d[section]:
+            if not contract.ID.match(key):
+                found.append(f'{section}: key {key!r} may use only letters, digits, "-", "_" and "."')
+    found += contract.check_text(d)[0]
     for e in listed('overviewEdges'):
         if e.get('id') not in layout.get('overviewEdges', {}):
             found.append(f'layout.overviewEdges.{e.get("id")} is missing')
@@ -268,6 +299,79 @@ def problems(d):
         if not asset_file(value):
             found.append(f'{value} is not a file in the skill\'s assets/ (available logos: {logos})')
     return found
+
+
+def warnings(d):
+    """What render.py changes or the viewer ignores: worth fixing, but the page still builds."""
+    notes = [f'{path} is not read by the viewer and is dropped; remove it or move its content to a field the viewer shows'
+             for path in contract.unknown_fields(d)]
+    return notes + contract.check_text(d)[1]
+
+
+def repo_problems(d, repo):
+    """Code references and files entries that do not match the checkout at repo."""
+    repo = pathlib.Path(repo).resolve()
+    if not repo.is_dir():
+        return [f'--repo-dir {repo} is not a folder']
+    found, lines = [], {}
+
+    def inside(rel):
+        path = (repo / rel).resolve()
+        return path if path == repo or repo in path.parents else None
+
+    for where, pattern, value, _ in contract.walk(d):
+        if pattern in contract.CODE_FIELDS and isinstance(value, str):
+            match = contract.CODE.match(value)
+            if not match:
+                continue  # reported by the text check
+            rel, start, end = match.group(1), match.group(2), match.group(3) or match.group(2)
+            path = inside(rel)
+            if not (path and path.is_file()):
+                found.append(f'{where}: {rel} is not a file in {repo}')
+                continue
+            if start:
+                if path not in lines:
+                    lines[path] = len(path.read_bytes().splitlines())
+                first, last, total = int(start), int(end), lines[path]
+                if not 1 <= first <= last <= total:
+                    found.append(f'{where}: lines {first}-{last} do not fit {rel}, which has {total} lines')
+        elif pattern == 'files.entries[].path' and isinstance(value, str):
+            path = inside(value.rstrip('/'))
+            if not (path and path.exists()):
+                found.append(f'{where}: {value} does not exist in {repo}')
+            elif value.endswith('/') != path.is_dir():
+                found.append(f'{where}: {value} is a {"folder" if path.is_dir() else "file"} in {repo}; '
+                             f'{"end" if path.is_dir() else "do not end"} the path with "/"')
+    return found
+
+
+def git_head(repo):
+    """The commit a git checkout is on, read from .git without running git; None when unknown."""
+    git = repo / '.git'
+    try:
+        head = (git / 'HEAD').read_text().strip()
+        if not head.startswith('ref: '):
+            return head
+        name = head[5:]
+        if (git / name).is_file():
+            return (git / name).read_text().strip()
+        for line in (git / 'packed-refs').read_text().splitlines():
+            if line.endswith(' ' + name):
+                return line.split()[0]
+    except OSError:
+        pass
+    return None
+
+
+def repo_warnings(d, repo):
+    """The links point at source.ref; lines checked against a different commit may have moved."""
+    ref = (d.get('source') or {}).get('ref') if isinstance(d.get('source'), dict) else None
+    if not ref:
+        return []
+    head = git_head(pathlib.Path(repo))
+    if not head or head.startswith(ref) or ref.startswith(head):
+        return []
+    return [f'source.ref is {ref[:12]} but {repo} is checked out at {head[:12]}: the line ranges were checked against the checkout']
 
 
 def with_data_uris(value):
@@ -307,18 +411,27 @@ def render(template, definition):
 
 
 def main(argv):
-    if len(argv) != 3:
-        sys.exit(__doc__)
-    source = sys.stdin.read() if argv[1] == '-' else pathlib.Path(argv[1]).read_text(encoding='utf-8')
+    parser = argparse.ArgumentParser(usage=__doc__.split('\n\n')[1].removeprefix('usage: '))
+    parser.add_argument('map')
+    parser.add_argument('out')
+    parser.add_argument('--repo-dir', help='checkout of the mapped repository; code references must exist in it')
+    args = parser.parse_args(argv[1:])
+    source = sys.stdin.read() if args.map == '-' else pathlib.Path(args.map).read_text(encoding='utf-8')
     try:
         definition = json.loads(source)
     except json.JSONDecodeError as error:
         sys.exit(f'the map is not valid JSON: {error}')
     definition = with_library(definition)
     found = problems(definition)
+    if not found and args.repo_dir:
+        found = repo_problems(definition, args.repo_dir)
     if found:
         sys.exit('the map needs fixing:\n- ' + '\n- '.join(found))
-    out = pathlib.Path(argv[2])
+    notes = warnings(definition) + (repo_warnings(definition, args.repo_dir) if args.repo_dir else [])
+    if notes:
+        print('warnings (the page was built anyway):\n- ' + '\n- '.join(notes), file=sys.stderr)
+    definition = contract.check_text(definition)[2]
+    out = pathlib.Path(args.out)
     out.write_text(render(viewer_page(), definition), encoding='utf-8')
     print(out.resolve())
 

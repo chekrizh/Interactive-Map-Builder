@@ -62,15 +62,16 @@ function renderTourCard(n) {
    arrival (summary only), k (1 to the edge count) once Next has played
    edge k (line k shows, with its own number, under the intro), and the
    edge count + 1 once "Why it matters" shows in the line's place. */
+/* Card text is rich text, rendered as HTML like the panels; titles stay plain. */
 function renderTourText(b) {
   ctx.tcBody.replaceChildren(...b.body.map(t => {
     const el = ctx.document.createElement("p");
-    el.textContent = t;
+    el.innerHTML = t;
     return el;
   }));
   const p = ctx.tour.phase;
   ctx.tcWhy.hidden = !b.why || Boolean(b.flow) && p <= ctx.edgeCount(b);
-  ctx.tcWhyText.textContent = b.why || "";
+  ctx.tcWhyText.innerHTML = b.why || "";
   if (!b.flow) {
     /* The closing step's sweep (2026-11-01): each Next lights a stage and
        recaps it in one line under the stage's own name, icon and colour,
@@ -90,7 +91,7 @@ function renderTourText(b) {
     head.append(ctx.TOUR_CHAPTERS.find(c => c.name.toLowerCase().startsWith(g))?.name || ctx.GROUPS[g].title);
     const text = ctx.document.createElement("span");
     text.className = "recap-t";
-    text.textContent = b.recap[g];
+    text.innerHTML = b.recap[g];
     li.append(head, text);
     ctx.tcList.replaceChildren(li);
     ctx.tcList.hidden = false;
@@ -114,7 +115,8 @@ function renderTourText(b) {
   n.className = "n";
   n.textContent = String(start + p);
   n.style.setProperty("--n-hue", ctx.hopHue(s, hop));
-  li.append(n, hop.t);
+  li.append(n);
+  li.insertAdjacentHTML("beforeend", hop.t);
   ctx.tcList.replaceChildren(li);
   ctx.tcList.hidden = false;
 }

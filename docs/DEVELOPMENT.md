@@ -17,6 +17,7 @@ plugins/interactive-map/
     examples/kutt-url-shortener.json  the main example: a C4 map of a real repo
     examples/fastapi-service.json   the smallest complete map; the dev map
     scripts/render.py               map JSON -> HTML; fills names from the library
+    scripts/contract.py             fields the viewer reads, the text contract and the HTML sanitizer
     scripts/find_asset.py           search the library for icon, logo and role names
   skills/interactive-map-repo/      repo mode: how to read a repository and model it in C4 terms
 app/                                viewer source (Vite): dev server + template build
@@ -38,7 +39,7 @@ npm run build:template   # rebuilds plugins/interactive-map/skills/interactive-m
 
 Rebuild the viewer only when viewer code or styles change.
 
-Keep every file in the plugin readable and under 256 KiB (fonts and images aside): Claude's plugin security scan cannot inspect larger or minified files and shows users a warning that the plugin "couldn't be confirmed". `tests/test_render.py` checks the sizes. Rebuild the asset library with `tools/build_library.py`; it splits each section into numbered parts. New maps never need a rebuild. Run the tests with `python3 -m unittest discover tests`.
+Keep every file in the plugin readable and under 256 KiB (fonts and images aside): Claude's plugin security scan cannot inspect larger or minified files and shows users a warning that the plugin "couldn't be confirmed". `tests/test_render.py` checks the sizes. Rebuild the asset library with `tools/build_library.py`; it splits each section into numbered parts. New maps never need a rebuild. Run the tests with `python3 -m unittest discover tests`; with Node and Playwright installed they also open a map full of hostile text in Chromium and check that none of it runs.
 
 ### Release an update
 
@@ -65,5 +66,5 @@ Ask for a map, for example "Draw an interactive map of how this repository works
 
 - **Prototype.** Only the repository mode is implemented, and its method is still being tuned. The modes for a pile of sources and for a research question are planned.
 - **Geometry is manual.** Every node, edge path, zone and overview card needs exact coordinates; there is no automatic layout yet.
-- **Authored HTML is trusted.** Many text fields are inserted as HTML. `SKILL.md` tells the model not to paste markup from sources it analyses, but nothing sanitises it yet.
+- **Text is sanitised at build time, not in the page.** `scripts/contract.py` holds the text contract: labels are plain text (rejected if they carry markup), every other text field keeps a small HTML subset and loses the rest, SVG fields keep drawing elements only, and URLs, colours and ids are checked for their shape. The page trusts what `render.py` wrote, so a definition mounted without `render.py` (the dev server) is not sanitised.
 - **Size.** A rendered page is about 450 KB, of which the font is about 220 KB. A model cannot retype it into a chat artifact, so the client has to show the file itself.

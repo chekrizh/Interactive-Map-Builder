@@ -368,7 +368,7 @@ function scopedDocument(root) {
 	} });
 }
 // src/rendering/inside-scenes.js
-var attr = (value) => String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+var attr$1 = (value) => String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 /** "path/file.js:466-471" -> link to that range at the pinned commit, labelled "file.js:466". */
 function codeLink(ref, source) {
 	if (!ref) return "";
@@ -377,7 +377,7 @@ function codeLink(ref, source) {
 	const label = path.split("/").pop() + (from ? ":" + from : "");
 	if (!source?.repo) return `<span class="ins-code">${label}</span>`;
 	const anchor = from ? `#L${from}${to ? "-L" + to : ""}` : "";
-	return `<a class="ins-code" href="${attr(`${source.repo.replace(/\/$/, "")}/blob/${source.ref || "HEAD"}/${path}${anchor}`)}" target="_blank" rel="noopener" title="${attr(path + (lines ? ":" + lines : ""))}">${label}</a>`;
+	return `<a class="ins-code" href="${attr$1(`${source.repo.replace(/\/$/, "")}/blob/${source.ref || "HEAD"}/${path}${anchor}`)}" target="_blank" rel="noopener" title="${attr$1(path + (lines ? ":" + lines : ""))}">${label}</a>`;
 }
 function steps(scene, source) {
 	return `<ol class="ins-steps">${scene.steps.map((s, i) => {
@@ -387,8 +387,8 @@ function steps(scene, source) {
 }
 function schema(scene, source) {
 	return `<div class="ins-schema">${scene.tables.map((t) => {
-		const fields = (t.fields || []).map((f) => `<li><span class="ins-f">${f.n}</span>` + (f.type ? `<span class="ins-type">${f.type}</span>` : "") + (f.ref ? `<span class="ins-ref" data-ref="${attr(f.ref)}">→ ${f.ref}</span>` : "") + (f.note ? `<span class="ins-fnote">${f.note}</span>` : "") + `</li>`).join("");
-		return `<section class="ins-table" data-table="${attr(t.name)}"><header><span class="ins-name">${t.name}</span>` + (t.ttl ? `<span class="ins-ttl">${t.ttl}</span>` : "") + `</header>` + (t.note ? `<p class="ins-note">${t.note}</p>` : "") + (fields ? `<ul>${fields}</ul>` : "") + (t.code ? `<footer>${codeLink(t.code, source)}</footer>` : "") + `</section>`;
+		const fields = (t.fields || []).map((f) => `<li><span class="ins-f">${f.n}</span>` + (f.type ? `<span class="ins-type">${f.type}</span>` : "") + (f.ref ? `<span class="ins-ref" data-ref="${attr$1(f.ref)}">→ ${f.ref}</span>` : "") + (f.note ? `<span class="ins-fnote">${f.note}</span>` : "") + `</li>`).join("");
+		return `<section class="ins-table" data-table="${attr$1(t.name)}"><header><span class="ins-name">${t.name}</span>` + (t.ttl ? `<span class="ins-ttl">${t.ttl}</span>` : "") + `</header>` + (t.note ? `<p class="ins-note">${t.note}</p>` : "") + (fields ? `<ul>${fields}</ul>` : "") + (t.code ? `<footer>${codeLink(t.code, source)}</footer>` : "") + `</section>`;
 	}).join("")}</div>`;
 }
 function renderInsideScene(scene, source) {
@@ -406,6 +406,7 @@ function wireInsideScene(root) {
 }
 // src/runtime/panels.js
 /** panels: extracted original behavior; dependencies supplied by the instance controller. */
+var attr = (value) => String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 function createPanels(ctx) {
 	function openInside(nodeId) {
 		const n = ctx.nodeEls[nodeId].def;
@@ -413,11 +414,9 @@ function createPanels(ctx) {
 		if (!sc) return;
 		ctx.T()?.step("inside", nodeId);
 		ctx.document.getElementById("insideTitle").textContent = sc.title;
-		ctx.document.getElementById("insideSub").textContent = sc.sub;
-		ctx.document.getElementById("insideCap").textContent = sc.cap || "";
+		ctx.document.getElementById("insideSub").innerHTML = sc.sub || "";
+		ctx.document.getElementById("insideCap").innerHTML = sc.cap || "";
 		if (sc.kind) {
-			ctx.document.getElementById("insideSub").innerHTML = sc.sub || "";
-			ctx.document.getElementById("insideCap").innerHTML = sc.cap || "";
 			const box = ctx.document.getElementById("insideScene");
 			box.innerHTML = renderInsideScene(sc, sc.source);
 			box.firstElementChild.style.setProperty("--ins-hue", `var(--h-${n.cat})`);
@@ -425,7 +424,7 @@ function createPanels(ctx) {
 			ctx.insideBox.hidden = false;
 			return;
 		}
-		ctx.document.getElementById("insideScene").innerHTML = `<svg class="iscene ml-canvas" viewBox="0 0 ${sc.w} ${sc.h}" role="img" aria-label="${sc.title}">${ctx.IMARK}${sc.svg}</svg>`;
+		ctx.document.getElementById("insideScene").innerHTML = `<svg class="iscene ml-canvas" viewBox="0 0 ${sc.w} ${sc.h}" role="img" aria-label="${attr(sc.title)}">${ctx.IMARK}${sc.svg}</svg>`;
 		const scene = ctx.document.querySelector("#insideScene svg");
 		ctx.canvas.setRole(scene, n.cat);
 		scene.querySelectorAll(".ie").forEach((path) => {
@@ -524,8 +523,8 @@ function createPanels(ctx) {
 		const look = n.inside ? `<div class="panel-actions"><button type="button" class="panel-action" id="lookInside">Look inside<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button></div>` : "";
 		const paths = ctx.filesView?.available ? ctx.filesView.pathsFor(id) : [];
 		const repo = paths.length ? `<h3>${ctx.definition.panels.repository}</h3>
-      <div class="panel-actions xrepo">${paths.map((p) => `<button type="button" class="panel-action" data-files-path="${p}" aria-label="Show ${p} in the project files"><span class="mono">${p}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>`).join("")}</div>` : n.structure ? `<h3>${ctx.definition.panels.repository}</h3>
-      <div class="panel-actions xrepo"><a class="panel-action" href="${ctx.structureHref(n.structure)}"${ctx.LINK_TARGET} aria-label="Open ${n.structure} in the project layout"><span class="mono">${n.structure}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a></div>` : "";
+      <div class="panel-actions xrepo">${paths.map((p) => `<button type="button" class="panel-action" data-files-path="${attr(p)}" aria-label="Show ${attr(p)} in the project files"><span class="mono">${p}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>`).join("")}</div>` : n.structure ? `<h3>${ctx.definition.panels.repository}</h3>
+      <div class="panel-actions xrepo"><a class="panel-action" href="${attr(ctx.structureHref(n.structure))}"${ctx.LINK_TARGET} aria-label="Open ${attr(n.structure)} in the project layout"><span class="mono">${n.structure}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a></div>` : "";
 		const bnote = ctx.BOOTCAMP && n.bootcampNote ? `<h3>${ctx.definition.panels.course}</h3><div class="bnote">${n.bootcampNote}</div>` : "";
 		ctx.panelHTML(`
       <div class="p-eyebrow">${ctx.catName(n.cat)}${n.art ? ctx.definition.panels.fileSuffix : ""}</div>
@@ -1373,12 +1372,12 @@ function createTourplayer(ctx) {
 	function renderTourText(b) {
 		ctx.tcBody.replaceChildren(...b.body.map((t) => {
 			const el = ctx.document.createElement("p");
-			el.textContent = t;
+			el.innerHTML = t;
 			return el;
 		}));
 		const p = ctx.tour.phase;
 		ctx.tcWhy.hidden = !b.why || Boolean(b.flow) && p <= ctx.edgeCount(b);
-		ctx.tcWhyText.textContent = b.why || "";
+		ctx.tcWhyText.innerHTML = b.why || "";
 		if (!b.flow) {
 			const g = b.recap && p > 0 && p <= ctx.stageCount(b) ? ctx.SWEEP[p - 1] : null;
 			if (!g) {
@@ -1395,7 +1394,7 @@ function createTourplayer(ctx) {
 			head.append(ctx.TOUR_CHAPTERS.find((c) => c.name.toLowerCase().startsWith(g))?.name || ctx.GROUPS[g].title);
 			const text = ctx.document.createElement("span");
 			text.className = "recap-t";
-			text.textContent = b.recap[g];
+			text.innerHTML = b.recap[g];
 			li.append(head, text);
 			ctx.tcList.replaceChildren(li);
 			ctx.tcList.hidden = false;
@@ -1417,7 +1416,8 @@ function createTourplayer(ctx) {
 		n.className = "n";
 		n.textContent = String(start + p);
 		n.style.setProperty("--n-hue", ctx.hopHue(s, hop));
-		li.append(n, hop.t);
+		li.append(n);
+		li.insertAdjacentHTML("beforeend", hop.t);
 		ctx.tcList.replaceChildren(li);
 		ctx.tcList.hidden = false;
 	}
@@ -4337,6 +4337,9 @@ function renderShell(template, d) {
 		mapViewBox: "0 0 " + d.layout.viewBoxes.map.join(" ")
 	};
 	slots.nextToolHidden = slots.nextToolUrl && slots.nextToolLabel ? "" : "hidden";
+	const attr = (value) => String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+	slots.overviewDescription = attr(slots.overviewDescription);
+	slots.mapDescription = attr(slots.mapDescription);
 	return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
 		if (!(key in slots)) throw new Error(`Missing page slot: ${key}`);
 		return slots[key];
