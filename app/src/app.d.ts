@@ -45,6 +45,9 @@ export interface ToolDefinition {
   tourChapters: Array<Record<string,unknown>>; tour: Array<Record<string,unknown>>;
   beatSeconds: number; flowBeatSeconds: number;
   links: {projectStructure:string};
+  /** Optional files view: annotated repository paths tied to map nodes. A path ending in "/" is a folder. */
+  files?: {title?:string;intro?:string;heading?:string;panel?:string;
+    entries:Array<{path:string;t:string;why?:string;tag?:string;nodes?:string[];open?:boolean;more?:string}>};
 }
 export interface ToolController {
   selectNode(id:string): boolean;

@@ -52,6 +52,11 @@ BROKEN = {
     'unknown node shape': lambda d: d['nodes'][0].update(shape='hexagon'),
     'steps scene without steps': lambda d: d['insides'].update(x={'kind': 'steps', 'title': 'x', 'steps': []}),
     'schema scene without tables': lambda d: d['insides'].update(x={'kind': 'schema', 'title': 'x'}),
+    'files entry tied to unknown node': lambda d: d.update(files={'entries': [{'path': 'app/', 't': 'x', 'nodes': ['ghost']}]}),
+    'files entry listed twice': lambda d: d.update(files={'entries': [{'path': 'app/', 't': 'x'}, {'path': 'app', 't': 'y'}]}),
+    'files entry without a note': lambda d: d.update(files={'entries': [{'path': 'app/main.py'}]}),
+    'files entry outside the repo': lambda d: d.update(files={'entries': [{'path': '../etc/', 't': 'x'}]}),
+    'files without entries': lambda d: d.update(files={'entries': []}),
     'unknown scene kind': lambda d: d['insides'].update(x={'kind': 'movie', 'title': 'x'}),
 }
 
@@ -105,6 +110,17 @@ class RenderTest(unittest.TestCase):
         aws = render.with_library(broken(lambda d: d['nodes'][0].update(logo='aws')))['logos']['aws']
         self.assertNotIn('tile', aws)  # not in Simple Icons: full-colour gilbarbara mark
         self.assertEqual(render.with_library(EXAMPLE)['roles'], EXAMPLE['roles'])  # authored entries win
+
+    @unittest.skipUnless(NODE, 'node is needed to run the viewer code')
+    def test_files_tree_adds_parents_and_lists_folders_first(self):
+        module = (ROOT / 'app' / 'src' / 'runtime' / 'files-view.js').as_uri()
+        entries = [{'path': 'server/handlers/links.js', 't': 'x'}, {'path': 'README.md', 't': 'y'}, {'path': 'docs/', 't': 'z'}]
+        script = (f'import {{ buildFileTree }} from "{module}";'
+                  f'const {{ root, byPath }} = buildFileTree({json.dumps(entries)});'
+                  'const walk = n => n.kids.map(k => k.path + (k.dir ? "/" : "") + (k.entry ? "" : " (implied)")).concat(...n.kids.map(walk));'
+                  'console.log(JSON.stringify(walk(root)));')
+        run = subprocess.run([NODE, '--input-type=module', '-e', script], capture_output=True, text=True, check=True)
+        self.assertEqual(json.loads(run.stdout), ['docs/', 'server/ (implied)', 'README.md', 'server/handlers/ (implied)', 'server/handlers/links.js'])
 
     def test_shipped_template_has_exactly_one_empty_placeholder(self):
         self.assertEqual(render.TEMPLATE.read_text(encoding='utf-8').count(render.PLACEHOLDER), 1)

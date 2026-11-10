@@ -226,6 +226,28 @@ def problems(d):
                 found.append(f'insides.{iid}.tables must be a non-empty list of tables, each with "name"')
         else:
             found.append(f'insides.{iid}.kind: {kind!r} is not steps or schema')
+    files = d.get('files')
+    if files is not None:
+        entries = files.get('entries') if isinstance(files, dict) else None
+        if not (isinstance(entries, list) and entries):
+            found.append('files.entries must be a non-empty list of paths')
+            entries = []
+        node_ids = {n.get('id') for n in listed('nodes')}
+        paths = set()
+        for i, e in enumerate(entries):
+            path = e.get('path') if isinstance(e, dict) else None
+            key = path.rstrip('/') if isinstance(path, str) else None
+            if not key or path.startswith('/') or '..' in key.split('/') or '//' in path:
+                found.append(f'files.entries[{i}].path must be a relative path like "src/" or "src/app.py", got {path!r}')
+                continue
+            if key in paths:
+                found.append(f'files.entries[{i}].path {path!r} is listed twice')
+            paths.add(key)
+            if not isinstance(e.get('t'), str) or not e['t'].strip():
+                found.append(f'files.entries[{i}] ({path}) needs "t": one line on what lives there')
+            for n in e.get('nodes') or []:
+                if n not in node_ids:
+                    found.append(f'files.entries[{i}] ({path}).nodes: unknown node {n!r}')
     source = d.get('source')
     if source is not None and not (isinstance(source, dict) and str(source.get('repo', '')).startswith('https://')):
         found.append('source.repo must be an https:// repository URL')

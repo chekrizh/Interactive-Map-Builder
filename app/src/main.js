@@ -3,6 +3,7 @@ import './styles/ml-chrome.css';
 import './styles/ml-canvas.css';
 import './styles/ml-panel.css';
 import './styles/inside-scenes.css';
+import './styles/files-view.css';
 import './styles/local.css';
 import { mount } from './app.js';
 

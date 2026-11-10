@@ -280,6 +280,37 @@ tour = [
               "The interesting design lives inside the container: a cached read path and an asynchronous write path for stats."]},
 ]
 
+# Files view: the paths a reader needs, each tied to the components it implements.
+FILES = {"entries": [
+    {"path": "server/", "t": "The whole Node.js app: one Express server holds every component on the map.", "open": True},
+    {"path": "server/server.js", "t": "Starts Express, mounts the routes and registers the redirect last, as the catch-all.", "why": "Route order is the design here: the redirect must come after every page and API route, or <code>/login</code> would be read as a short link.", "tag": "entry point", "nodes": ["redirect", "web"]},
+    {"path": "server/routes/", "t": "URL to handler wiring for the REST API and the pages.", "nodes": ["api", "web"]},
+    {"path": "server/routes/renders.routes.js", "t": "Page routes: Handlebars views and the htmx fragments they swap in.", "nodes": ["web"]},
+    {"path": "server/routes/link.routes.js", "t": "<code>/api/v2/links</code>: create, edit, delete and stats.", "nodes": ["api"]},
+    {"path": "server/handlers/", "t": "Request logic. Routes stay thin; the decisions live here.", "open": True},
+    {"path": "server/handlers/links.handler.js", "t": "Create a link and serve a redirect: the hot path of the system.", "why": "Every click lands here. It reads through the cache and pushes the visit to a queue, so a redirect never waits on a database write.", "nodes": ["links", "redirect"]},
+    {"path": "server/handlers/auth.handler.js", "t": "Login, signup, API keys and the checks every protected route runs.", "nodes": ["auth"]},
+    {"path": "server/handlers/validators.handler.js", "t": "express-validator rules for every input: URLs, aliases, passwords."},
+    {"path": "server/passport.js", "t": "Passport strategies: local, JWT, API key and OIDC.", "why": "One place decides who a request belongs to, so the pages, the API and scripts share the same rules.", "nodes": ["auth", "oidc"]},
+    {"path": "server/queries/", "t": "The only code that talks to the database, with the Redis cache in front of reads.", "why": "Keeping SQL and cache invalidation together means a write can never forget to clear the cached copy.", "nodes": ["queries"]},
+    {"path": "server/queries/link.queries.js", "t": "Find, create and batch-remove links; caches each link for 15 minutes by its address.", "nodes": ["queries"]},
+    {"path": "server/models/", "t": "Table definitions; the first migration calls them to create the schema.", "nodes": ["db"]},
+    {"path": "server/migrations/", "t": "Knex migrations: the schema's history since 2020.", "nodes": ["db"], "more": "10 migrations, one per schema change"},
+    {"path": "server/queues/visit.js", "t": "Bull worker that turns a raw click into visit stats, off the request path.", "why": "Stats are kept as one row per link per hour; updating them inline would make every redirect slower.", "nodes": ["visitq"]},
+    {"path": "server/cron.js", "t": "Every 30 seconds, deletes links whose expiry has passed.", "why": "A plain <code>setInterval</code> instead of a job scheduler: one process, nothing extra to deploy.", "nodes": ["cron"]},
+    {"path": "server/mail/", "t": "nodemailer setup and the verify, reset and change-email templates.", "nodes": ["mail", "smtp"]},
+    {"path": "server/redis.js", "t": "The ioredis client, the cache key patterns and their invalidation.", "nodes": ["redis"]},
+    {"path": "server/views/", "t": "Handlebars templates for every page and htmx partial.", "nodes": ["web"]},
+    {"path": "server/env.js", "t": "Reads and validates every environment variable at start-up.", "why": "A typo in configuration fails at boot with a clear message, not on the first request that needs it.", "tag": "config"},
+    {"path": "static/", "t": "Browser assets served as they are: CSS, htmx, Chart.js for stats."},
+    {"path": "custom/", "t": "Empty hook for self-hosters: their own CSS, images and views override the defaults.", "why": "Lets a company brand its instance without forking the code."},
+    {"path": "docs/api/", "t": "Generates the OpenAPI page for the REST API."},
+    {"path": "docker-compose.yml", "t": "The three containers: server, database and Redis.", "why": "The fastest way to see the deployment: everything on the map that runs, runs from here.", "tag": "deploy", "nodes": ["db", "redis"]},
+    {"path": "knexfile.js", "t": "Database connection for migrations: Postgres, MariaDB/MySQL or SQLite.", "tag": "config", "nodes": ["db"]},
+    {"path": ".example.env", "t": "Every setting with its default; copy to <code>.env</code> to run.", "tag": "config"},
+    {"path": "package.json", "t": "Scripts and dependencies: Express, Knex, Bull, Passport, Handlebars.", "tag": "deploy"},
+]}
+
 d = {
     "id": "kutt-url-shortener",
     "page": {"title": "Kutt: a URL shortener, mapped",
@@ -303,7 +334,7 @@ d = {
         "nodeCourseLabel": "Step {step}", "buildLabel": "Build order · Step {step} of {total}",
         "courseLabel": "Kutt · Step {step}", "buildRole": "component"},
     "ui": {"fullSystem": "Full system", "pinnedTitle": "Step {step}: {title}",
-           "tourEntry": "Take the guided tour · 4 min",
+           "tourEntry": "Take the guided tour · 4 min", "filesEntry": "Project structure",
            "flowComplete": "Flow complete. Choose another flow or open a component."},
     "groups": groups, "overview": overview,
     "overviewEdges": [{"id": i, "from": f, "to": t, "label": l} for i, f, t, l, *_ in oedges],
@@ -321,6 +352,7 @@ d = {
                  "pinnedFlowFraction": 0.5,
                  "appearanceRoles": {"accent": "component", "artifact": "store", "error": "external"}},
     "links": {"projectStructure": "https://github.com/thedevs-network/kutt"},
+    "files": FILES,
     "source": {"repo": "https://github.com/thedevs-network/kutt", "ref": "029da42b2459693681886665589fd9512d6b473c"},
     "layout": {
         "viewBoxes": {"map": [1510, 740], "map0": [1230, 580]},

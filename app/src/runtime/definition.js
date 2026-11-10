@@ -81,6 +81,20 @@ export function prepareDefinition(input) {
     if (!d.layout.insides?.[id]) fail(`layout.insides.${id} is missing`);
     Object.assign(scene,d.layout.insides[id]);
   }
+  if (d.files != null) {
+    // The files view: a flat list of paths, each tied to the map's components.
+    const entries = d.files.entries;
+    if (!Array.isArray(entries) || !entries.length) fail('files.entries must be a non-empty list of paths');
+    const paths = new Set();
+    entries.forEach((e, i) => {
+      const path = e?.path, key = typeof path === 'string' ? path.replace(/\/$/, '') : '';
+      if (!key || path.startsWith('/') || path.includes('//') || key.split('/').includes('..')) fail(`files.entries[${i}].path: ${path}`);
+      if (paths.has(key)) fail(`files.entries[${i}].path ${path} is listed twice`);
+      paths.add(key);
+      if (typeof e.t !== 'string' || !e.t.trim()) fail(`files.entries[${i}] (${path}) needs t`);
+      for (const n of e.nodes || []) requireRef(nodes, n, `files.entries[${i}].nodes`);
+    });
+  }
   for (const e of d.overviewEdges) if (!d.layout.overviewEdges[e.id]) fail(`layout.overviewEdges.${e.id} is missing`);
   d.insideMarkers = d.layout.insideMarkers;
   return d;

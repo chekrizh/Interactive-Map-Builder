@@ -148,7 +148,9 @@ function renderNode(id) {
   const decision = n.decision ? `<h3>${ctx.definition.panels.decision}</h3><div class="decision">${n.decision}</div>` : "";
   const look = n.inside ? `<div class="panel-actions"><button type="button" class="panel-action" id="lookInside">Look inside<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button></div>` : "";
 
-  const repo = n.structure ? `<h3>${ctx.definition.panels.repository}</h3>
+  const paths = ctx.filesView?.available ? ctx.filesView.pathsFor(id) : [];
+  const repo = paths.length ? `<h3>${ctx.definition.panels.repository}</h3>
+      <div class="panel-actions xrepo">${paths.map(p => `<button type="button" class="panel-action" data-files-path="${p}" aria-label="Show ${p} in the project files"><span class="mono">${p}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>`).join("")}</div>` : n.structure ? `<h3>${ctx.definition.panels.repository}</h3>
       <div class="panel-actions xrepo"><a class="panel-action" href="${ctx.structureHref(n.structure)}"${ctx.LINK_TARGET} aria-label="Open ${n.structure} in the project layout"><span class="mono">${n.structure}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a></div>` : "";
 
   const bnote = ctx.BOOTCAMP && n.bootcampNote ? `<h3>${ctx.definition.panels.course}</h3><div class="bnote">${n.bootcampNote}</div>` : "";
@@ -167,6 +169,7 @@ function renderNode(id) {
     `, n.cat);
   const b = ctx.document.getElementById("lookInside");
   if (b) ctx.scope.listen(b, "click", () => ctx.openInside(id));
+  ctx.panelBody.querySelectorAll("[data-files-path]").forEach(el => ctx.scope.listen(el, "click", () => ctx.filesView.open(el.dataset.filesPath)));
   ctx.openPanel();
 }
 
