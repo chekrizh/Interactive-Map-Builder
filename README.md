@@ -1,59 +1,91 @@
+<div align="center">
+
 # Interactive Map Builder
 
-An interactive system-map viewer (components, connections, animated flows, build order, guided tour) packaged as a skill. The viewer is built once into a self-contained HTML template. The skill writes a map as JSON, and a Python script with no dependencies puts it into the template. The result is one HTML file that works without a server: open it from disk, send it as a file, or show it in an agent's browser.
+[![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757?logo=claude&logoColor=white)](#install)
+[![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fchekrizh%2FInteractive-Map-Builder%2Fmain%2Fplugins%2Finteractive-map%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version&color=4F46E5)](plugins/interactive-map/.claude-plugin/plugin.json)
+[![Agent Skills](https://img.shields.io/badge/Agent_Skills-compatible-6E56CF)](#install)
 
-## Layout
+[![Output](https://img.shields.io/badge/output-one_offline_HTML-0F766E)](#how-it-works)
+[![License: MIT](https://img.shields.io/badge/license-MIT-64748B)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/chekrizh/Interactive-Map-Builder?style=flat&logo=github&color=E3B341)](https://github.com/chekrizh/Interactive-Map-Builder/stargazers)
 
-```
-.claude-plugin/marketplace.json     Claude Code marketplace: lists the plugin below
-app/                                viewer source (Vite): dev server + template build
-  index.html                        contains an empty <script type="application/json" id="map-definition">
-  src/main.js                       reads that tag; in dev loads a skill example map
-  src/app.js, src/runtime/, src/rendering/, src/styles/, src/template.html
-  src/app.d.ts                      the map format as TypeScript types
-  src/assets/fonts/                 Manrope (SIL Open Font License), inlined into the template
-  vite.config.js                    public dir = the skill folder; --mode template inlines everything
-plugins/interactive-map/
-  .claude-plugin/plugin.json        plugin name and version (bump it to ship an update)
-  skills/interactive-map/           the skill itself, self-contained; Node is not needed here
-    SKILL.md
-    assets/template.html            built from app/, committed
-    assets/logos/                   custom logos a map can use as /assets/logos/<file>
-    assets/library/                 icons (Lucide), logos (Simple Icons, gilbarbara/logos), role presets
-    examples/kutt-url-shortener.json  the main example: a C4 map of a real repo, using the library
-    examples/fastapi-service.json   the smallest complete, self-contained map; the dev map
-    scripts/render.py               map JSON -> HTML, Python 3 stdlib only; fills names from the library
-    scripts/find_asset.py           search the library for icon, logo and role names
-  skills/interactive-map-repo/      repo mode: how to read a repository and model it in C4 terms
-tests/test_render.py                render.py checks, incl. agreement with the page's own validator
-```
+**Deep dives into how a system works: from the big picture down to a line of code, as one interactive map.**
 
-## Work on the viewer
+This skill is for understanding: it gives the agent a method for studying a repository or a topic and a ready-made viewer built for going deep.<br>
+Levels you drill into, animated flows, step-by-step code walkthroughs, a guided tour, and every claim linked to its source. The agent spends its effort on the explanation instead of building the page.
 
-```bash
-cd app
-npm install
-npm run dev              # examples/fastapi-service.json, live. Maps that rely on the library
-                         # (the Kutt example) need render.py, which fills icons, logos and roles
-npm run build:template   # rebuilds plugins/interactive-map/skills/interactive-map/assets/template.html
-```
+[Features](#features) · [Modes](#three-modes) · [Install](#install) · [How it works](#how-it-works)
 
-Rebuild the template only when viewer code or styles change. New maps never need a rebuild.
+<br>
 
-## Render a map without an agent
+<img alt="An animated flow on a repository map: a request travels from the visitor through the redirect handler, cache and database, while the side panel explains each step" src="docs/readme/hero-flow.gif" width="100%">
 
-```bash
-python3 plugins/interactive-map/skills/interactive-map/scripts/render.py \
-  plugins/interactive-map/skills/interactive-map/examples/kutt-url-shortener.json /tmp/map.html
-open /tmp/map.html
-python3 -m unittest discover tests
-```
+<sub>One of the flows on a map of the <a href="https://github.com/thedevs-network/kutt">Kutt</a> URL shortener, made by the skill.</sub>
 
-`render.py` applies the same checks the page runs before drawing (IDs, references, build steps, tour, geometry), plus a check that every section the viewer reads is present, and lists all problems at once. Paths such as `/assets/logos/slack.svg` become embedded `data:` URIs. To add a logo, drop the file into `assets/logos/`.
+</div>
 
-## Install the skill
+---
 
-The skill is the folder `plugins/interactive-map/skills/interactive-map/`. Every client gets a copy of it; only the Claude Code marketplace can deliver updates.
+## Features
+
+- [**Overview**](#overview): the whole system in a few cards.
+- [**Full map**](#full-map): every part and how they connect.
+- [**Flows**](#flows): watch a request or a process move through the system.
+- [**Look inside**](#look-inside): open one component and see how it works step by step.
+- [**Guided tour**](#guided-tour): a short walk through the map, good for a first visit.
+- [**Build order**](#build-order): how the system is put together, piece by piece.
+
+Every map is one HTML file. It opens offline, in light or dark, and every claim points to its source.
+
+### Overview
+
+The first screen. Who uses the system, what it is made of and what it depends on, in a handful of cards. It is the picture you would draw on a whiteboard before going into details. Click a card to open that part.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/overview-dark.png">
+  <img alt="The overview: six cards with labelled connections and a side panel" src="docs/readme/overview-light.png" width="100%">
+</picture>
+
+### Full map
+
+All the parts of the system and the connections between them, grouped into zones. Click any of them to see what it does, why it matters and which files it lives in.
+
+For a repository the map follows the [C4 model](https://c4model.com): *containers* are the pieces that run separately (a server, a database, a queue), *components* are the main parts inside them. You do not need to know C4 to read the map.
+
+<img alt="The full map: components grouped into zones, with labelled connections" src="docs/readme/fullmap-light.png" width="100%">
+
+### Flows
+
+A diagram shows what is connected; a flow shows what actually happens. Pick a scenario, such as "a visitor opens a link", and press *Play flow*: the path lights up hop by hop while the panel explains each step. The GIF at the top is one of them.
+
+### Look inside
+
+Some components deserve a closer look. *Look inside* opens a close-up: a code walkthrough in the order the code runs, with the early exits and links to exact lines, or the tables of a database and how they relate.
+
+<img alt="Clicking from the overview to a component and into its code walkthrough" src="docs/readme/drill.gif" width="100%">
+
+<table>
+  <tr>
+    <td width="50%"><img alt="Step-by-step walkthrough of the redirect handler with links to code lines" src="docs/readme/inside-redirect-light.png"></td>
+    <td width="50%"><img alt="Database tables and the relations between them, in the dark theme" src="docs/readme/inside-db-dark.png"></td>
+  </tr>
+</table>
+
+### Guided tour
+
+For someone who opens the map for the first time and does not know where to start. A few minutes in short chapters: the context, a click, a new link, the background work, a recap. *Next* moves the map and explains what you are looking at.
+
+<img alt="The guided tour: chapter progress at the top, a highlighted flow and a card with the current step" src="docs/readme/tour-light.png" width="100%">
+
+### Build order
+
+How you would build the system from scratch. Switch from *Full system* to step 1, 2, 3: each step adds a few components and says why they come now. Good for seeing what is the core and what was added on top.
+
+<img alt="Build order, step 2 of 4: the components added in this step are highlighted" src="docs/readme/build-light.png" width="100%">
+
+
+## Install
 
 **Claude Code, through the marketplace (receives updates):**
 
@@ -62,42 +94,50 @@ The skill is the folder `plugins/interactive-map/skills/interactive-map/`. Every
 /plugin install interactive-map@interactive-map-builder
 ```
 
-In a shell, the same is `claude plugin marketplace add chekrizh/Interactive-Map-Builder` and `claude plugin install interactive-map@interactive-map-builder`. The skill then triggers on its own and is also available as `/interactive-map:interactive-map`.
+Then just ask, for example:
 
-- Update on request: `/plugin marketplace update interactive-map-builder` in a session, or `claude plugin update interactive-map@interactive-map-builder` in a shell.
+> Draw an interactive map of how this repository works.
+
+The skill triggers on its own. It is also available as `/interactive-map:interactive-map`, and the repository method as `/interactive-map:interactive-map-repo`.
+
+- Update on request: `/plugin marketplace update interactive-map-builder`, or `claude plugin update interactive-map@interactive-map-builder` in a shell.
 - Update automatically: `/plugin` → Marketplaces → interactive-map-builder → Enable auto-update. It is off by default for marketplaces like this one.
 
-**Other clients (no updates; install the new copy again):**
+<details>
+<summary><b>Other clients</b> (no automatic updates; install the new copy again)</summary>
 
-- **Claude Code without the marketplace:** `cp -R plugins/interactive-map/skills/interactive-map ~/.claude/skills/`. Start a new session.
-- **Claude apps (desktop, web):** `cd plugins/interactive-map/skills && zip -r interactive-map.zip interactive-map`, then upload the zip under Settings → Capabilities → Skills. Code execution must be on.
-- **Codex:** copy the skill folder into the skills folder Codex reads (`~/.codex/skills/` at the time of writing).
-- **ChatGPT:** upload the same zip where your workspace allows custom skills. This path has not been checked here.
+<br>
 
-## Release an update
+The skills are the folders in `plugins/interactive-map/skills/`.
 
-1. Change the viewer in `app/` and run `npm run build:template`, or change the skill files directly.
-2. Run `python3 -m unittest discover tests` and `claude plugin validate .`.
-3. Bump `version` in `plugins/interactive-map/.claude-plugin/plugin.json`. Claude Code users keep their cached copy until this string changes, so a push without a bump reaches nobody.
-4. Commit and push to `main`. Marketplace users get the update on their next update command, or on their own if they enabled auto-update.
-5. Make a new zip for Claude apps and ChatGPT users; they have to upload it again.
+- **Claude Code without the marketplace:** `cp -R plugins/interactive-map/skills/* ~/.claude/skills/`, then start a new session.
+- **Claude apps (desktop, web):** `cd plugins/interactive-map/skills && zip -r interactive-map.zip interactive-map` (and the same for `interactive-map-repo`), then upload each zip under Settings → Capabilities → Skills. Code execution must be on.
+- **Codex:** copy the skill folders into the skills folder Codex reads (`~/.codex/skills/` at the time of writing).
+- **ChatGPT:** upload the same zips where your workspace allows custom skills. This path has not been checked here.
 
-Pages that were already generated do not change: each HTML file carries its own copy of the viewer and its map.
+</details>
 
-## Test on each device
+## How it works
 
-Ask for a map, for example "Draw an interactive map of how this repository works", then check:
+```
+ subject ──► agent designs the map ──► map.json ──► render.py ──► map.html
+ (repo, topic)   (skills decide what      (nodes, flows,   (checks it, fills    (viewer + map,
+                  goes on the map)         tour, layout)    icons and logos)     works offline)
+```
 
-1. The skill triggers, writes JSON and runs `render.py`. The model must not type the HTML itself.
-2. Where the file appears and how it is shown: preview pane, built-in browser, file card, or only a path.
-3. The map opens on the big picture; stages open, components show their panel, and flows play.
-4. The build order switch and the guided tour work.
-5. Two different maps opened from disk keep separate tour progress.
-6. The downloaded file still opens with the network off.
+- **Two skills.** `interactive-map-repo` is the method for repositories: find the evidence (deployment files, entry points, contracts), model it in [C4](https://c4model.com) terms (context on the overview, containers and components on the full map) and pick the flows worth animating. `interactive-map` is the format: how to write the map JSON and render it.
+- **The agent never writes HTML.** It writes one JSON definition. `render.py` (Python 3, standard library only) validates it with the same checks the page runs, lists every problem at once, and puts it into a prebuilt viewer template.
+- **An asset library is built in.** About 2,300 [Lucide](https://lucide.dev) icons, about 3,500 brand logos from [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos), and role presets with tested light and dark colours. A map only names them.
+- **The output is self-contained.** Each HTML file carries its own copy of the viewer, the map and the font, so it keeps working when the skill changes.
 
-## Known limits
+Render the bundled example yourself:
 
-- **Authored HTML is trusted.** Many text fields are inserted as HTML. `SKILL.md` tells the model not to paste markup from sources it analyses, but nothing sanitises it yet. Add an allowlist sanitiser to `render.py` before wider release.
-- **Geometry is manual.** Every node, edge path, zone and overview card needs exact coordinates; there is no automatic layout.
-- **Size.** The template is about 340 KB, of which the font is about 214 KB. A model cannot retype it into a chat artifact, so the client has to show the file itself.
-- **Browser tests** from the original project (interaction and visual parity) are not ported yet.
+```bash
+python3 plugins/interactive-map/skills/interactive-map/scripts/render.py \
+  plugins/interactive-map/skills/interactive-map/examples/kutt-url-shortener.json /tmp/map.html
+open /tmp/map.html
+```
+
+## License
+
+[MIT](LICENSE). Bundled assets keep their own licenses: [Lucide](https://lucide.dev) icons (ISC), [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos) (CC0; brand marks remain trademarks of their owners), the Manrope font (SIL Open Font License).
