@@ -154,4 +154,4 @@ open /tmp/map.html
 
 ## License
 
-[MIT](LICENSE). Bundled assets keep their own licenses: [Lucide](https://lucide.dev) icons (ISC), [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos) (CC0; brand marks remain trademarks of their owners), the Manrope font (SIL Open Font License).
+[MIT](LICENSE). Bundled assets keep their own licenses: [Lucide](https://lucide.dev) icons (ISC), [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos) (CC0; brand marks remain trademarks of their owners), the Manrope font (SIL Open Font License). The example maps describe [Kutt](https://github.com/thedevs-network/kutt) (The Devs Network and contributors, MIT), [PrivateBin](https://github.com/PrivateBin/PrivateBin) (Sébastien Sauvage and the PrivateBin contributors, zlib/libpng) and [Healthchecks](https://github.com/healthchecks/healthchecks) (Pēteris Caune and other contributors, BSD 3-clause); they copy none of their code, and the [examples README](plugins/interactive-map/skills/interactive-map/examples/README.md) links each licence and mapped commit.

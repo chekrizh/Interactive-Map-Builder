@@ -43,14 +43,20 @@ export function buildFileTree(entries) {
   return { root, byPath };
 }
 
-export function createFilesView(ctx) {
-  const files = ctx.definition.files;
-  const box = ctx.document.getElementById("files");
-  const btn = ctx.document.getElementById("filesBtn");
+/* The neighbours' functions the files view calls (through act). */
+export const NEEDS = ["panelHTML", "openPanel", "renderL0", "renderOverview", "renderNode", "showLevel", "selectNode", "closeInside", "clearStory"];
+
+export function createFilesView({ env, model, scene, state, act }) {
+  const doc = env.document;
+  const files = model.definition.files;
+  const box = doc.getElementById("files");
+  const btn = doc.getElementById("filesBtn");
   if (!files || !box || !btn) return { available: false, open() {}, close() {}, isOpen: () => false, pathsFor: () => [] };
 
   const { root, byPath } = buildFileTree(files.entries);
-  const source = ctx.definition.source;
+  const source = model.definition.source;
+  const panelBody = doc.getElementById("panelBody");
+  const stagecard = doc.querySelector(".stagecard");
   const tree = box.querySelector("#filesTree");
   const expanded = new Set();
   byPath.forEach(n => {
@@ -59,14 +65,14 @@ export function createFilesView(ctx) {
   let selected = null;
 
   btn.hidden = false;
-  const label = ctx.t("filesEntry");
-  ctx.document.getElementById("filesBtnText").textContent = label;
+  const label = env.t("filesEntry");
+  doc.getElementById("filesBtnText").textContent = label;
   const repoName = files.title || (source ? source.repo.replace(/^https:\/\/github\.com\//, "").replace(/\/$/, "") : "project");
   root.name = repoName.split("/").pop();
   box.querySelector("#filesTitle").innerHTML = `${esc(label)} · ${esc(repoName)}` +
-    (source?.ref ? ` ${esc(ctx.t("filesAt"))} <span class="mono">${esc(source.ref.slice(0, 7))}</span>` : "");
+    (source?.ref ? ` ${esc(env.t("filesAt"))} <span class="mono">${esc(source.ref.slice(0, 7))}</span>` : "");
 
-  const nodeOf = id => ctx.nodeEls[id]?.def;
+  const nodeOf = id => scene.nodeEls[id]?.def;
   /* A path takes the role of its first component. A folder without its own
      components takes its contents' role when they all share one; mixed or
      unlinked paths stay grey. */
@@ -84,8 +90,8 @@ export function createFilesView(ctx) {
   const chip = id => {
     const n = nodeOf(id);
     if (!n) return "";
-    return `<button type="button" class="ft-chip" data-node="${esc(id)}" style="--chip-hue:var(--h-${n.cat})" title="${esc(ctx.t("filesShowOnMap", { name: n.concept }))}" tabindex="-1">` +
-      `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ctx.ICONS[n.icon] || ""}</svg>${esc(n.concept)}</button>`;
+    return `<button type="button" class="ft-chip" data-node="${esc(id)}" style="--chip-hue:var(--h-${n.cat})" title="${esc(env.t("filesShowOnMap", { name: n.concept }))}" tabindex="-1">` +
+      `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${model.ICONS[n.icon] || ""}</svg>${esc(n.concept)}</button>`;
   };
 
   function rowHTML(n, depth) {
@@ -117,18 +123,18 @@ export function createFilesView(ctx) {
   }
 
   function renderIntro() {
-    ctx.panelHTML(`
-      <div class="p-eyebrow">${esc(ctx.t("filesEyebrow"))}</div>
-      <h2>${esc(files.heading || ctx.t("filesHeading"))}</h2>
-      <p style="margin-top:8px">${files.panel || esc(ctx.t("filesIntro", { repo: "\u0000", count: files.entries.length })).replace("\u0000", `<span class="mono">${esc(repoName)}</span>`)}</p>
-      <h3>${esc(ctx.t("filesHowTo"))}</h3>
+    act.panelHTML(`
+      <div class="p-eyebrow">${esc(env.t("filesEyebrow"))}</div>
+      <h2>${esc(files.heading || env.t("filesHeading"))}</h2>
+      <p style="margin-top:8px">${files.panel || esc(env.t("filesIntro", { repo: "\u0000", count: files.entries.length })).replace("\u0000", `<span class="mono">${esc(repoName)}</span>`)}</p>
+      <h3>${esc(env.t("filesHowTo"))}</h3>
       <ul class="newlist ft-toplist">
-        <li><b>${esc(ctx.t("filesTagsTerm"))}</b> ${esc(ctx.t("filesTags"))}</li>
-        <li><b>${esc(ctx.t("filesFolderTerm"))}</b> ${esc(ctx.t("filesFolder"))}</li>
-        <li>${esc(ctx.t("filesClickRow"))} <kbd>↑</kbd> <kbd>↓</kbd> ${esc(ctx.t("filesKeysWalk"))} <kbd>←</kbd> <kbd>→</kbd> ${esc(ctx.t("filesKeysFold"))}</li>
+        <li><b>${esc(env.t("filesTagsTerm"))}</b> ${esc(env.t("filesTags"))}</li>
+        <li><b>${esc(env.t("filesFolderTerm"))}</b> ${esc(env.t("filesFolder"))}</li>
+        <li>${esc(env.t("filesClickRow"))} <kbd>↑</kbd> <kbd>↓</kbd> ${esc(env.t("filesKeysWalk"))} <kbd>←</kbd> <kbd>→</kbd> ${esc(env.t("filesKeysFold"))}</li>
       </ul>
     `, null);
-    ctx.openPanel();
+    act.openPanel();
   }
 
   function renderEntry(n) {
@@ -136,24 +142,24 @@ export function createFilesView(ctx) {
     const nodes = (e.nodes || []).map(id => [id, nodeOf(id)]).filter(([, d]) => d);
     const onMap = nodes.map(([id, d]) =>
       `<button type="button" class="panel-action ft-goto" data-node="${esc(id)}" style="--chip-hue:var(--h-${d.cat})">` +
-      `<span class="ft-goto-ico"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ctx.ICONS[d.icon] || ""}</svg></span>` +
+      `<span class="ft-goto-ico"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${model.ICONS[d.icon] || ""}</svg></span>` +
       `${esc(d.concept)}${svg(ARROW)}</button>`).join("");
     const kids = n.dir ? n.kids.filter(k => k.entry).map(k =>
       `<li><button type="button" class="ft-link" data-path="${esc(k.path)}">${esc(k.name + (k.dir ? "/" : ""))}</button> ${k.entry.t}</li>`).join("") : "";
     const hue = nodes[0]?.[1].cat || null;
-    ctx.panelHTML(`
+    act.panelHTML(`
       <div class="p-eyebrow">${n.dir ? "Folder" : "File"}</div>
       <h2 class="ft-h">${esc(n.name + (n.dir ? "/" : ""))}</h2>
       <p class="p-sub mono">${esc(n.path + (n.dir ? "/" : ""))}</p>
       ${e.tag ? `<div class="p-chips ft-chips"><span class="pchip">${esc(e.tag)}</span></div>` : ""}
-      ${e.t ? `<h3>${esc(ctx.t("filesWhat"))}</h3><p>${e.t}</p>` : ""}
-      ${e.why ? `<h3>${esc(ctx.t("filesWhy"))}</h3><p>${e.why}</p>` : ""}
-      ${onMap ? `<h3>${esc(ctx.t("filesOnMap"))}</h3><div class="panel-actions">${onMap}</div>` : ""}
-      ${kids ? `<h3>${esc(ctx.t("filesInside"))}</h3><ul class="newlist ft-toplist">${kids}</ul>` : ""}
+      ${e.t ? `<h3>${esc(env.t("filesWhat"))}</h3><p>${e.t}</p>` : ""}
+      ${e.why ? `<h3>${esc(env.t("filesWhy"))}</h3><p>${e.why}</p>` : ""}
+      ${onMap ? `<h3>${esc(env.t("filesOnMap"))}</h3><div class="panel-actions">${onMap}</div>` : ""}
+      ${kids ? `<h3>${esc(env.t("filesInside"))}</h3><ul class="newlist ft-toplist">${kids}</ul>` : ""}
     `, hue);
-    ctx.panelBody.querySelectorAll("[data-node]").forEach(b => ctx.scope.listen(b, "click", () => goToNode(b.dataset.node)));
-    ctx.panelBody.querySelectorAll(".ft-link").forEach(b => ctx.scope.listen(b, "click", () => select(b.dataset.path, { reveal: true })));
-    ctx.openPanel();
+    panelBody.querySelectorAll("[data-node]").forEach(b => env.scope.listen(b, "click", () => goToNode(b.dataset.node)));
+    panelBody.querySelectorAll(".ft-link").forEach(b => env.scope.listen(b, "click", () => select(b.dataset.path, { reveal: true })));
+    act.openPanel();
   }
 
   function select(path, { reveal = false, focus = false } = {}) {
@@ -165,7 +171,7 @@ export function createFilesView(ctx) {
     renderEntry(n);
     const row = tree.querySelector(`.ft-row[data-path="${CSS.escape(n.path)}"]`);
     if (row) {
-      if (reveal) row.scrollIntoView({ block: "nearest", behavior: ctx.reduced ? "auto" : "smooth" });
+      if (reveal) row.scrollIntoView({ block: "nearest", behavior: env.reduced ? "auto" : "smooth" });
       if (focus) row.focus({ preventScroll: !reveal });
     }
     return true;
@@ -179,17 +185,17 @@ export function createFilesView(ctx) {
 
   function goToNode(id) {
     close();
-    if (ctx.level !== 1) ctx.showLevel(1);
-    ctx.selectNode(id);
+    if (state.level !== 1) act.showLevel(1);
+    act.selectNode(id);
   }
 
   function open(path) {
-    if (ctx.tour.active) return;
-    ctx.closeInside();
-    ctx.clearStory?.();
+    if (state.tour.active) return;
+    act.closeInside();
+    act.clearStory();
     box.hidden = false;
     btn.setAttribute("aria-pressed", "true");
-    ctx.stagecard.classList.add("files-open");
+    stagecard.classList.add("files-open");
     if (path && select(path, { reveal: true, focus: true })) return;
     selected = null;
     render();
@@ -200,17 +206,17 @@ export function createFilesView(ctx) {
     if (box.hidden) return;
     box.hidden = true;
     btn.setAttribute("aria-pressed", "false");
-    ctx.stagecard.classList.remove("files-open");
+    stagecard.classList.remove("files-open");
   }
 
   function rerenderPanelAfterClose() {
     close();
-    if (ctx.level === 0) ctx.renderL0(); else if (ctx.selected) ctx.renderNode(ctx.selected); else ctx.renderOverview();
+    if (state.level === 0) act.renderL0(); else if (state.selected) act.renderNode(state.selected); else act.renderOverview();
   }
 
-  ctx.scope.listen(btn, "click", () => (box.hidden ? open() : rerenderPanelAfterClose()));
-  ctx.scope.listen(box.querySelector("#filesBack"), "click", rerenderPanelAfterClose);
-  ctx.scope.listen(tree, "click", ev => {
+  env.scope.listen(btn, "click", () => (box.hidden ? open() : rerenderPanelAfterClose()));
+  env.scope.listen(box.querySelector("#filesBack"), "click", rerenderPanelAfterClose);
+  env.scope.listen(tree, "click", ev => {
     const c = ev.target.closest(".ft-chip");
     if (c) { goToNode(c.dataset.node); return; }
     const row = ev.target.closest(".ft-row[data-path]");
@@ -222,7 +228,7 @@ export function createFilesView(ctx) {
     if (n.dir && (n !== selected || !expanded.has(n.path))) toggle(n, true);
     select(n.path, { focus: true });
   });
-  ctx.scope.listen(tree, "keydown", ev => {
+  env.scope.listen(tree, "keydown", ev => {
     const row = ev.target.closest(".ft-row[data-path]");
     if (!row) return;
     const rows = [...tree.querySelectorAll(".ft-row[data-path]")];
