@@ -1,0 +1,66 @@
+# Developing Interactive Map Builder
+
+Notes for working on the viewer and the skills, releasing updates and testing them.
+
+## Repository layout
+
+```
+.claude-plugin/marketplace.json     Claude Code marketplace: lists the plugin below
+plugins/interactive-map/
+  .claude-plugin/plugin.json        plugin name and version (bump it to ship an update)
+  skills/interactive-map/           the format and renderer; self-contained, no Node needed
+    SKILL.md
+    assets/template.html            the viewer, built from app/ and committed
+    assets/logos/                   custom logos a map can use as /assets/logos/<file>
+    assets/library/                 icons, logos and role presets
+    examples/kutt-url-shortener.json  the main example: a C4 map of a real repo
+    examples/fastapi-service.json   the smallest complete map; the dev map
+    scripts/render.py               map JSON -> HTML; fills names from the library
+    scripts/find_asset.py           search the library for icon, logo and role names
+  skills/interactive-map-repo/      repo mode: how to read a repository and model it in C4 terms
+app/                                viewer source (Vite): dev server + template build
+  src/app.d.ts                      the map format as TypeScript types
+evals/                              scripts that build and check the example maps
+tests/test_render.py                render.py checks, incl. agreement with the page's own validator
+docs/readme/                        images for the README
+```
+
+## Develop the viewer
+
+```bash
+cd app
+npm install
+npm run dev              # examples/fastapi-service.json, live. Maps that rely on the library
+                         # (the Kutt example) need render.py, which fills icons, logos and roles
+npm run build:template   # rebuilds plugins/interactive-map/skills/interactive-map/assets/template.html
+```
+
+Rebuild the template only when viewer code or styles change. New maps never need a rebuild. Run the tests with `python3 -m unittest discover tests`.
+
+### Release an update
+
+1. Change the viewer in `app/` and run `npm run build:template`, or change the skill files directly.
+2. Run `python3 -m unittest discover tests` and `claude plugin validate .`.
+3. **Bump `version` in `plugins/interactive-map/.claude-plugin/plugin.json`.** Claude Code users keep their cached copy until this string changes, so a push without a bump reaches nobody.
+4. Merge to `main`. Marketplace users get the update on their next update command, or on their own if they enabled auto-update.
+5. Make new zips for Claude apps and ChatGPT users; they have to upload them again.
+
+Pages that were already generated do not change: each HTML file carries its own copy of the viewer and its map.
+
+### Test on each device
+
+Ask for a map, for example "Draw an interactive map of how this repository works", then check:
+
+1. The skill triggers, writes JSON and runs `render.py`. The model must not type the HTML itself.
+2. Where the file appears and how it is shown: preview pane, built-in browser, file card, or only a path.
+3. The map opens on the big picture; cards open their part, components show their panel, flows play.
+4. The build order switch and the guided tour work.
+5. Two different maps opened from disk keep separate tour progress.
+6. The downloaded file still opens with the network off.
+
+## Known limits
+
+- **Prototype.** Only the repository mode is implemented, and its method is still being tuned. The modes for a pile of sources and for a research question are planned.
+- **Geometry is manual.** Every node, edge path, zone and overview card needs exact coordinates; there is no automatic layout yet.
+- **Authored HTML is trusted.** Many text fields are inserted as HTML. `SKILL.md` tells the model not to paste markup from sources it analyses, but nothing sanitises it yet.
+- **Size.** The template is about 340 KB, of which the font is about 214 KB. A model cannot retype it into a chat artifact, so the client has to show the file itself.
