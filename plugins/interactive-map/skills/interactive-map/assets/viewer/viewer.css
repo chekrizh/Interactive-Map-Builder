@@ -241,6 +241,11 @@
   .zoomctl .crumbbtn:hover { background: color-mix(in srgb,var(--ink) 5%,var(--surface)); }
   .zoomctl #zoomFit { font-size: 12px; }
   .zoomctl .crumbbtn:focus-visible { outline-offset: -3px; }
+  /* On the full map the control sits in the legend bar (showLevel), a
+     little taller than the bar's text line without making the bar taller. */
+  .legend .zoomctl { position: static; margin: -5px 0 -5px auto; box-shadow: none; }
+  .legend .zoomctl .crumbbtn { width: 28px; height: 28px; min-height: 0; }
+  .legend .zoomctl #zoomFit { width: 40px; }
   /* Whichever right-side control comes first takes the auto margin; the
      rest sit beside it. Show panel only exists while the panel is closed. */
   .crumbbar #panelBtn { margin-left: auto; }

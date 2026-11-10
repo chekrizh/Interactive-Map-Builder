@@ -116,6 +116,41 @@ function popBadge(g) {
   g.classList.add("badge-pop");
 }
 
+/* Where a bare step number (a chip w wide, 20 high) goes on edge ee: the
+   free spot along its line nearest the middle, clear of every label still
+   shown (faded ones too), every step chip already placed and every card;
+   on an edge too short for that, just beside its own label. A flow that
+   uses one edge twice used to stack both numbers on the label
+   (2026-11-10). */
+function chipSpot(ee, w, own) {
+  const grow = (b, m) => ({ x: b.x - m, y: b.y - m, width: b.width + 2 * m, height: b.height + 2 * m });
+  const hits = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+  const shown = id => ctx.edgeEls[id].label && !ctx.edgeEls[id].label.classList.contains("inchip");
+  const busy = ctx.EDGES.map(e => e.id).filter(shown).map(id => grow(ctx.edgeEls[id].label.getBBox(), 2))
+    .concat([...ctx.storyLayer.querySelectorAll("g.fchip > .fchip-r")].filter(r => r.parentNode !== own).map(r => grow(r.getBBox(), 2)))
+    .concat(ctx.NODES.map(n => grow({ x: n.x, y: n.y, width: n.w, height: n.h }, 4)));
+  const free = p => !busy.some(b => hits({ x: p.x - w / 2, y: p.y - 10, width: w, height: 20 }, b));
+  const L = ee.path.getTotalLength(), lo = w / 2 + 6, hi = L - w / 2 - 12;
+  for (let d = 0; d <= L / 2; d += 4) {
+    for (const t of d ? [L / 2 - d, L / 2 + d] : [L / 2]) {
+      if (t < lo || t > hi) continue;
+      const p = ee.path.getPointAtLength(t);
+      if (free(p)) return p;
+    }
+  }
+  if (ee.label) {
+    const b = ee.label.getBBox(), cx = b.x + b.width / 2, cy = b.y + b.height / 2;
+    const above = cy - b.height / 2 - 13, below = cy + b.height / 2 + 13;
+    const right = b.x + b.width + 3 + w / 2, left = b.x - 3 - w / 2;
+    const across = [[cx, above], [cx + w + 2, above], [cx, below], [cx + w + 2, below]];
+    const along = [[right, cy], [right, cy - 22], [left, cy], [left, cy - 22]];
+    const a = ee.path.getPointAtLength(L * 0.45), z = ee.path.getPointAtLength(L * 0.55);
+    const spots = Math.abs(z.x - a.x) >= Math.abs(z.y - a.y) ? across.concat(along) : along.concat(across);
+    for (const [x, y] of spots) if (free({ x, y })) return { x, y };
+  }
+  return ee.path.getPointAtLength(L / 2);
+}
+
 async function playStory(key, opts) {
   const quiet = Boolean(opts && opts.quiet);
   const wide = Boolean(opts && opts.wide);
@@ -145,7 +180,6 @@ async function playStory(key, opts) {
     list = ctx.document.getElementById("stepList");
   }
   const badgeUses = {},
-    badgeSeen = {},
     bidirSeen = {};
   s.hops.forEach(h => {
     badgeUses[h.e] = (badgeUses[h.e] || 0) + 1;
@@ -208,12 +242,11 @@ async function playStory(key, opts) {
       ee.path.classList.remove("eglow");
     }
     if (token !== ctx.storyToken) return;
-    const L = ee.path.getTotalLength();
-    /* A bidirectional edge can carry two hops of one story (s3_dr:
-       reference in, report out). Spread their badges along the path so a
-       later number does not land exactly on top of an earlier one. */
-    const k = badgeSeen[hop.e] = (badgeSeen[hop.e] || 0) + 1;
-    const mid = badgeUses[hop.e] === 1 && ee.mid ? ee.mid : ee.path.getPointAtLength(L * 0.5 + (k - (badgeUses[hop.e] + 1) / 2) * 26);
+    /* An edge one flow uses once carries its label on the step chip. One
+       it uses more than once (s3_dr: reference in, report out) keeps its
+       label and gets bare numbers placed clear of it (chipSpot). */
+    const once = badgeUses[hop.e] === 1;
+    let mid = once && ee.mid ? ee.mid : null;
     const bg = ctx.el("g", {
       "data-hop": i,
       class: "fchip"
@@ -222,40 +255,39 @@ async function playStory(key, opts) {
     /* A step chip sits on the line: the hop number in a filled disc, then
        the edge's own label, which leaves its usual spot while the flow
        runs. The latest landed step is filled with the flow's hue. */
-    const label = badgeUses[hop.e] === 1 && ee.label ? ee.def.label : "";
-    const pill = ctx.el("rect", { class: "fchip-r", y: mid.y - 10, height: 20, rx: 10 }, bg);
-    ctx.el("circle", {
-      cx: 0,
-      cy: mid.y,
-      r: 7,
-      class: "badge-c"
-    }, bg);
-    const num = ctx.el("text", {
-      x: 0,
-      y: mid.y + 3.4,
-      class: "badge-t"
-    }, bg);
+    const label = once && ee.label ? ee.def.label : "";
+    const pill = ctx.el("rect", { class: "fchip-r", height: 20, rx: 10 }, bg);
+    const disc = ctx.el("circle", { r: 7, class: "badge-c" }, bg);
+    const num = ctx.el("text", { class: "badge-t" }, bg);
     num.textContent = String(i + 1);
     let w = 20;
     let txt = null;
     if (label) {
-      txt = ctx.el("text", { y: mid.y + 3.4, class: "fchip-t" }, bg);
+      txt = ctx.el("text", { class: "fchip-t" }, bg);
       txt.textContent = label;
       w = 26 + txt.getComputedTextLength() + 9;
       /* A label that will not fit on a short edge stays where it was and
          the chip keeps only the number. */
-      if (w > (ee.mid && badgeUses[hop.e] === 1 ? ee.mid.len - 4 : L - 28)) {
+      if (w > (mid ? mid.len - 4 : ee.path.getTotalLength() - 28)) {
         txt.remove();
         txt = null;
         w = 20;
+        mid = null;
       } else ee.label.classList.add("inchip");
     }
+    if (!mid) mid = txt ? ee.path.getPointAtLength(ee.path.getTotalLength() / 2) : chipSpot(ee, w, bg);
     const x0 = mid.x - w / 2;
     pill.setAttribute("x", x0);
+    pill.setAttribute("y", mid.y - 10);
     pill.setAttribute("width", w);
-    bg.querySelector(".badge-c").setAttribute("cx", x0 + 10);
+    disc.setAttribute("cx", x0 + 10);
+    disc.setAttribute("cy", mid.y);
     num.setAttribute("x", x0 + 10);
-    if (txt) txt.setAttribute("x", x0 + 22);
+    num.setAttribute("y", mid.y + 3.4);
+    if (txt) {
+      txt.setAttribute("x", x0 + 22);
+      txt.setAttribute("y", mid.y + 3.4);
+    }
     ctx.storyLayer.querySelectorAll("g.fchip.now").forEach(g => g.classList.remove("now"));
     bg.classList.add("now");
     if (!landed) ctx.popBadge(bg);
