@@ -882,6 +882,18 @@
   button.lookbtn, button.panel-action { border-radius: var(--ml-control-radius); }
   /* Look inside is the panel's main action: filled ink, like Play flow and the tour entry. */
   button#lookInside { color: var(--bg); background: var(--ink); border-color: var(--ink); font-weight: 600; }
+  /* Opening the full map is the big picture's main step: filled, in the panel (centred) and in the bar. */
+  button#gofull, button#toL1 { color: var(--bg); background: var(--ink); border-color: var(--ink); font-weight: 600; }
+  button#gofull:hover, button#toL1:hover { background: color-mix(in srgb,var(--ink) 86%,var(--bg)); border-color: color-mix(in srgb,var(--ink) 86%,var(--bg)); }
+  .panel-actions:has(> #gofull) { justify-content: center; }
+  #toL1 { gap: 6px; margin-left: 12px; white-space: nowrap; }
+  /* On a phone the button says where you are going; the "big picture" note gives way. */
+  @media (max-width: 640px) {
+    .crumbbar #crumbNote:has(+ #toL1:not([hidden])) { display: none; }
+    #toL1 { margin-left: 0; }
+  }
+  #toL1 .ml-control-icon { width: 14px; height: 14px; order: 1; }
+  .stagecard.touring #toL1 { display: none !important; }
   button#lookInside:hover { background: color-mix(in srgb,var(--ink) 86%,var(--bg)); border-color: color-mix(in srgb,var(--ink) 86%,var(--bg)); }
   .crumbbar button[hidden] { display: none; }
 

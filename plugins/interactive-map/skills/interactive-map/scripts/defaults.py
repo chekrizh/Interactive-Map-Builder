@@ -43,6 +43,7 @@ UI = {
     'bigPicture': 'The big picture',
     'fullMap': 'The full map',
     'backToBigPicture': 'Big picture',
+    'openFullMap': 'Open full map',
     'clearStage': 'Clear {stage} stage filter',
     'showAllStages': 'Show all stages',
     'showPanel': 'Show panel',

@@ -24,6 +24,7 @@ const fsBtn = document.getElementById("fsBtn");
 const panelBtn = document.getElementById("panelBtn");
 const tourBar = document.getElementById("tourBar");
 const toL0 = document.getElementById("toL0");
+const toL1 = document.getElementById("toL1");
 const crumbNote = document.getElementById("crumbNote");
 const unfocusBtn = document.getElementById("unfocus");
 /* Highlight only while the full map is showing: on the big picture the
@@ -60,6 +61,7 @@ function showLevel(l) {
      map off to the bottom right. */
   act.resetView();
   toL0.hidden = l === 0;
+  toL1.hidden = l !== 0;
   crumbNote.textContent = t(l === 0 ? "bigPicture" : "fullMap");
   if (l === 0) {
     setFocus(null);
@@ -256,6 +258,12 @@ scope.listen(toL0, "click", () => {
   showLevel(0);
   act.renderL0();
 });
+/* The same step as the intro panel's "Open full map", always in reach on the big picture. */
+scope.listen(toL1, "click", () => {
+  showLevel(1);
+  setFocus(null);
+  act.renderOverview();
+});
 scope.listen(unfocusBtn, "click", () => {
   setFocus(null);
   act.renderOverview();
@@ -346,6 +354,7 @@ function applyLabels() {
   });
 }
 control.label(toL0, t("backToBigPicture"), "back");
+control.label(toL1, t("openFullMap"), "forward");
 control.label(fsBtn, t("fullScreen"), "expand");
 return { applyLabels, onEscape, refreshWeekSeg, showLevel, setFocus, focusGroup, updateDrawerBounds, applyFsDom, enterFs, exitFs, clearSelection, selectNode, setWeek, setTheme, unselect, restoreSelection };
 }
