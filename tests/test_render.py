@@ -122,8 +122,24 @@ class RenderTest(unittest.TestCase):
         run = subprocess.run([NODE, '--input-type=module', '-e', script], capture_output=True, text=True, check=True)
         self.assertEqual(json.loads(run.stdout), ['docs/', 'server/ (implied)', 'README.md', 'server/handlers/ (implied)', 'server/handlers/links.js'])
 
-    def test_shipped_template_has_exactly_one_empty_placeholder(self):
-        self.assertEqual(render.TEMPLATE.read_text(encoding='utf-8').count(render.PLACEHOLDER), 1)
+    def test_viewer_page_is_self_contained_with_one_empty_placeholder(self):
+        page = render.viewer_page()
+        self.assertEqual(page.count(render.PLACEHOLDER), 1)
+        self.assertNotIn('src="./', page)
+        self.assertNotIn('href="./', page)
+        self.assertNotIn('url("./', page)
+        self.assertIn('data:font/ttf;base64,', page)
+
+    def test_plugin_files_stay_readable_for_the_security_scan(self):
+        """The plugin scan holds any non-image, non-font file over 256 KiB as one it couldn't inspect."""
+        plugin = ROOT / 'plugins' / 'interactive-map'
+        files = [p for p in plugin.rglob('*') if p.is_file()]
+        self.assertLessEqual(len(files), 512)
+        for path in files:
+            if path.suffix in ('.ttf', '.woff2', '.png', '.jpg'):
+                continue
+            with self.subTest(str(path.relative_to(plugin))):
+                self.assertLess(path.stat().st_size, 256 * 1024)
 
 
 if __name__ == '__main__':

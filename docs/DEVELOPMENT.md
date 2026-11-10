@@ -10,9 +10,10 @@ plugins/interactive-map/
   .claude-plugin/plugin.json        plugin name and version (bump it to ship an update)
   skills/interactive-map/           the format and renderer; self-contained, no Node needed
     SKILL.md
-    assets/template.html            the viewer, built from app/ and committed
+    assets/viewer/                  the viewer (unminified JS, CSS, font), built from app/ and committed;
+                                    render.py inlines it into each page
     assets/logos/                   custom logos a map can use as /assets/logos/<file>
-    assets/library/                 icons, logos and role presets
+    assets/library/                 icons, logos and role presets, split into files under 256 KB
     examples/kutt-url-shortener.json  the main example: a C4 map of a real repo
     examples/fastapi-service.json   the smallest complete map; the dev map
     scripts/render.py               map JSON -> HTML; fills names from the library
@@ -32,10 +33,12 @@ cd app
 npm install
 npm run dev              # examples/fastapi-service.json, live. Maps that rely on the library
                          # (the Kutt example) need render.py, which fills icons, logos and roles
-npm run build:template   # rebuilds plugins/interactive-map/skills/interactive-map/assets/template.html
+npm run build:template   # rebuilds plugins/interactive-map/skills/interactive-map/assets/viewer/
 ```
 
-Rebuild the template only when viewer code or styles change. New maps never need a rebuild. Run the tests with `python3 -m unittest discover tests`.
+Rebuild the viewer only when viewer code or styles change.
+
+Keep every file in the plugin readable and under 256 KiB (fonts and images aside): Claude's plugin security scan cannot inspect larger or minified files and shows users a warning that the plugin "couldn't be confirmed". `tests/test_render.py` checks the sizes. Rebuild the asset library with `tools/build_library.py`; it splits each section into numbered parts. New maps never need a rebuild. Run the tests with `python3 -m unittest discover tests`.
 
 ### Release an update
 
@@ -63,4 +66,4 @@ Ask for a map, for example "Draw an interactive map of how this repository works
 - **Prototype.** Only the repository mode is implemented, and its method is still being tuned. The modes for a pile of sources and for a research question are planned.
 - **Geometry is manual.** Every node, edge path, zone and overview card needs exact coordinates; there is no automatic layout yet.
 - **Authored HTML is trusted.** Many text fields are inserted as HTML. `SKILL.md` tells the model not to paste markup from sources it analyses, but nothing sanitises it yet.
-- **Size.** The template is about 340 KB, of which the font is about 214 KB. A model cannot retype it into a chat artifact, so the client has to show the file itself.
+- **Size.** A rendered page is about 450 KB, of which the font is about 220 KB. A model cannot retype it into a chat artifact, so the client has to show the file itself.

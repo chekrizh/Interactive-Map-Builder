@@ -4,41 +4,29 @@ import { defineConfig } from 'vite';
 // exactly as render.py resolves them: relative to the skill folder.
 const skill = '../plugins/interactive-map/skills/interactive-map';
 
-// `npm run build:template` (vite build --mode template) emits ONE self-contained HTML file:
-// JS, CSS and the font are inlined, nothing is fetched at runtime. The empty
-// <script id="map-definition"> stays empty; render.py fills it.
-const singleFile = {
-  name: 'single-file',
-  enforce: 'post',
-  generateBundle(_, bundle) {
-    const page = bundle['index.html'];
-    for (const [name, chunk] of Object.entries(bundle)) {
-      const isJs = name.endsWith('.js');
-      if (!isJs && !name.endsWith('.css')) continue;
-      const tag = isJs
-        ? `<script type="module" crossorigin src="./${name}"></script>`
-        : `<link rel="stylesheet" crossorigin href="./${name}">`;
-      if (!page.source.includes(tag)) throw new Error(`single-file: ${tag} not found in index.html`);
-      const inline = isJs
-        ? `<script type="module">${chunk.code.replaceAll('</script', '<\\/script')}</script>`
-        : `<style>${chunk.source}</style>`;
-      page.source = page.source.replace(tag, () => inline);
-      delete bundle[name];
-    }
-  },
-};
-
+// `npm run build:template` (vite build --mode template) emits the viewer as readable files:
+// index.html (the page shell with the empty <script id="map-definition">), viewer.js and
+// viewer.css (not minified) and the font. render.py inlines them into ONE self-contained
+// HTML file, so nothing is fetched at runtime. Shipping readable source keeps every file in
+// the plugin under the plugin scanner's 256 KiB limit and lets a reviewer read the code.
 export default defineConfig(({ mode }) => ({
   publicDir: skill,
   ...(mode === 'template' && {
     base: './',
-    plugins: [singleFile],
     build: {
       outDir: 'dist-template',
+      emptyOutDir: true,
       copyPublicDir: false,
-      assetsInlineLimit: () => true, // font -> data: URI
+      minify: false,
+      assetsInlineLimit: 0, // the font stays a .ttf file; render.py inlines it
       modulePreload: false,
-      rolldownOptions: { output: { codeSplitting: false } },
+      rolldownOptions: {
+        output: {
+          codeSplitting: false,
+          entryFileNames: 'viewer.js',
+          assetFileNames: (info) => (info.names?.[0] ?? info.name ?? '').endsWith('.css') ? 'viewer.css' : '[name][extname]',
+        },
+      },
     },
   }),
 }));

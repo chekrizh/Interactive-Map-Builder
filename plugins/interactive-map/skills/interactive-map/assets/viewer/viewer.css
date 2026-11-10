@@ -1,0 +1,1421 @@
+
+  :root { --panel-w: 375px; }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.55;
+    padding: 0 20px 48px;
+  }
+  .mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+
+  /* Embed mode (?embed=1): the tool always sits in a host (the tools hub, or
+     a course lesson), which carries its name, so it has no page header or
+     footer of its own (2026-11-02, tools live only in the hub). */
+  .embedded body { padding: 12px 12px 16px; }
+  /* Pinned mode (?week=N): the bootcamp view. Components from later build
+     steps are not rendered at all (the course never shows future content),
+     and the big picture stays out of reach because it is not week-aware. */
+  .weekpinned g.node.future, .weekpinned g.zone.future, .weekpinned .epath.future, .weekpinned .elabel.future { display: none; }
+  .weekpinned #toL0 { display: none !important; }
+  .pintitle { margin: 2px 0 12px; }
+  .pintitle h1 { margin: 3px 0 0; }
+  .eyebrow {
+    font-family: inherit;
+    font-size: 13px; line-height: 20px; font-weight: 500; color: var(--muted);
+  }
+  h1 {
+    font-size: clamp(24px, 3.4vw, 34px);
+    font-weight: 600; letter-spacing: -0.01em;
+    margin: 6px 0 8px; text-wrap: balance;
+  }
+  main.wrap {
+    max-width: 1720px; margin: 0 auto;
+    display: flex; gap: 16px; align-items: stretch;
+  }
+  /* Column flex + stretch on .wrap keeps the whiteboard and side card the
+     same height; min-height keeps the short big-picture canvas respectable. */
+  .stagecard {
+    flex: 1 1 auto; min-width: 0; position: relative;
+    display: flex; flex-direction: column; min-height: 620px;
+    background: var(--surface);
+    border: 1px solid var(--line); border-radius: 10px;
+    overflow: hidden;
+  }
+  .stage-scroll { position: relative; overflow-x: auto; flex: 1 1 auto;
+    display: flex; align-items: center;
+    background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  /* Fast clicks never select a button's label (2026-11-01). */
+  button, [role="button"] { -webkit-user-select: none; user-select: none; }
+  svg.mapsvg { display: block; width: 100%; height: auto; }
+  /* The big picture fills the stage up to a reading size (2026-11-09; was 640px, which shrank card text to ~8px). */
+  svg#map0 { max-width: 1000px; margin: auto; }
+  @media (max-width: 980px) {
+    svg.mapsvg:not(#map0) { min-width: 1000px; }
+    main.wrap { flex-direction: column; }
+    aside.panel { width: 100%; flex: none; }
+  }
+
+  /* Extra bottom padding so the last lines scroll clear of the fixed Feedback pill. */
+  aside.panel {
+    flex: 0 0 var(--panel-w); width: var(--panel-w);
+    background: var(--surface);
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 20px 20px 56px;
+    overflow-y: auto;
+  }
+  aside.panel.closed { display: none; }
+  /* The side card must never set the row's height. It grows while a flow
+     plays (a step per hop, then the closing note and "Build it yourself"),
+     and under align-items: stretch that growth was pushing the whiteboard
+     taller with it, sliding the vertically centered map down mid-flow. Taking
+     the panel out of flow pins the row to the whiteboard's own height and
+     lets the panel scroll inside it instead. Fullscreen is untouched: there
+     the panel is reparented into .drawer, so none of this applies, and the
+     camera pan stays the only thing that moves the map. */
+  @supports selector(:has(*)) {
+    @media (min-width: 981px) {
+      main.wrap { position: relative; padding-right: calc(var(--panel-w) + 16px); }
+      /* Closed, or away in the fullscreen drawer: give the column back. */
+      main.wrap:not(:has(> aside.panel:not(.closed))) { padding-right: 0; }
+      main.wrap > aside.panel { position: absolute; top: 0; right: 0; bottom: 0; }
+    }
+  }
+  /* Opaque, because it is sticky: a scrolled panel (a long flow, or one that
+     ends with a wrap-up) slides its own prose under this button. */
+  .panel .panelclose, .drawer .drawerclose {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; padding: 0; margin-left: 12px;
+    border-radius: 6px; color: var(--muted);
+  }
+  .panel .panelclose:hover, .drawer .drawerclose:hover {
+    color: var(--ink); border-color: var(--muted);
+  }
+  .panel .panelclose:focus-visible, .drawer .drawerclose:focus-visible {
+    outline: 2px solid var(--ink); outline-offset: 2px;
+  }
+  /* The close button lives in a full-width sticky strip. At the top of the
+     card the strip is transparent and the button shares the eyebrow's row;
+     once the card scrolls it turns opaque with a hairline, so prose passes
+     under a clean bar instead of colliding with a floating button. The strip
+     spans the card's padding (20px top and sides); its -40px bottom margin is
+     that 20px less the strip's own 60px, so the card's content starts level
+     with the button. */
+  .panelhead {
+    /* Sticky offsets count from the card's padding edge, hence -20px. */
+    position: sticky; top: -20px; z-index: 2;
+    display: flex; justify-content: flex-end;
+    margin: -20px -20px -40px; padding: 20px 20px 12px;
+    border-bottom: 1px solid transparent; pointer-events: none;
+    transition: background-color .15s var(--ml-ease), border-color .15s var(--ml-ease);
+  }
+  .panelhead > button { pointer-events: auto; }
+  .panelhead.scrolled { background: var(--surface); border-bottom-color: var(--line); }
+  /* Once the card scrolls, the bar carries what scrolled away (2026-11-01):
+     the stage label while the title is still in view, then the component's
+     name, each after a dot in the panel's hue (syncPanelHead). */
+  .ph-label {
+    margin-right: auto; min-width: 0; display: flex; align-items: center; gap: 8px;
+    font-size: 13px; line-height: 20px; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ph-label::before { content: ""; width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--ph-hue, var(--muted)); }
+  .ph-label.title { color: var(--ink); font-weight: 600; }
+  .ph-label[hidden] { display: none; }
+  .drawer aside.panel {
+    width: 100%; border: none; border-radius: 0;
+    padding: 0 2px 12px; overflow: visible;
+  }
+  .drawer aside.panel .panelhead { display: none; }
+  .p-eyebrow {
+    font-family: inherit;
+    font-size: 11px; letter-spacing: .02em; text-transform: none;
+    color: var(--p-hue, var(--muted)); margin-bottom: 4px;
+  }
+  /* Match the existing close button's row, then separate the content title. */
+  #panelBody > .p-eyebrow:first-child {
+    display: flex; align-items: center; min-height: 28px; margin-bottom: 12px;
+  }
+  .panel h2 { font-size: 18px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 2px; }
+  .p-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 10px; }
+  .p-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 12px; }
+  .pchip {
+    font-family: inherit; font-size: 10px;
+    border: 1px solid var(--line); border-radius: 5px; padding: 2px 7px; color: var(--muted);
+  }
+  .panel h3 {
+    font-family: inherit;
+    font-size: 11px; letter-spacing: .02em; text-transform: none;
+    color: var(--muted); margin: 16px 0 4px; font-weight: 600;
+  }
+  .panel p { font-size: 13.5px; margin: 0 0 8px; }
+  /* The design decision: an inset note on the page surface, the same as the
+     tour card's "Why it matters" (unslop pass, 2026-10-31). The section
+     heading above names it, so it needs no coloured bar or tint; the card's
+     role colour stays on its eyebrow dot. */
+  .decision {
+    padding: 12px 16px; margin: 0 0 8px;
+    font-size: 14px; line-height: 22px;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  }
+  /* Bootcamp-mode note (?bootcamp=1): where the course deviated from this
+     real-world system. The same inset, with an amber hairline so it reads
+     apart from a design decision. */
+  .bnote {
+    padding: 12px 16px; margin: 0 0 8px;
+    font-size: 14px; line-height: 22px;
+    background: var(--bg); border: 1px solid color-mix(in srgb, var(--map-artifact) 45%, var(--line)); border-radius: 8px;
+  }
+  .toolline { font-size: 12.5px; color: var(--muted); }
+  /* A command the reader would type: a code box, never loose mono text. */
+  pre.cmd {
+    margin: 0; padding: 8px 12px; overflow-x: auto;
+    border: 1px solid var(--line); border-radius: 8px;
+    background: var(--bg);
+  }
+  .panel pre.cmd code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; line-height: 20px;
+    color: var(--ink); border: 0; padding: 0; background: none; white-space: pre;
+  }
+  ol.steps { margin: 8px 0 0; padding-left: 0; list-style: none; }
+  ol.steps li {
+    font-size: 14px; margin: 0 0 12px; padding-left: 32px; position: relative;
+  }
+  ol.steps li .n {
+    position: absolute; left: 0; top: 1px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--p-hue, var(--ink)); color: var(--bg);
+    font-family: inherit; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  /* An aside under one step of a flow: used where the step that plants a
+     failure looks entirely routine and needs saying so. Muted and indented
+     behind a hairline; no italic (unslop pass, 2026-10-31). */
+  ol.steps li .note {
+    display: block; margin-top: 8px; font-size: 13px; line-height: 20px;
+    color: var(--muted);
+    border-left: 2px solid var(--line); padding-left: 12px;
+  }
+  .p-note { font-size: 13px; line-height: 20px; color: var(--muted); margin-top: 12px; }
+  ul.newlist { margin: 4px 0 0; padding-left: 20px; }
+  ul.newlist li { font-size: 14px; margin-bottom: 4px; }
+  /* Every action inside a side card uses this one outlined button, links
+     included, so nothing in a card is plain underlined text. */
+  .panel-actions { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+  h3 + .panel-actions { margin-top: 0; }
+  .panel-action {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 16px;
+    font: inherit; font-size: 13px; line-height: 20px; font-weight: 500; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--ml-control-radius); cursor: pointer;
+    transition: border-color .15s var(--ml-ease);
+  }
+  .panel-action:hover { border-color: var(--muted); }
+  .panel-action:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .panel a { color: var(--map-accent); text-decoration: underline; text-underline-offset: 2px; }
+  .panel a.panel-action { color: var(--ink); text-decoration: none; }
+  .panel-action .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
+  .panel a:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  /* ---- inside (level 2) overlay ---- */
+  .inside {
+    position: absolute; inset: 0; z-index: 5;
+    background: var(--surface);
+    padding: 16px 20px 20px; overflow: auto;
+  }
+  .inside h2 { font-size: 17px; font-weight: 600; margin: 12px 0 4px; }
+  .inside .i-sub { font-size: 14px; line-height: 20px; color: var(--muted); margin: 0 0 12px; }
+  .inside svg:not(.ml-control-icon) { width: 100%; max-width: 1020px; height: auto; display: block; }
+  .inside .i-cap { font-size: 14px; line-height: 22px; color: var(--muted); max-width: 78ch; margin-top: 12px; }
+  /* ---- fullscreen mode ---- */
+  .stagecard.fs-fixed { position: fixed; inset: 0; z-index: 50; border-radius: 0; border: none; }
+  .stagecard.fs-card { display: flex; flex-direction: column; height: 100%; }
+  .stagecard.fs-card .stage-scroll { flex: 1 1 auto; overflow: hidden; }
+  /* flex: none is load-bearing: .stage-scroll is a flex container, and a
+     shrinkable svg gets squeezed back to the container width, silently
+     eating any zoom past fit. */
+  .stagecard.fs-card svg.mapsvg { flex: none; margin: auto; transform: translate(var(--tx, 0px), var(--ty, 0px)); }
+  .stagecard.fs-card.campan svg.mapsvg { transition: transform 0.45s ease; }
+  @media (prefers-reduced-motion: reduce) { .stagecard.fs-card.campan svg.mapsvg { transition: none; } }
+  /* Fit-to-height: 185px approximates the toolbar + controls + legend chrome;
+     the ratios are viewBox width/height and must match the svg viewBox attrs
+     (and the VB constant in the script). */
+  .stagecard.fs-card svg#map { width: calc(min(100%, (100vh - 185px) * var(--map-ratio)) * var(--zoom, 1)); min-width: 0; }
+  .stagecard.fs-card svg#map0 { width: calc(min(100%, (100vh - 185px) * var(--overview-ratio)) * var(--zoom, 1)); min-width: 0; max-width: none; }
+  .zoomctl {
+    display: none; position: absolute; left: 16px; bottom: 16px; z-index: 2;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    box-shadow: var(--ml-float-shadow); overflow: hidden; cursor: default;
+  }
+  .zoomctl .crumbbtn {
+    width: 32px; height: 32px; padding: 0; border: 0; border-right: 1px solid var(--line);
+    border-radius: 0; display: grid; place-items: center;
+  }
+  .zoomctl #zoomFit { width: 44px; }
+  .zoomctl .crumbbtn:last-child { border-right: 0; }
+  .zoomctl .crumbbtn:hover { background: color-mix(in srgb,var(--ink) 5%,var(--surface)); }
+  .zoomctl #zoomFit { font-size: 12px; }
+  .zoomctl .crumbbtn:focus-visible { outline-offset: -3px; }
+  /* Whichever right-side control comes first takes the auto margin; the
+     rest sit beside it. Show panel only exists while the panel is closed. */
+  .crumbbar #panelBtn { margin-left: auto; }
+  .crumbbar #fsBtn { margin-left: auto; }
+  .crumbbar #panelBtn:not([hidden]) ~ #fsBtn { margin-left: 0; }
+  .stagecard.fs-card .zoomctl { display: inline-flex; }
+  .stagecard.fs-card .stage-scroll { cursor: grab; }
+  .stage-scroll.panning { cursor: grabbing; user-select: none; }
+  /* Normal-view zoom, hub only (2026-11-04). Scaling with a transform keeps
+     the canvas its own height, where the fullscreen width calc would grow it.
+     Below 981px the map keeps its native sideways scroll. */
+  @media (min-width: 981px) {
+    .stagecard.zoomable .zoomctl { display: inline-flex; }
+    .stagecard.zoomable:not(.fs-card) .stage-scroll { overflow: hidden; }
+    .stagecard.zoomable:not(.fs-card) svg.mapsvg {
+      transform-origin: 0 0;
+      transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--zoom, 1));
+    }
+    .stagecard.zoomable.zoomed:not(.fs-card) .stage-scroll:not(.panning) { cursor: grab; }
+  }
+  .stagecard.fs-card .controls { max-width: none; margin: 0; padding: 8px 16px;
+    border: 0; border-bottom: 1px solid var(--line); border-radius: 0; gap: 10px 20px; align-items: center; }
+  .drawer {
+    position: absolute; top: var(--drawer-top, 150px); right: var(--drawer-inset); bottom: auto; z-index: 7;
+    /* Same width range as the tour card (2026-11-01), so Explore's panel and
+       the tour read at one size in full screen. */
+    width: min(clamp(400px, 28vw, 500px), calc(100% - 2 * var(--drawer-inset)));
+    max-height: calc(100% - var(--drawer-top, 150px) - var(--drawer-inset));
+    background: var(--surface);
+    border: 1px solid var(--line); border-radius: 16px;
+    box-shadow: var(--ml-float-shadow);
+    visibility: hidden; opacity: 0;
+    transform: translateX(calc(100% + var(--drawer-inset) + 2px));
+    transition: transform .25s var(--ml-ease), opacity .2s var(--ml-ease), visibility .25s;
+    padding: 20px 20px 16px; overflow-y: auto;
+    display: none;
+  }
+  .stagecard { --drawer-inset: 16px; }
+  .stagecard.fs-card .drawer { display: block; }
+  .drawer.open { visibility: visible; opacity: 1; transform: translateX(0); }
+  @media (prefers-reduced-motion: reduce) { .drawer { transition: none; } }
+
+  /* ---- guided tour, ending, explore message ----
+     2026-10-31, see "Guided tour" in docs/tools/ml-canvas/DESIGN.md. The
+     light values are the approved mockup's; the dark ones are tinted from
+     the dark palette, never the light hexes on a dark surface. Same
+     three-way resolution as ml-chrome.css: system dark unless the page is
+     forced light, then the explicit dark theme. */
+  :root {
+    --tour-accent: #3f51b5;
+    --tour-tint: #eef1fd; --tour-tint-line: #c3cbf2; --tour-text: #2b3aa0;
+    --tour-option-line: #8e9ce6;
+    --bar-future: #e6e8ee;
+    --done-tint: #e3f4ec; --done-ink: #1d7a52;
+    --end-scrim: rgba(247, 248, 250, .62);
+    --tour-shadow: 0 8px 24px rgba(15, 18, 28, .08), 0 1px 2px rgba(15, 18, 28, .05);
+    --tour-lift: 0 24px 56px -12px rgba(15, 18, 28, .24), 0 8px 20px -8px rgba(15, 18, 28, .14);
+    --form-line: #d0d4dd; --form-button: #1f2433; --form-button-ink: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --tour-accent: #aab8ff;
+      --tour-tint: #232c47; --tour-tint-line: #3e4a78; --tour-text: #c6cfff;
+      --tour-option-line: #5d6cb6;
+      --bar-future: #333d52;
+      --done-tint: #1c3a2d; --done-ink: #80d6a9;
+      --end-scrim: rgba(23, 28, 39, .62);
+      --tour-shadow: 0 12px 32px rgba(0, 0, 0, .32);
+      --tour-lift: 0 24px 56px -12px rgba(0, 0, 0, .62), 0 8px 20px -8px rgba(0, 0, 0, .44);
+    --form-line: #46536c; --form-button: #e7ecf6; --form-button-ink: #171c27;
+    }
+  }
+  :root[data-theme="dark"] {
+    --tour-accent: #aab8ff;
+    --tour-tint: #232c47; --tour-tint-line: #3e4a78; --tour-text: #c6cfff;
+    --tour-option-line: #5d6cb6;
+    --bar-future: #333d52;
+    --done-tint: #1c3a2d; --done-ink: #80d6a9;
+    --end-scrim: rgba(23, 28, 39, .62);
+    --tour-shadow: 0 12px 32px rgba(0, 0, 0, .32);
+    --tour-lift: 0 24px 56px -12px rgba(0, 0, 0, .62), 0 8px 20px -8px rgba(0, 0, 0, .44);
+    --form-line: #46536c; --form-button: #e7ecf6; --form-button-ink: #171c27;
+  }
+
+  /* Tour chrome rhythm, 2026-10-31 (unslop pass): every size sits on
+     the 4px grid, labels are sentence case, headings use weight 600, hovers
+     are a border step on one ease-out curve, and the tour's indigo is the
+     only accent: it marks the recommended way in and nothing else. */
+  .tourcard, .tourend { --tour-ease: cubic-bezier(.22, 1, .36, 1); }
+
+  /* Controls-row entry: a third group after Build order, same divider. */
+  .tour-controls { padding-left: 20px; border-left: 1px solid var(--line); }
+  .tour-controls[hidden] { display: none; }
+  .tour-entry {
+    height: 36px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px 0 12px;
+    border: 1px solid var(--tour-tint-line); border-radius: var(--ml-control-radius);
+    background: var(--tour-tint); color: var(--tour-text);
+    font: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer;
+    transition: border-color .15s cubic-bezier(.22, 1, .36, 1);
+  }
+  .tour-entry svg { width: 16px; height: 16px; flex: none; }
+  .tour-entry:hover { border-color: var(--tour-option-line); }
+  .tour-entry:focus-visible { outline: 2px solid var(--tour-accent); outline-offset: 2px; }
+
+  /* Tour mode: the in-frame full screen with the Explore chrome swapped for
+     the tour bar and a floating step card. The map stays pannable and
+     zoomable but not selectable, so a stray click cannot leave the tour. */
+  .tourbar { display: none; }
+  .stagecard.touring > .controls { display: none !important; }
+  .stagecard.touring :is(#fsBtn, #panelBtn, #toL0, #unfocus) { display: none !important; }
+  .stagecard.touring .drawer { display: none !important; }
+  .stagecard.touring svg.mapsvg { pointer-events: none; }
+  .stagecard.touring .tourbar {
+    display: flex; align-items: center; gap: 24px;
+    padding: 12px 16px 12px 20px; border-bottom: 1px solid var(--line); background: var(--surface);
+  }
+  /* Fixed width, wide enough for the longest status, so the progress bars
+     never shift as the text changes. */
+  .tb-text { flex: none; width: 272px; white-space: nowrap; }
+  .tb-eyebrow { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--muted); }
+  .tb-status { margin-top: 4px; font-size: 13px; line-height: 20px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .tb-chapters {
+    flex: 1 1 auto; max-width: 720px; margin: 0; padding: 0; list-style: none;
+    display: grid; grid-template-columns: 1fr 2fr 1fr 2fr 2fr 1fr; gap: 8px;
+  }
+  .tb-bar { display: block; height: 4px; border-radius: 2px; background: var(--bar-future); overflow: hidden; }
+  .tb-fill { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--ink); transition: width .3s cubic-bezier(.22, 1, .36, 1); }
+  .tb-name { display: block; margin-top: 8px; font-size: 12px; line-height: 16px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tb-chapters li.current .tb-name { font-weight: 600; color: var(--ink); }
+  .tb-exit { margin-left: auto; flex: none; }
+
+  .tourcard, .tourend { display: none; }
+  .stagecard.touring .tourcard:not([hidden]) {
+    display: flex; flex-direction: column; position: absolute; z-index: 8;
+    top: var(--tour-top, 140px); right: 20px; width: min(360px, calc(100% - 40px));
+    max-height: calc(100% - var(--tour-top, 140px) - 20px); overflow-y: auto;
+    padding: 20px 24px 16px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--line); box-shadow: var(--tour-lift);
+    color: var(--ink);
+  }
+  .tourcard [hidden] { display: none !important; }
+  /* Next stays put within a beat (2026-10-31): the card takes one height for
+     the whole beat (sizeTourCard) and only this part scrolls, so the footer
+     never moves between moments, replay and summary. */
+  .stagecard.touring .tourcard:not([hidden]) { overflow: visible; }
+  .tc-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+  .tc-foot { flex: none; }
+  /* The card no longer repeats the tour bar (2026-11-01): the chapter and
+     step label stays for screen readers only, and the footer shows progress
+     inside this step instead of "N of 10". */
+  .tc-eyebrow { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .tc-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--tc-hue, var(--ink)); }
+  .tourcard h2 { margin: 0 0 8px; font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -.01em; }
+  .tourcard h2:focus { outline: none; }
+  .tc-body p { margin: 0 0 12px; font-size: 15px; line-height: 24px; }
+  /* The card's line (2026-11-01, click-through): each Next shows the
+     current edge's numbered line under the summary, in Explore's own words,
+     like its flow panel, on a soft wash of the chapter hue. The chip is the
+     map badge's number and hue. "Why it matters" takes the line's place. */
+  .tc-list { margin: 4px 0 12px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .tc-list li {
+    position: relative; padding: 6px 8px 6px 40px; border-radius: 8px;
+    font-size: 14px; line-height: 20px; color: var(--muted);
+    transition: background-color .2s var(--ml-ease), color .2s var(--ml-ease);
+  }
+  .tc-list li .n {
+    position: absolute; left: 8px; top: 6px; width: 20px; height: 20px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--n-hue, var(--ink)); color: var(--bg);
+    font-size: 11px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .tc-list li.cur { background: color-mix(in srgb, var(--tc-hue, var(--ink)) 10%, transparent); color: var(--ink); }
+  .tc-list li.recap { padding: 4px 0 0; color: var(--ink); display: flex; flex-direction: column; gap: 4px; }
+  .recap-h { display: inline-flex; align-items: center; gap: 8px; color: var(--recap-hue, var(--ink)); font-weight: 600; }
+  .recap-h svg { width: 18px; height: 18px; flex: none; }
+  /* The current edge on the map, while the tour walks the path: a wider
+     stroke and a soft halo round its badge. */
+  /* The edge being played glows in its flow's hue instead of thickening
+     (2026-11-01). The glow fades in as the dot sets off, so it plays along
+     with the motion; Explore's flows and the tour both use .eglow. */
+  .ml-canvas .epath { transition: opacity .25s cubic-bezier(.22, 1, .36, 1), filter .35s ease-out; }
+  .ml-canvas .epath.eglow {
+    filter: drop-shadow(0 0 2.5px color-mix(in srgb, var(--glow, var(--story-hue)) 75%, transparent))
+      drop-shadow(0 0 7px color-mix(in srgb, var(--glow, var(--story-hue)) 40%, transparent));
+  }
+  .stagecard.touring g.tcur .badge-c { stroke: color-mix(in srgb, var(--story-hue) 30%, transparent); stroke-width: 8; paint-order: stroke; }
+  /* A beat's badges wait for the Next that explains their edge. */
+  .stagecard.touring g.tpend { display: none; }
+  @keyframes badge-pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+  .ml-canvas g.badge-pop { transform-box: fill-box; transform-origin: center; animation: badge-pop .22s cubic-bezier(.22, 1, .36, 1); }
+  @media (prefers-reduced-motion: reduce) { .ml-canvas g.badge-pop { animation: none; } }
+  /* Focus (2026-11-01). During a flow beat syncFocus puts svg.tfocus on
+     the map: the lit path keeps full strength, and the rest of the map
+     takes Explore's stage-focus fade (.dimmed), with the group boxes and
+     titles fading too. Changes ease over 200 ms. */
+  .stagecard.touring svg.tfocus g.zone .zone-r {
+    fill: color-mix(in srgb, var(--ml-group) 30%, var(--ml-canvas));
+    stroke: color-mix(in srgb, var(--ml-group-border) 30%, var(--ml-canvas));
+  }
+  .stagecard.touring svg.tfocus g.zone :is(.zone-t, .hostchip, .hostchip-t) { opacity: .18; }
+  @media (prefers-reduced-motion: no-preference) {
+    .stagecard.touring svg.tfocus :is(g.node > *, .epath, .elabel, g.zone > *, g[data-hop]) {
+      transition: opacity .2s var(--ml-ease), fill .2s var(--ml-ease), stroke .2s var(--ml-ease), stroke-opacity .2s var(--ml-ease);
+    }
+  }
+  /* The step card casts a larger, softer two-layer shadow (--tour-lift),
+     so it reads as a layer above the map. Above phone width it grows with
+     the window, from 400px to 500px, and its text steps up at 1100px and
+     1700px (rules below). The camera reads the card's
+     left edge, so the map frame follows the width. The card keeps its fixed
+     per-step height (sizeTourCard) and sits centred in the map area,
+     between the tour bar and the legend (--tour-top and --tour-bottom). In
+     the tour bar the status stays left, the chapters sit centred on the
+     screen and Exit stays right; the canvas header is hidden during the
+     tour. */
+  @media (min-width: 641px) {
+    .stagecard.touring .tourcard:not([hidden]) {
+      width: min(clamp(400px, 28vw, 500px), calc(100% - 40px));
+      /* 30px more at the bottom keeps the card and the key hint under it centred together. */
+      bottom: calc(var(--tour-bottom, 20px) + 30px); margin-block: auto;
+      max-height: calc(100% - var(--tour-top, 140px) - var(--tour-bottom, 20px) - 30px);
+    }
+    .stagecard.touring .tourbar { display: grid; grid-template-columns: 1fr minmax(0, 720px) 1fr; align-items: center; padding-block: 12px; }
+    .stagecard.touring .tb-text { grid-column: 1; }
+    /* The progress line sits near the bar's centre rather than the line plus
+       its labels: the chapters shift down 6px, which keeps the labels clear
+       of the bar's bottom edge (translate does not take layout space). */
+    .stagecard.touring .tb-chapters { grid-column: 2; translate: 0 6px; }
+    .stagecard.touring .tb-exit { grid-column: 3; justify-self: end; }
+    /* Exit is a quiet text button with a door-and-arrow icon (2026-11-01):
+       the tour saves its place, so leaving needs no frame or confirmation. */
+    .stagecard.touring .tb-exit { border-color: transparent; background: transparent; color: var(--muted); }
+    .stagecard.touring .tb-exit:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent); }
+  }
+  .stagecard.touring .crumbbar { display: none; }
+  /* The card is half of what people watch, so it reads at a bigger size
+     from laptop width up, and one step bigger again on large screens
+     (2026-11-01). */
+  @media (min-width: 1100px) {
+    .tourcard h2 { font-size: 24px; line-height: 30px; }
+    .tourcard .tc-body p { font-size: 16px; line-height: 26px; }
+    .tourcard :is(.tc-list li, .tc-why p) { font-size: 15px; line-height: 22px; }
+  }
+  @media (min-width: 1700px) {
+    .tourcard h2 { font-size: 26px; line-height: 32px; }
+    .tourcard .tc-body p { font-size: 17px; line-height: 28px; }
+    .tourcard :is(.tc-list li, .tc-why p) { font-size: 16px; line-height: 24px; }
+  }
+  /* Why it matters: an inset note on the page surface, not a tinted card. */
+  .tc-why { margin: 4px 0 0; padding: 12px 16px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
+  .tc-why-label { margin-bottom: 4px; font-size: 13px; line-height: 20px; font-weight: 600; color: var(--ink); }
+  .tc-why p { margin: 0; font-size: 14px; line-height: 20px; color: var(--muted); }
+  /* The instruction above the controls, until the visitor's first Next
+     within a beat. */
+  .tc-hint {
+    flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 4px;
+    margin: 12px 0 0; font-size: 14px; line-height: 20px; color: var(--muted);
+  }
+  .tc-hint svg { width: 16px; height: 16px; flex: none; }
+  .tc-foot { display: flex; align-items: center; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .tc-hint:not([hidden]) + .tc-foot { margin-top: 8px; }
+  .tc-count { margin-right: auto; display: flex; align-items: center; gap: 4px; }
+  /* Keyboard hint under the controls, as in the tools' quizzes (2026-11-01). */
+  /* It hangs 12px under the step card: part of the card in the markup, so it
+     moves with it on every step change, Back and resize, but drawn outside
+     its frame (the card does not clip; .tc-scroll scrolls on its own). */
+  .tc-keys { position: absolute; top: calc(100% + 12px); left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 5px; margin: 0; font-size: 11px; line-height: 18px; color: var(--muted); }
+  .tc-keys > span { margin: 0 5px; }
+  .tc-keys kbd { font-family: inherit; font-size: 10px; line-height: 17px; min-width: 18px; text-align: center; padding: 0 4px; border: 1px solid var(--line); border-radius: 4px; background: color-mix(in srgb, var(--ink) 4%, var(--surface)); box-shadow: 0 1px 0 var(--line); }
+  @media (max-width: 640px), (hover: none) { .tc-keys { display: none; } }
+  .tc-seg { width: 18px; height: 4px; border-radius: 2px; background: var(--bar-future); transition: background-color .25s ease-out; }
+  .tc-seg.on { background: var(--tc-hue, var(--ink)); }
+  .tc-back, .tc-next {
+    height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border-radius: var(--ml-control-radius); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: border-color .15s var(--ml-ease), background-color .15s var(--ml-ease), box-shadow .2s var(--ml-ease);
+  }
+  .tc-back { padding: 0 16px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+  .tc-back:hover { border-color: var(--muted); }
+  .tc-back:disabled { color: var(--muted); opacity: .5; cursor: default; }
+  .tc-back:disabled:hover { border-color: var(--line); }
+  .tc-next { min-width: 92px; padding: 0 16px; border: 1px solid var(--ink); background: var(--ink); color: var(--bg); }
+  .tc-next:hover { background: color-mix(in srgb, var(--ink) 86%, var(--bg)); border-color: color-mix(in srgb, var(--ink) 86%, var(--bg)); }
+  /* The subtle highlight until the first Next within a beat: a soft, still ring. */
+  .tc-next.hint { box-shadow: 0 0 0 4px color-mix(in srgb, var(--tour-accent) 22%, transparent); }
+  .tc-back:focus-visible, .tc-next:focus-visible { outline: 2px solid var(--tour-accent); outline-offset: 2px; }
+
+  /* The ending: the finished map stays behind a blurred scrim, under the
+     tour bar, with one centred card. */
+  .stagecard.touring .tourend:not([hidden]) {
+    display: flex; position: absolute; left: 0; right: 0; bottom: 0; top: var(--tour-bar-h, 64px); z-index: 9;
+    padding: 24px 16px; overflow-y: auto;
+    background: var(--end-scrim); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    animation: tour-fade .55s .15s ease-out both;
+  }
+  /* The finish arrives in order (2026-11-01): scrim, then the card rises,
+     the check pops and draws itself, the heading and the three things you
+     can now explain follow one by one, and the newsletter and links last.
+     About 1.9 s in all, the first 0.45 s spent letting the map
+     settle behind the scrim; reduced motion shows it at once. */
+  .tourend:not([hidden]) .tourend-card { animation: te-card .6s .45s var(--tour-ease) both; }
+  .tourend:not([hidden]) :is(.te-eyebrow, .tourend-card h1, .te-lede, .te-list li, .te-news, .te-links) { animation: te-up .4s var(--tour-ease) both; }
+  .tourend:not([hidden]) .te-eyebrow { animation-delay: .9s; }
+  .tourend:not([hidden]) .tourend-card h1 { animation-delay: .96s; }
+  .tourend:not([hidden]) .te-lede { animation-delay: 1.02s; }
+  .tourend:not([hidden]) .te-list li:nth-child(1) { animation-delay: 1.2s; }
+  .tourend:not([hidden]) .te-list li:nth-child(2) { animation-delay: 1.28s; }
+  .tourend:not([hidden]) .te-list li:nth-child(3) { animation-delay: 1.36s; }
+  .tourend:not([hidden]) :is(.te-news, .te-links) { animation-delay: 1.52s; }
+  .tourend-card {
+    margin: auto; width: 540px; max-width: 100%; padding: 40px 40px 32px; border-radius: 16px;
+    background: var(--surface); border: 1px solid var(--line); box-shadow: var(--tour-shadow);
+    text-align: center; color: var(--ink);
+    /* Tokens for the shared newsletter form, which otherwise defaults dark. */
+    --text: var(--ink); --border: var(--line); --accent: var(--map-accent); --canvas: var(--bg);
+    --newsletter-plain-line: var(--form-line); --newsletter-plain-bg: var(--form-button); --newsletter-plain-fg: var(--form-button-ink);
+  }
+  .te-check {
+    width: 48px; height: 48px; margin: 0 auto; display: grid; place-items: center; border-radius: 50%;
+    background: var(--done-tint); color: var(--done-ink);
+    animation: te-pop .45s .75s cubic-bezier(.34, 1.56, .64, 1) both;
+  }
+  .te-check svg { width: 24px; height: 24px; }
+  .te-check path { stroke-dasharray: 24; stroke-dashoffset: 24; animation: te-draw .4s 1.02s var(--tour-ease) forwards; }
+  .te-eyebrow { margin-top: 16px; font-size: 13px; line-height: 20px; font-weight: 500; color: var(--done-ink); font-variant-numeric: tabular-nums; }
+  .tourend-card h1 { margin: 4px 0 12px; font-family: var(--ml-font); font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: -.01em; }
+  .tourend-card h1:focus { outline: none; }
+  .te-lede { max-width: 420px; margin: 0 auto; font-size: 15px; line-height: 24px; color: var(--muted); }
+  .te-list { width: fit-content; max-width: 100%; margin: 16px auto 0; padding: 0; list-style: none; text-align: left; }
+  .te-list li { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 8px; font-size: 15px; line-height: 24px; }
+  .te-list svg { width: 16px; height: 16px; flex: none; margin-top: 4px; color: var(--done-ink); }
+  .te-news { margin-top: 24px; }
+  .te-news:empty { display: none; }
+  /* The shared plain form, aligned to this card's type and radii. Scoped to
+     the ending so the form looks the same everywhere else. */
+  .tourend .fp-newsletter { text-align: left; }
+  .tourend .fp-newsletter[data-compact=true] { padding-top: 24px; }
+  .tourend .fp-newsletter[data-variant=plain] h3 { font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: 0; }
+  .tourend .fp-newsletter[data-variant=plain] .fp-newsletter-description { margin-top: 4px; font-size: 14px; line-height: 20px; }
+  .tourend .fp-newsletter[data-variant=plain] form { margin-top: 16px; }
+  .tourend .fp-newsletter[data-variant=plain] :is(input, button) { height: 44px; padding-top: 0; padding-bottom: 0; border-radius: var(--ml-control-radius); }
+  .tourend .fp-newsletter[data-variant=plain] button { font-weight: 600; }
+  /* The success state, centred under the card's own check and in its green. */
+  .tourend .fp-newsletter[data-variant=plain] .fp-newsletter-success { flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+  .tourend .fp-newsletter-success .fp-newsletter-icon { border: 0; border-radius: 50%; background: var(--done-tint); color: var(--done-ink); }
+  .te-links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 16px; margin-top: 24px; font-size: 14px; line-height: 20px; font-weight: 500; }
+  .te-links :is(button, a) { padding: 4px 2px; border: 0; background: none; color: var(--muted); font: inherit; text-decoration: none; cursor: pointer; transition: color .15s var(--tour-ease); }
+  .te-links :is(button, a):hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  .te-links :is(button, a):focus-visible { outline: 2px solid var(--tour-accent); outline-offset: 2px; border-radius: 4px; }
+  .te-sep { color: var(--line); }
+
+  /* Phones: the step card becomes a bottom sheet and the tour bar keeps
+     only the progress bars and Exit. The extra bottom padding keeps Next and
+     the ending's links clear of the fixed Feedback pill. */
+  @media (max-width: 640px) {
+    .stagecard.touring .tourbar { gap: 16px; padding: 8px 12px 8px 16px; }
+    .stagecard.touring :is(.tb-text, .tb-name) { display: none; }
+    .stagecard.touring .tourcard:not([hidden]) {
+      top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 55%;
+      padding: 16px 20px 64px; border-radius: 12px 12px 0 0; border-width: 1px 0 0;
+    }
+    .tc-body p { font-size: 14px; line-height: 22px; }
+    .tc-hint { margin-top: 8px; }
+    .tourcard h2 { font-size: 20px; line-height: 28px; margin-top: 8px; }
+    .stagecard.touring .tourend:not([hidden]) { padding-bottom: 64px; }
+    .tourend-card { padding: 32px 20px 24px; }
+    .tourend-card h1 { font-size: 24px; line-height: 32px; }
+  }
+
+  /* Explore message (the shared explore-nudge card). In full screen it
+     lives inside the stagecard (see applyFsDom) and takes the lower left,
+     since the open panel holds the right; it sits above the zoom control
+     there (2026-11-02). */
+  .stagecard { --fpds-nudge-fs-bottom: 64px; }
+
+  @keyframes tour-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes te-draw { to { stroke-dashoffset: 0; } }
+  @keyframes te-card { from { opacity: 0; transform: translateY(24px) scale(.97); } to { opacity: 1; transform: none; } }
+  @keyframes te-pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+  /* About 2 s after the finish has settled (it settles at ~1.9 s), the
+     email field starts a slow, soft pulse; focusing it or typing stops it
+     (2026-11-01). */
+  .tourend:not([hidden]) .fp-newsletter input { animation: te-nudge 2.4s 3.9s ease-in-out infinite; }
+  .tourend:not([hidden]) .fp-newsletter input:is(:focus, :not(:placeholder-shown)) { animation: none; }
+  @keyframes te-nudge {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent); }
+    50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+  }
+  @keyframes te-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .stagecard.touring .tourend:not([hidden]), .te-check,
+    .tourend:not([hidden]) :is(.tourend-card, .te-eyebrow, .tourend-card h1, .te-lede, .te-list li, .te-news, .te-links) { animation: none; }
+    .te-check path { animation: none; stroke-dashoffset: 0; }
+    .tourend:not([hidden]) .fp-newsletter input { animation: none; }
+    .tb-fill, .tour-entry, .tc-back, .tc-next, .tc-list li, .te-links :is(button, a) { transition: none; }
+    .panelhead, .panel-action { transition: none; }
+  }
+
+  /* Flow playback on the map (2026-11-09, after the Stripe-style mockup).
+     Each landed hop gets a step chip on its line (number + the edge's
+     label), the latest one filled with the flow's hue; a small dot marks
+     where each hop starts; whatever the flow never touches steps back. */
+  .ml-canvas g.fchip .fchip-r {
+    fill: var(--surface); stroke: var(--story-hue); stroke-width: 1.3;
+    filter: drop-shadow(0 1px 2px rgba(50, 50, 93, .16));
+  }
+  .ml-canvas g.fchip .fchip-t { font: 600 10px var(--ml-font); fill: var(--ml-ink, var(--ink)); }
+  .ml-canvas g.fchip.now .fchip-r { fill: var(--story-hue); filter: drop-shadow(0 3px 6px color-mix(in srgb, var(--story-hue) 45%, transparent)); }
+  .ml-canvas g.fchip.now .fchip-t { fill: var(--ml-tile-ink, #fff); }
+  .ml-canvas g.fchip.now .badge-c { fill: var(--ml-tile-ink, #fff); }
+  .ml-canvas g.fchip.now .badge-t { fill: var(--story-hue); }
+  .ml-canvas .elabel.inchip { display: none; }
+  .ml-canvas .fstart { fill: var(--story-hue); }
+  .ml-canvas g.fdot .fdot-core { fill: var(--story-hue); }
+  .ml-canvas g.fdot .fdot-halo { fill: var(--story-hue); opacity: .2; }
+  svg.flowing g.node.fout > :not(.nrect) { opacity: .3; }
+  svg.flowing g.node.fout .nrect { filter: none; opacity: .55; }
+  svg.flowing :is(.epath, .elabel).fout { opacity: .25; }
+  /* Edge labels as chips on their line. */
+  .ml-canvas g.echip rect { fill: var(--ml-card); stroke: color-mix(in srgb, var(--ml-wire) 70%, transparent); stroke-width: 1; paint-order: normal; }
+  .ml-canvas g.echip text { font: 500 9.5px var(--ml-font); fill: var(--ml-muted); stroke: none; }
+/* Journey Board theme and controls for the ML tool. Shared geometry and
+   typography keep normal, standalone, pinned and fullscreen views consistent. */
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("./Manrope-variable.ttf") format("truetype");
+}
+  :root {
+    --bg: #f6f7fa;
+    --surface: #ffffff;
+    --ink: #243044;
+    --muted: #606d85;
+    --line: #e2e5ee;
+    --dot: #e5e8f0;
+    --edge: #b7c2d5;
+
+
+
+
+
+
+
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #171c27;
+      --surface: #1e2633;
+      --ink: #e7ecf6;
+      --muted: #aab7ce;
+      --line: #354259;
+      --dot: #2a3345;
+      --edge: #65758f;
+
+
+
+
+
+
+
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171c27;
+    --surface: #1e2633;
+    --ink: #e7ecf6;
+    --muted: #aab7ce;
+    --line: #354259;
+    --dot: #2a3345;
+    --edge: #65758f;
+
+
+
+
+
+
+
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f7fa;
+    --surface: #ffffff;
+    --ink: #243044;
+    --muted: #606d85;
+    --line: #e2e5ee;
+    --dot: #e5e8f0;
+    --edge: #b7c2d5;
+
+
+
+
+
+
+
+  }
+
+  .controls {
+    max-width: 1720px; margin: 12px auto 12px;
+    display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center;
+    padding: 0; border: 0; background: transparent; position: relative; z-index: 3;
+    --flow-hue: var(--map-accent);
+  }
+  .embedded .controls { margin-top: 4px; }
+  .flow-controls[hidden] { display: none; }
+  .flow-controls { display: flex; align-items: center; gap: 8px; }
+  .flow-field { width: auto; max-width: 100%; }
+  .flow-field .flow-picker { width: 248px; max-width: 100%; }
+  .build-controls { margin-left: 0; padding-left: 20px; border-left: 1px solid var(--line); }
+  .flow-picker { position: relative; }
+  .flow-picker > summary {
+    display: flex; align-items: center; gap: 8px; height: 36px;
+    padding: 0 40px 0 12px; position: relative; list-style: none; cursor: pointer;
+    transition: border-color .15s var(--ml-ease);
+    /* Neutral control (2026-11-09): the flow's colour is only its dot. */
+    border: 1px solid var(--line); border-radius: var(--ml-control-radius);
+    color: var(--ink); background: var(--surface);
+    font-size: 13px; font-weight: 600;
+  }
+  .flow-picker > summary:hover { border-color: var(--muted); }
+  .flow-picker > summary::-webkit-details-marker { display: none; }
+  #flowSelected { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .flow-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--flow-hue); flex: none; }
+  .flow-chevron { position: absolute; right: 12px; top: 9px; width: 16px; height: 16px; color: var(--muted); }
+  .flow-menu {
+    position: absolute; left: 0; top: calc(100% + 8px); z-index: 10;
+    width: max(100%, 272px); max-height: min(400px, 60dvh); overflow-y: auto;
+    padding: 8px; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--surface); box-shadow: var(--ml-float-shadow);
+  }
+  .flow-options-label {
+    padding: 8px 8px 4px; font-size: 12px; line-height: 16px;
+    letter-spacing: 0; text-transform: none; color: var(--muted); font-weight: 500;
+  }
+  .flow-option-group + .flow-option-group { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 4px; }
+  .flow-option-group[hidden] { display: none; }
+  .flow-option {
+    display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 8px;
+    /* Nested radius: the 12px menu less its 8px padding. */
+    border: 0; border-radius: 4px; background: transparent; color: var(--ink);
+    text-align: left; font: inherit; font-size: 13px; line-height: 20px; cursor: pointer;
+    transition: background-color .15s var(--ml-ease);
+  }
+  .flow-option:hover { background: color-mix(in srgb,var(--ink) 5%,var(--surface)); }
+  .flow-option[aria-pressed="true"] { background: color-mix(in srgb,var(--flow-hue) 9%,var(--surface)); font-weight: 600; }
+  .flow-play {
+    height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 0 16px; border: 1px solid var(--ink); border-radius: var(--ml-control-radius);
+    /* Neutral ink, like the selected build step: the flow's colour lives in
+       the picker and on the map, never on the action itself. */
+    color: var(--bg); background: var(--ink); font: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; cursor: pointer;
+    transition: background-color .15s var(--ml-ease), border-color .15s var(--ml-ease);
+  }
+  .flow-play svg { width: 14px; height: 14px; flex: none; }
+  /* The tour entry matches Play: the two actions share one style. */
+  .controls .tour-entry {
+    height: 36px; padding: 0 16px 0 12px; border: 1px solid var(--ink); background: var(--ink); color: var(--bg);
+    font-weight: 600;
+  }
+  .controls .tour-entry:hover { background: color-mix(in srgb,var(--ink) 86%,var(--bg)); border-color: color-mix(in srgb,var(--ink) 86%,var(--bg)); }
+  .controls .tour-entry:focus-visible { outline-color: var(--ink); }
+  .theme-toggle {
+    margin-left: auto; width: 36px; height: 36px; display: inline-grid; place-items: center;
+    border: 1px solid var(--line); border-radius: var(--ml-control-radius); background: var(--surface); color: var(--muted); cursor: pointer;
+    transition: color .15s var(--ml-ease), border-color .15s var(--ml-ease);
+  }
+  .theme-toggle:hover { color: var(--ink); border-color: var(--muted); }
+  .theme-toggle svg { width: 17px; height: 17px; }
+  .theme-toggle .ico-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .ico-sun { display: block; }
+  :root[data-theme="dark"] .theme-toggle .ico-moon { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .ico-sun { display: block; }
+    :root:not([data-theme="light"]) .theme-toggle .ico-moon { display: none; }
+  }
+  .flow-play:hover { background: color-mix(in srgb,var(--ink) 86%,var(--bg)); border-color: color-mix(in srgb,var(--ink) 86%,var(--bg)); }
+  .flow-picker > summary:focus-visible, .flow-option:focus-visible, .flow-play:focus-visible {
+    outline: 2px solid var(--flow-hue); outline-offset: 2px;
+  }
+  .build-controls .seg { height: 36px; }
+  .build-controls .seg button { padding: 0 12px; }
+  /* Labels sit left of their control, so the whole row is one line high. */
+  .cgroup { display: flex; flex-direction: row; align-items: center; gap: 10px; }
+  .clabel {
+    font-family: var(--ml-font);
+    font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0; color: var(--muted); text-transform: none;
+  }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--ml-control-radius); overflow: hidden; background: var(--surface); }
+  .seg button {
+    font-family: var(--ml-font);
+    font-size: 12px; color: var(--muted); background: transparent;
+    border: none; border-right: 1px solid var(--line);
+    padding: 6px 12px; cursor: pointer; font-variant-numeric: tabular-nums;
+    transition: color .15s var(--ml-ease), background-color .15s var(--ml-ease);
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button:hover { color: var(--ink); }
+  .seg button:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+  .seg button.on { background: var(--ink); color: var(--bg); }
+
+
+  .crumbbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-bottom: 1px solid var(--line);
+    min-height: 48px;
+  }
+  button.crumbbtn {
+    font-family: inherit; font-size: 13px; line-height: 20px; color: var(--ink);
+    background: transparent; border: 1px solid var(--line); border-radius: var(--ml-control-radius);
+    padding: 4px 12px; min-height: 32px; cursor: pointer;
+    transition: border-color .15s var(--ml-ease), color .15s var(--ml-ease), background-color .15s var(--ml-ease);
+  }
+  button.crumbbtn:hover { border-color: var(--muted); }
+  button.crumbbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .crumbnote {
+    font-weight: 500;
+    font-family: var(--ml-font);
+    font-size: 13px; line-height: 20px; letter-spacing: 0; color: var(--muted); text-transform: none;
+  }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center;
+    border-top: 1px solid var(--line);
+    padding: 8px 16px; font-size: 12px; line-height: 20px; color: var(--muted);
+  }
+  .lg { display: inline-flex; align-items: center; gap: 8px; }
+  .sw { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--legend-hue); }
+
+
+  /* Unslop pass, 2026-10-31: radii and sizes on the 4px grid, one ease-out
+     curve for every hover and entrance, and one soft neutral shadow for
+     anything that floats (menus, the zoom control, the drawer). */
+  :root {
+    --ml-font: "Manrope", system-ui, sans-serif; --ml-control-radius: 8px;
+    --ml-ease: cubic-bezier(.22, 1, .36, 1);
+    --ml-float-shadow: 0 8px 24px rgba(15, 18, 28, .08), 0 1px 2px rgba(15, 18, 28, .05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --ml-float-shadow: 0 12px 32px rgba(0, 0, 0, .32); }
+  }
+  :root[data-theme="dark"] { --ml-float-shadow: 0 12px 32px rgba(0, 0, 0, .32); }
+  body { font-family: var(--ml-font); }
+  /* Focus rings only for the keyboard, in ink: a mouse click shows the
+     map's own selected and hover states, never the browser's blue ring. */
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  :focus:not(:focus-visible) { outline: none; }
+  button.crumbbtn, button.lookbtn, button.panel-action {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .ml-control-icon { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  button.lookbtn:focus-visible {
+    outline: 2px solid var(--ink); outline-offset: 2px;
+  }
+  #unfocus {
+    gap: 8px; color: var(--focus-hue); background: color-mix(in srgb,var(--focus-hue) 7%,var(--surface));
+    border-color: color-mix(in srgb,var(--focus-hue) 30%,var(--line));
+  }
+  #unfocus::before { content: ""; width: 8px; height: 8px; flex: none; border-radius: 50%; background: currentColor; }
+  #unfocus .ml-control-icon { width: 14px; height: 14px; order: 1; }
+  .inside h2 { font-family: var(--ml-font); font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -.01em; margin-top: 16px; }
+  .inside .i-sub, .inside .i-cap { font-family: var(--ml-font); }
+  .eyebrow { font-family: var(--ml-font); letter-spacing: 0; }
+  .stagecard, aside.panel { border-radius: 16px; }
+  button.lookbtn, button.panel-action { border-radius: var(--ml-control-radius); }
+  .crumbbar button[hidden] { display: none; }
+
+  .panel .panelclose, .drawer .drawerclose { border-radius: 8px; min-height: 28px; }
+
+  .panel .xrepo a .ml-control-icon { vertical-align: middle; margin-left: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flow-picker > summary, .flow-option, .flow-play, .seg button, button.crumbbtn { transition: none; }
+  }
+
+  /* Compact toolbar (2026-11-09): one quiet strip above the map, controls
+     30px tall, so the map gets the height. */
+  .controls {
+    margin: 10px auto 10px; padding: 6px 6px 6px 14px; gap: 8px 16px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  }
+  .stagecard.fs-card .controls { border-radius: 0; border-width: 0 0 1px; padding: 6px 12px; }
+  .controls .clabel { font-size: 12px; }
+  .flow-picker > summary { height: 30px; font-size: 12.5px; padding-right: 34px; }
+  .flow-chevron { top: 6px; right: 10px; }
+  .flow-play, .controls .tour-entry { height: 30px; padding: 0 12px; font-size: 12.5px; gap: 6px; }
+  .flow-play svg { width: 12px; height: 12px; }
+  .controls .tour-entry svg { width: 14px; height: 14px; }
+  .build-controls .seg { height: 30px; }
+  .build-controls .seg button { padding: 0 10px; font-size: 12px; }
+  .build-controls, .tour-controls { padding-left: 16px; }
+  .theme-toggle { width: 30px; height: 30px; }
+  .theme-toggle svg { width: 15px; height: 15px; }
+  .steptip { position: fixed; z-index: 50; pointer-events: none; padding: 5px 9px; border-radius: 7px;
+    background: var(--ink); color: var(--bg); font: 600 12px/1.3 "Manrope", sans-serif; white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+  .steptip[hidden] { display: none; }
+/* Journey Board primitives for ML diagrams. The contract lives in
+   docs/tools/ml-canvas/DESIGN.md. Theme and control typography live in ml-chrome.css. */
+.stagecard {
+  --ml-ink: #243044;
+  --ml-muted: #606d85;
+  --ml-wire: #b7c2d5;
+  --ml-canvas: #fcfcfe;
+  --ml-dot: #d3d9e4;
+  --ml-dot-radius: 1px;
+  --ml-group: #f0f3f8;
+  --ml-group-border: #bdc8da;
+  --ml-icon-surface: #ffffffd9;
+  --ml-card: #ffffff;
+  --ml-tile-ink: #ffffff;
+
+
+
+
+
+
+  --ml-shadow: drop-shadow(0 2px 4px #3c42680f);
+}
+:root[data-theme="dark"] .stagecard {
+  --ml-ink: #e7ecf6;
+  --ml-muted: #aab7ce;
+  --ml-wire: #65758f;
+  --ml-canvas: #171c27;
+  --ml-dot: #2a3345;
+  --ml-dot-radius: .8px;
+  --ml-group: #1b2230;
+  --ml-group-border: #3e4a61;
+  --ml-icon-surface: #ffffff10;
+  --ml-card: #1e2533;
+  --ml-tile-ink: #171c27;
+
+
+
+
+
+
+  --ml-shadow: drop-shadow(0 2px 4px #0000001f);
+}
+.ml-canvas {
+  --edge: var(--ml-wire);
+  font-family: var(--ml-font);
+}
+.stage-scroll {
+  background-color: var(--ml-canvas);
+  background-image: radial-gradient(var(--ml-dot) var(--ml-dot-radius), transparent var(--ml-dot-radius));
+  background-size: 14px 14px;
+}
+.ml-canvas g.block, .ml-canvas g.node { cursor: pointer; outline: none; }
+.ml-canvas .brect, .ml-canvas .nrect {
+  /* Resting cards carry a faint outline in their own hue so they separate
+     from the group surface; hover and every highlighted state take it to
+     full strength. The fade animates stroke-opacity only: a number tweens
+     smoothly, whereas a currentColor mix or an SVG drop-shadow re-renders
+     unevenly frame to frame and reads as flicker. The shadow never changes. */
+  fill: var(--ml-node-fill); stroke: currentColor; stroke-opacity: .32; stroke-width: 1.5;
+  filter: var(--ml-shadow); transition: opacity .25s var(--ml-ease), stroke-opacity .15s var(--ml-ease);
+}
+.ml-canvas g.block:is(:hover, :focus-visible) .brect,
+.ml-canvas g.node:is(:hover, :focus-visible, .sel, .lit, .future, .dimmed, .justbuilt, .broken) .nrect { stroke-opacity: 1; }
+.ml-canvas .brect { rx: 18; }
+.ml-canvas .nrect { rx: 20; }
+.ml-canvas .nicon-tile { fill: var(--ml-icon-surface); }
+.ml-canvas .nicon-tile.logo-tile { fill: #fff; }
+.ml-canvas .nlogo { pointer-events: none; }
+.ml-canvas .nicon { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+/* Overview cards share the full map's style E (2026-11-09). */
+.ml-canvas .brect {
+  fill: var(--ml-card); stroke-opacity: .24; stroke-width: 1.3;
+  filter: drop-shadow(0 1px 1px #1018280f) drop-shadow(0 6px 10px color-mix(in srgb, currentColor 20%, transparent));
+}
+.ml-canvas .brect.b-person { rx: 34; }
+.ml-canvas .brect.b-external { fill: transparent; stroke-dasharray: 6 5; stroke-opacity: .6; filter: none; }
+.ml-canvas g.block:is(:hover, :focus-visible) .brect:not(.b-external) {
+  filter: drop-shadow(0 1px 1px #1018280f) drop-shadow(0 10px 18px color-mix(in srgb, currentColor 30%, transparent));
+}
+.ml-canvas g.block .nicon-tile { fill: currentColor; rx: 12; }
+.ml-canvas g.block .nicon { stroke: var(--ml-tile-ink); stroke-width: 1.8; }
+.ml-canvas g.block:has(.b-person) .nicon-tile { rx: 22; }
+.ml-canvas g.block:has(.b-external) .nicon-tile { fill: var(--ml-node-fill); }
+.ml-canvas g.block:has(.b-external) .nicon { stroke: currentColor; }
+.ml-canvas .btitle { font: 700 19px var(--ml-font); letter-spacing: -.01em; fill: var(--ml-ink); }
+.ml-canvas .bkind { font: 500 12.5px var(--ml-font); fill: var(--ml-muted); }
+.ml-canvas .bline { font: 400 14.5px var(--ml-font); fill: var(--ml-muted); }
+.ml-canvas .brule { stroke: currentColor; stroke-opacity: .16; stroke-width: 1; }
+.ml-canvas .btools { font: 400 12px var(--ml-font); fill: var(--ml-muted); }
+.ml-canvas .bgo { font: 700 12.5px var(--ml-font); fill: currentColor; opacity: 0; transition: opacity .15s var(--ml-ease); }
+.ml-canvas g.block:is(:hover, :focus-visible) .bgo { opacity: 1; }
+.ml-canvas .bstep { font: 600 13px var(--ml-font); fill: var(--ml-muted); opacity: .8; font-variant-numeric: tabular-nums; }
+.ml-canvas .l0start { fill: var(--ml-canvas); stroke: var(--ml-wire); stroke-width: 1.5; }
+.ml-canvas g.l0chip rect { fill: var(--ml-card); stroke: color-mix(in srgb, var(--ml-wire) 75%, transparent); stroke-width: 1; }
+.ml-canvas g.l0chip text { font: 600 12px var(--ml-font); fill: var(--ml-muted); }
+.ml-canvas .l1 { font: 600 13.5px var(--ml-font); fill: var(--ml-ink); text-anchor: start; }
+.ml-canvas .l2 { font: 400 11px var(--ml-font); fill: var(--ml-muted); text-anchor: start; }
+.ml-canvas .zone-r, .ml-canvas .igrp {
+  fill: var(--ml-group); stroke: var(--ml-group-border); stroke-dasharray: 4 5;
+  stroke-width: 1; rx: 16;
+}
+.ml-canvas .zone-t, .ml-canvas .gt {
+  font: 600 11px var(--ml-font); letter-spacing: 0; fill: var(--ml-muted);
+}
+/* Environment titles are short structural labels, distinct from card titles. */
+.ml-canvas .zone-t { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; }
+.ml-canvas .hostchip { fill: none; stroke: var(--ml-group-border); stroke-dasharray: 3 3; }
+.ml-canvas .hostchip-t { font: 400 10px var(--ml-font); fill: var(--ml-muted); text-anchor: middle; }
+.ml-canvas .epath, .ml-canvas .l0edge, .ml-canvas .ie {
+  fill: none; stroke: var(--ml-wire); stroke-width: 1.5; transition: opacity .25s var(--ml-ease);
+}
+.ml-canvas .epath.eactive { stroke-width: 2.4; }
+.ml-canvas .elabel, .ml-canvas .l0lab {
+  font: 500 10px var(--ml-font); fill: var(--ml-muted);
+  paint-order: stroke; stroke: var(--ml-canvas); stroke-width: 5px; stroke-linejoin: round;
+}
+.ml-canvas .l0lab { text-anchor: middle; }
+.ml-canvas g.block:focus-visible .brect, .ml-canvas g.node:focus-visible .nrect { stroke: currentColor; stroke-width: 3; }
+.ml-canvas g.node.sel .nrect { stroke: currentColor; stroke-width: 2.5; }
+.ml-canvas g.node.lit .nrect { stroke: var(--story-hue) !important; stroke-width: 2.8; }
+/* Faded cards and environments stay opaque: their surface is mixed toward
+   the canvas instead of made transparent, so the dot grid and the wires
+   behind never show through. Only their contents take the opacity. */
+.ml-canvas g.node.future > :not(.badge-c):not(.badge-t):not(.nrect) { opacity: .35; }
+.ml-canvas g.node.future .nrect {
+  fill: color-mix(in srgb, var(--ml-node-fill) 35%, var(--ml-canvas));
+  stroke: color-mix(in srgb, currentColor 35%, var(--ml-canvas)); stroke-dasharray: 4 3; filter: none;
+}
+.ml-canvas g.node.dimmed > :not(.nrect) { opacity: .18; }
+.ml-canvas g.node.dimmed .nrect {
+  fill: color-mix(in srgb, var(--ml-node-fill) 18%, var(--ml-canvas));
+  stroke: color-mix(in srgb, currentColor 18%, var(--ml-canvas)); filter: none;
+}
+.ml-canvas g.zone.future .zone-r {
+  fill: color-mix(in srgb, var(--ml-group) 35%, var(--ml-canvas));
+  stroke: color-mix(in srgb, var(--ml-group-border) 35%, var(--ml-canvas));
+}
+.ml-canvas g.zone.future .zone-t, .ml-canvas g.zone.future .hostchip, .ml-canvas g.zone.future .hostchip-t { opacity: .35; }
+.ml-canvas .epath.future, .ml-canvas .elabel.future { opacity: .24; }
+.ml-canvas .epath.dimmed, .ml-canvas .elabel.dimmed { opacity: .15; }
+.ml-canvas g.node.justbuilt .nrect { stroke: currentColor; animation: ml-built 1.6s ease-in-out infinite; }
+@keyframes ml-built { 0%,100% { stroke-width: 2; } 50% { stroke-width: 3; } }
+.ml-canvas .badge-c { fill: var(--story-hue); }
+.ml-canvas .badge-t { font: 600 10px var(--ml-font); fill: var(--bg); text-anchor: middle; font-variant-numeric: tabular-nums; }
+.ml-canvas g.node.broken .nrect {
+  stroke: var(--map-error) !important; fill: var(--map-error-fill);
+  animation: ml-built 2s ease-in-out infinite;
+}
+.ml-canvas .silent-c { fill: var(--ml-canvas); stroke: var(--map-error); stroke-width: 1.6; }
+.ml-canvas .silent-x { fill: none; stroke: var(--map-error); stroke-width: 1.6; stroke-linecap: round; }
+.ml-canvas .silent-t { font: 500 10px var(--ml-font); fill: var(--map-error); text-anchor: middle; paint-order: stroke; stroke: var(--ml-canvas); stroke-width: 4; }
+/* Close-ups share card surfaces and type. Their authored data/geometry stays intact. */
+.inside { background: var(--ml-canvas); }
+.ml-canvas.iscene text { font-family: var(--ml-font); fill: var(--ml-ink); }
+.ml-canvas .ib, .ml-canvas .ibart { fill: var(--ml-node-fill); stroke: transparent; rx: 12; filter: var(--ml-shadow); }
+.ml-canvas .ibart { fill: var(--map-artifact-fill); }
+.ml-canvas .lbl { font-size: 11px; font-weight: 600; text-anchor: middle; }
+.ml-canvas .sm, .ml-canvas .smL { font-size: 9px; fill: var(--ml-muted); }
+.ml-canvas .sm { text-anchor: middle; }
+.ml-canvas .smL { text-anchor: start; }
+@media (prefers-reduced-motion: reduce) {
+  .ml-canvas g.node.justbuilt .nrect, .ml-canvas g.node.broken .nrect { animation: none; stroke-width: 2.8; }
+  .ml-canvas .brect, .ml-canvas .nrect, .ml-canvas .epath { transition: none; }
+}
+
+@media (prefers-color-scheme: dark) {
+:root:not([data-theme]) .stagecard {
+  --ml-ink: #e7ecf6;
+  --ml-muted: #aab7ce;
+  --ml-wire: #65758f;
+  --ml-canvas: #171c27;
+  --ml-dot: #2a3345;
+  --ml-dot-radius: .8px;
+  --ml-group: #1b2230;
+  --ml-group-border: #3e4a61;
+  --ml-icon-surface: #ffffff10;
+  --ml-card: #1e2533;
+  --ml-tile-ink: #171c27;
+
+
+
+
+
+
+  --ml-shadow: drop-shadow(0 2px 4px #0000001f);
+}
+}
+
+/* Node style E: white cards with a role-tinted shadow and a solid role tile;
+   the card outline follows the C4 kind (see SHAPES in ml-canvas.js). */
+.ml-canvas g.node .nrect {
+  fill: var(--ml-card); stroke-opacity: .22; stroke-width: 1.2;
+  filter: drop-shadow(0 1px 1px #1018280f) drop-shadow(0 5px 8px color-mix(in srgb, currentColor 20%, transparent));
+}
+.ml-canvas g.node .nrect:is(rect) { rx: 16; }
+.ml-canvas g.node.shape-person .nrect { rx: 36; }
+.ml-canvas g.node .nicon-tile:not(.logo-tile) { fill: currentColor; rx: 10; }
+.ml-canvas g.node.shape-person .nicon-tile { rx: 18; }
+.ml-canvas g.node .nicon { stroke: var(--ml-tile-ink); stroke-width: 1.8; }
+.ml-canvas g.node .nstack {
+  fill: var(--ml-card); stroke: currentColor; stroke-opacity: .28; stroke-width: 1.2; rx: 16;
+}
+.ml-canvas g.node .ncap { fill: var(--ml-node-fill); stroke: currentColor; stroke-opacity: .3; stroke-width: 1.2; }
+.ml-canvas g.node.shape-database .ncap { fill: none; }
+.ml-canvas g.node.shape-external .nrect { fill: transparent; stroke-dasharray: 5 4; stroke-opacity: .6; filter: none; }
+.ml-canvas g.node.shape-external .nicon-tile:not(.logo-tile) { fill: var(--ml-node-fill); }
+.ml-canvas g.node.shape-external .nicon { stroke: currentColor; }
+.ml-canvas g.node:is(.future, .dimmed) :is(.nstack, .ncap) { opacity: .25; }
+.ml-canvas g.node .nicon-tile.logo-tile { rx: 10; }
+.ml-canvas g.node.shape-person .nicon-tile.logo-tile { rx: 18; }
+.ml-canvas g.node .nicon-tile.logo-tile:not(.brand-tile) { fill: #fff; stroke: #10182824; stroke-width: 1; }
+/* Shared Journey Board side cards for the ML map. Every panel renderer uses
+   these rules, including the same card reparented into fullscreen. */
+.panel[data-panel-design="journey"] {
+  font-family: var(--ml-font);
+}
+.panel[data-panel-design="journey"] .p-eyebrow {
+  gap: 8px; font-family: inherit; font-size: 12px; line-height: 16px; font-weight: 500;
+  text-transform: none; letter-spacing: 0; color: var(--muted);
+}
+.panel[data-panel-design="journey"] .p-eyebrow::before {
+  content: ""; width: 8px; height: 8px; flex: none; border-radius: 50%;
+  background: var(--p-hue);
+}
+.panel[data-panel-design="journey"] h2 {
+  font-family: inherit; font-size: 22px; line-height: 28px; font-weight: 600;
+  letter-spacing: -.01em; margin-bottom: 4px;
+}
+/* Unslop pass, 2026-10-31: the card shares the tour card's type. 14px body
+   on a 22px line, 13px section headings at 600, every gap on the 4px grid. */
+.panel[data-panel-design="journey"] p {
+  font-size: 14px; line-height: 22px; margin-bottom: 0;
+}
+.panel[data-panel-design="journey"] p.p-sub {
+  color: var(--muted); font-size: 14px; line-height: 20px; margin-bottom: 12px;
+}
+.panel[data-panel-design="journey"] .p-chips { margin-bottom: 24px; }
+.panel[data-panel-design="journey"] .pchip {
+  font-family: inherit; font-size: 12px; font-weight: 500; line-height: 16px;
+  border: none; background: color-mix(in srgb, var(--ink) 5%, var(--surface));
+  border-radius: 6px; padding: 4px 8px; font-variant-numeric: tabular-nums;
+}
+.panel[data-panel-design="journey"] h3 {
+  font-family: inherit; font-size: 13px; line-height: 20px; font-weight: 600;
+  letter-spacing: 0; text-transform: none; color: var(--ink);
+  margin: 24px 0 8px;
+}
+.panel[data-panel-design="journey"] .p-chips + h3 { margin-top: 0; }
+.panel[data-panel-design="journey"] .toolline { color: var(--muted); }
+.panel[data-panel-design="journey"] code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .9em;
+  border: 1px solid var(--line); border-radius: 4px; padding: 1px 4px;
+  background: color-mix(in srgb, var(--ink) 3%, var(--surface));
+}
+
+/* Multi-paragraph introductions and flow narration keep their reading rhythm. */
+.panel[data-panel-design="journey"] p + p { margin-top: 12px; }
+.panel[data-panel-design="journey"] li { line-height: 22px; }
+.panel[data-panel-design="journey"] ol.steps li .n { font-family: inherit; }
+.panel[data-panel-design="journey"] .p-note { font-size: 13px; line-height: 20px; margin-top: 12px; }
+.panel[data-panel-design="journey"] .p-note + p { margin-top: 12px; }
+/* Structured inside scenes (rendering/inside-scenes.js). Colours come from shared tokens:
+   --surface, --ink, --muted, --line, --edge, and --ins-hue (the node's role hue, set by panels.js). */
+.ins { width: 100%; box-sizing: border-box; --ins-gap: 14px; font-family: var(--ml-font); color: var(--ink); max-width: 1020px; }
+.ins .ins-t { font-weight: 600; font-size: 14px; line-height: 1.35; }
+.ins .ins-d { font-size: 13px; line-height: 1.5; color: var(--muted); margin-top: 3px; }
+.ins .ins-code {
+  display: inline-block; margin-top: 7px; font: 500 11.5px ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color: var(--ink); text-decoration: none; padding: 2px 7px; border-radius: 6px;
+  background: color-mix(in srgb, var(--ins-hue) 9%, transparent);
+}
+.ins a.ins-code:hover { background: color-mix(in srgb, var(--ins-hue) 16%, transparent); }
+
+/* steps: one column of cards joined by a line; early exits branch to the right */
+.ins-steps { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: var(--ins-gap); }
+.ins-step { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 300px); gap: 0 44px; align-items: center; position: relative; }
+.ins-step:not(.is-last)::before {
+  content: ""; position: absolute; left: 27px; top: 50%; height: calc(100% + var(--ins-gap)); width: 0;
+  border-left: 1.5px solid var(--edge); z-index: 0;
+}
+.ins-step.is-async + .ins-step::before, .ins-step.is-async::before { border-left-style: dashed; }
+.ins-card {
+  position: relative; z-index: 1; display: flex; gap: 12px; align-items: flex-start;
+  background: var(--surface); border: 1px solid color-mix(in srgb, var(--ins-hue) 22%, var(--line));
+  border-radius: 14px; padding: 12px 14px;
+  box-shadow: 0 1px 1px #1018280d, 0 5px 10px -4px color-mix(in srgb, var(--ins-hue) 22%, transparent);
+}
+.ins-n {
+  flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+  background: var(--ins-hue); color: var(--surface); font: 600 12px var(--ml-font); font-variant-numeric: tabular-nums;
+}
+.ins-main { min-width: 0; color: var(--ink); }
+.ins-step .ins-main .ins-code { color: var(--muted); }
+.ins-exit { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.ins-exit::before {
+  content: ""; position: absolute; left: -44px; width: 40px; top: 50%; border-top: 1.5px dashed var(--edge);
+}
+.ins-exit::after {
+  content: ""; position: absolute; left: -9px; top: calc(50% - 4px); border: 4px solid transparent; border-left: 6px solid var(--edge);
+}
+.ins-when { position: absolute; left: -44px; bottom: calc(50% + 4px); width: 44px; text-align: center; font-size: 10.5px; color: var(--muted); line-height: 1.2; }
+.ins-exit-card {
+  border: 1.5px dashed var(--line); border-radius: 12px; padding: 9px 12px; background: var(--surface);
+  color: var(--ink);
+}
+.ins-exit-card .ins-t { font-weight: 500; font-size: 13px; }
+.ins-exit-card .ins-code { color: var(--muted); margin-top: 5px; }
+@media (max-width: 720px) {
+  .ins-step { grid-template-columns: 1fr; gap: 8px; }
+  .ins-exit { margin-left: 52px; }
+  .ins-exit::before, .ins-exit::after { display: none; }
+  .ins-when { position: static; width: auto; text-align: left; }
+}
+
+/* schema: table cards; hovering a reference lights the table it points to */
+.ins-schema { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; align-items: start; }
+.ins-table {
+  background: var(--surface); border: 1px solid color-mix(in srgb, var(--ins-hue) 22%, var(--line)); border-radius: 14px;
+  overflow: hidden; color: var(--ink); transition: box-shadow .15s var(--ml-ease), border-color .15s var(--ml-ease);
+  box-shadow: 0 1px 1px #1018280d, 0 5px 10px -4px color-mix(in srgb, var(--ins-hue) 22%, transparent);
+}
+.ins-table.is-lit { border-color: var(--ins-hue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ins-hue) 22%, transparent); }
+.ins-table header {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px;
+  background: color-mix(in srgb, var(--ins-hue) 10%, var(--surface)); border-bottom: 1px solid color-mix(in srgb, var(--ins-hue) 15%, var(--line));
+}
+.ins-name { font: 600 13.5px ui-monospace, "SFMono-Regular", Menlo, monospace; color: var(--ink); }
+.ins-ttl { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.ins-note { margin: 10px 14px 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.ins-table ul { list-style: none; margin: 8px 0 10px; padding: 0 14px; display: grid; gap: 5px; }
+.ins-table li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 12.5px; color: var(--ink); }
+.ins-f { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-weight: 500; }
+.ins-type { color: var(--muted); font-size: 11.5px; }
+.ins-ref { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: color-mix(in srgb, var(--ins-hue) 10%, transparent); cursor: default; }
+.ins-fnote { flex-basis: 100%; color: var(--muted); font-size: 11.5px; }
+.ins-table footer { padding: 0 14px 12px; }
+.ins-table footer .ins-code { color: var(--muted); margin-top: 0; }
+/* Files view (runtime/files-view.js): the repository as an annotated tree.
+   Calm by design: one mono column of names, one muted column of notes, and
+   the only colour is the role hue of the map component a path belongs to. */
+
+/* Entry beside the tour: the same filled ink button as Play flow and the tour. */
+.controls .files-entry {
+  height: 30px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px;
+  border: 1px solid var(--ink); border-radius: var(--ml-control-radius); background: var(--ink); color: var(--bg);
+  font: inherit; font-size: 12.5px; font-weight: 600; white-space: nowrap; cursor: pointer;
+  transition: background-color .15s var(--ml-ease), border-color .15s var(--ml-ease);
+}
+.controls .files-entry[hidden] { display: none; }
+.controls .files-entry svg { width: 14px; height: 14px; flex: none; }
+.controls .files-entry:hover { background: color-mix(in srgb,var(--ink) 86%,var(--bg)); border-color: color-mix(in srgb,var(--ink) 86%,var(--bg)); }
+.controls .files-entry:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.tour-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+.files {
+  position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column;
+  background: var(--surface); font-family: var(--ml-font); color: var(--ink);
+}
+.files[hidden] { display: none; }
+.files-head { flex: none; background: var(--surface); }
+/* The tree sits on the same dotted canvas as the map. */
+.files-body {
+  flex: 1; overflow: auto; padding: 16px 20px 28px;
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 22px 22px;
+}
+.files .mono, .panel .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .92em; }
+
+.ft { --ft-indent: 22px; --ft-name: minmax(240px, 34%); max-width: 1180px; }
+.ft-kids { position: relative; }
+/* Indent guide: a hairline under each open folder's chevron. */
+.ft-kids::before {
+  content: ""; position: absolute; top: 0; bottom: 8px;
+  left: calc(12px + var(--depth) * var(--ft-indent) + 7px); border-left: 1px solid var(--line);
+}
+.ft-row {
+  display: grid; grid-template-columns: var(--ft-name) 1fr auto; align-items: center; gap: 16px;
+  min-height: 36px; padding: 4px 10px 4px 12px; border-radius: 9px; cursor: pointer; position: relative;
+  transition: background-color .12s var(--ml-ease);
+}
+.ft-row:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.ft-row:hover { background: color-mix(in srgb, var(--ink) 4%, var(--surface)); }
+.ft-row.is-sel { background: color-mix(in srgb, var(--row-hue) 10%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--row-hue) 40%, transparent); }
+.ft-row.is-sel::before {
+  content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--row-hue);
+}
+.ft-name {
+  display: flex; align-items: center; gap: 6px; min-width: 0;
+  padding-left: calc(var(--depth) * var(--ft-indent));
+}
+.ft-chev { width: 15px; height: 15px; flex: none; color: var(--muted); transition: transform .15s var(--ml-ease); }
+.ft-row[aria-expanded="true"] > .ft-name > .ft-chev { transform: rotate(90deg); }
+.ft-ico { width: 17px; height: 17px; flex: none; color: var(--row-hue); }
+.ft-row[aria-expanded] .ft-ico { fill: color-mix(in srgb, var(--row-hue) 18%, transparent); }
+.ft-label {
+  font: 500 13px/20px ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ft-note { font-size: 13px; line-height: 20px; color: var(--muted); min-width: 0; }
+.ft-note code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .92em; }
+.ft-row.is-bare .ft-label { color: var(--muted); font-weight: 400; }
+.ft-row.is-root .ft-label { font-weight: 600; }
+.ft-row.is-root .ft-note { color: var(--muted); }
+.ft-more { cursor: default; }
+.ft-more:hover { background: none; }
+.ft-more .ft-label { padding-left: 22px; }
+.ft-more .ft-label, .ft-more .ft-note { color: var(--muted); }
+.ft-meta { display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.ft-tag {
+  font-size: 11.5px; line-height: 16px; font-weight: 500; color: var(--muted); white-space: nowrap;
+  padding: 2px 8px; border-radius: 6px; border: 1px solid var(--line);
+}
+/* A component tag: the map card's own icon tile, shrunk, with its name. */
+.ft-chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px 0 3px; border-radius: 12px;
+  font: 600 12px/1 var(--ml-font); color: var(--ink); white-space: nowrap; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--chip-hue) 26%, var(--line));
+  background: color-mix(in srgb, var(--chip-hue) 7%, var(--surface));
+  transition: border-color .12s var(--ml-ease);
+}
+.ft-chip:hover { border-color: var(--chip-hue); }
+.ft-chip svg {
+  width: 18px; height: 18px; padding: 3px; box-sizing: border-box; border-radius: 9px; flex: none;
+  background: var(--chip-hue); color: var(--surface);
+}
+
+/* Panel bits */
+.panel .ft-goto { padding-left: 6px; }
+.panel .ft-goto > svg { width: 16px; height: 16px; }
+.panel .ft-goto-ico {
+  width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; flex: none;
+  background: var(--chip-hue); color: var(--surface);
+}
+.panel .ft-goto-ico svg { width: 16px; height: 16px; }
+.panel .panel-action > svg { width: 16px; height: 16px; flex: none; }
+.panel .ft-link {
+  font: 500 13px ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink); background: none; border: none; padding: 0;
+  cursor: pointer; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px;
+}
+.panel .ft-link:hover { text-decoration-color: var(--ink); }
+.panel ul.ft-toplist li { line-height: 22px; margin-bottom: 6px; }
+.panel p.p-sub.mono { font-size: 12.5px; }
+.panel .ft-chips { margin: 0 0 4px; }
+.panel h2.ft-h { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 20px; letter-spacing: -.02em; }
+.panel .xrepo { flex-direction: column; align-items: flex-start; }
+
+@media (max-width: 760px) {
+  .files-body { padding: 16px 12px 24px; }
+  .ft { --ft-indent: 14px; }
+  .ft-row { grid-template-columns: 1fr auto; gap: 2px 10px; }
+  .ft-note { grid-column: 1 / -1; grid-row: 2; padding-left: calc(var(--depth) * var(--ft-indent) + 42px); font-size: 12.5px; }
+  .ft-note:empty { display: none; }
+  .ft-chip { font-size: 0; gap: 0; padding: 0 3px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ft-chev, .ft-row, .ft-chip { transition: none; }
+}
+/* The app takes the original iframe's content box, without the website shell. */
+#app { display: contents; }
+/* The original marketing-only mobile gate is intentionally not installed. */
+/* A map that fails validation shows its error instead of a blank page. */
+.map-error { margin: 24px; padding: 16px; white-space: pre-wrap; font: 14px/1.5 ui-monospace, monospace;
+  color: #c62a2f; background: #fff; border: 1px solid #c62a2f; border-radius: 12px; }
