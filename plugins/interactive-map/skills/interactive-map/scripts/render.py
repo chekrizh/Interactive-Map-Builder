@@ -21,9 +21,11 @@ On problems it lists what to fix and exits with status 1.
 """
 import argparse
 import base64
+import html
 import json
 import mimetypes
 import pathlib
+import re
 import sys
 
 import auto_layout
@@ -451,6 +453,14 @@ def render(template, definition):
         raise ValueError('template must contain exactly one empty map-definition placeholder')
     # Which plugin built the page, so a map file can be traced back to its viewer.
     template = template.replace('<meta charset="UTF-8">', f'<meta charset="UTF-8"><meta name="generator" content="interactive-map {plugin_version()}">', 1)
+    # The page names itself before any script runs, for browser tabs, bookmarks and search results.
+    page = definition.get('page', {}) if isinstance(definition, dict) else {}
+    head = f'<title>{html.escape(str(page.get("title", "")).strip() or "System Map")}</title>'
+    about = (page.get('slots') or {}).get('overviewDescription')
+    if isinstance(about, str) and about.strip():
+        about = html.unescape(re.sub(r'<[^>]*>', '', about)).strip()  # rich text: keep the words only
+        head += f'<meta name="description" content="{html.escape(about)}">'
+    template = template.replace('<title>System Map</title>', head, 1)
     # < keeps "</script>" and "<!--" inside authored strings from closing the tag early.
     payload = json.dumps(with_data_uris(definition), ensure_ascii=False).replace('<', '\\u003c')
     return template.replace(PLACEHOLDER, PLACEHOLDER.replace('></', f'>{payload}</'))

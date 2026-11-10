@@ -136,6 +136,14 @@ The skill triggers on its own. It is also available as `/interactive-map:interac
 - Update on request: `/plugin marketplace update interactive-map-builder`, or `claude plugin update interactive-map@interactive-map-builder` in a shell.
 - Update automatically: `/plugin` → Marketplaces → interactive-map-builder → Enable auto-update. It is off by default for marketplaces like this one.
 
+**Other agents (Codex, Cursor, Gemini CLI and more), with the [skills CLI](https://skills.sh):**
+
+```
+npx skills add chekrizh/Interactive-Map-Builder --skill '*'
+```
+
+Install both skills: `interactive-map-repo` reads the repository and `interactive-map` renders the map. Run the same command again to update.
+
 <details>
 <summary><b>Other clients</b> (no automatic updates; install the new copy again)</summary>
 
