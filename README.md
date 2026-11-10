@@ -11,7 +11,7 @@
 
 **Deep dives into how a system works: from the big picture down to a line of code, as one interactive map.**
 
-Any model can draw a diagram as an HTML page. This skill is for understanding: it gives the agent a method for studying a repository or a topic and a ready-made viewer built for going deep.<br>
+This skill is for understanding: it gives the agent a method for studying a repository or a topic and a ready-made viewer built for going deep.<br>
 Levels you drill into, animated flows, step-by-step code walkthroughs, a guided tour, and every claim linked to its source. The agent spends its effort on the explanation instead of building the page.
 
 [Features](#features) · [Modes](#three-modes) · [Install](#install) · [How it works](#how-it-works)
@@ -32,7 +32,7 @@ Levels you drill into, animated flows, step-by-step code walkthroughs, a guided 
 - [**Full map**](#full-map): every part and how they connect.
 - [**Flows**](#flows): watch a request or a process move through the system.
 - [**Look inside**](#look-inside): open one component and see how it works step by step.
-- [**Guided tour**](#guided-tour): a short walk through the map, for a first visit.
+- [**Guided tour**](#guided-tour): a short walk through the map, good for a first visit.
 - [**Build order**](#build-order): how the system is put together, piece by piece.
 
 Every map is one HTML file. It opens offline, in light or dark, and every claim points to its source.
@@ -169,6 +169,3 @@ python3 plugins/interactive-map/skills/interactive-map/scripts/render.py \
 open /tmp/map.html
 ```
 
----
-
-Working on the viewer or the skills, releasing an update, known limits: see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
