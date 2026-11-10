@@ -1,5 +1,5 @@
 // src/template.html?raw
-var template_default = "\n\n\n<div class=\"pintitle\" id=\"pinTitle\" hidden>\n  <span class=\"eyebrow\">Your system so far</span>\n  <h1 id=\"pinTitleWeek\"></h1>\n</div>\n\n<section class=\"controls\" aria-label=\"Explore the map\">\n  <div class=\"flow-controls\" id=\"flowControls\">\n    <div class=\"cgroup flow-field\">\n      <div class=\"clabel\" id=\"flowLabel\">Watch a flow</div>\n      <details class=\"flow-picker\" id=\"flowPicker\">\n        <summary aria-labelledby=\"flowLabel flowSelected\"><span class=\"flow-dot\" aria-hidden=\"true\"></span><span id=\"flowSelected\">Choose a flow</span><svg class=\"flow-chevron\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"/></svg></summary>\n        <div class=\"flow-menu\" aria-label=\"Available flows\">\n          <div class=\"flow-option-group\" role=\"group\" aria-labelledby=\"systemFlowsLabel\"><div class=\"flow-options-label\" id=\"systemFlowsLabel\">System flows</div><div id=\"storyOptions\"></div></div>\n          <div class=\"flow-option-group\" role=\"group\" aria-labelledby=\"failureFlowsLabel\"><div class=\"flow-options-label\" id=\"failureFlowsLabel\">Failure scenario</div><div id=\"failureOptions\"></div></div>\n        </div>\n      </details>\n    </div>\n    <button type=\"button\" class=\"flow-play\" id=\"playFlow\"><svg viewBox=\"0 0 16 16\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M3 1.5 14 8 3 14.5Z\"/></svg><span>Play flow</span></button>\n  </div>\n  <div class=\"cgroup build-controls\">\n    <div class=\"clabel\">Build it step by step</div>\n    <div class=\"seg\" id=\"weekSeg\"></div>\n  </div>\n  <div class=\"cgroup tour-controls\" id=\"tourControls\">\n    <div class=\"clabel\" id=\"tourLabel\" hidden>New here?</div>\n    <button type=\"button\" class=\"tour-entry\" id=\"tourBtn\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M10 8.6v6.8l5.6-3.4z\" fill=\"currentColor\"/></svg><span id=\"tourBtnText\">{{tourEntry}}</span></button>\n    <button type=\"button\" class=\"files-entry\" id=\"filesBtn\" aria-pressed=\"false\" hidden><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 4v13a2 2 0 0 0 2 2h3M4 9h5\"/><rect x=\"11\" y=\"6\" width=\"9\" height=\"6\" rx=\"1.5\"/><rect x=\"11\" y=\"15\" width=\"9\" height=\"6\" rx=\"1.5\"/></svg><span id=\"filesBtnText\"></span></button>\n  </div>\n  <button type=\"button\" class=\"theme-toggle\" id=\"themeToggle\" aria-label=\"Switch to dark theme\" title=\"Switch theme\"><svg class=\"ico-moon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401\"/></svg><svg class=\"ico-sun\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41\"/></svg></button>\n\n</section>\n<div id=\"ctrlSlot\" hidden></div>\n\n<main class=\"wrap\">\n  <div class=\"stagecard\">\n\n    <div class=\"tourbar\" id=\"tourBar\">\n      <div class=\"tb-text\"><div class=\"tb-eyebrow\">Guided tour</div><div class=\"tb-status\" id=\"tourStatus\"></div></div>\n      <ol class=\"tb-chapters\" id=\"tourChapters\" aria-label=\"Tour chapters\"></ol>\n      <button type=\"button\" class=\"crumbbtn tb-exit\" id=\"tourExit\">Exit tour</button>\n    </div>\n    <div class=\"crumbbar\">\n      <button class=\"crumbbtn\" id=\"toL0\" hidden>&lsaquo; Big picture</button>\n      <span class=\"crumbnote\" id=\"crumbNote\">The big picture</span>\n      <button class=\"crumbbtn\" id=\"unfocus\" hidden></button>\n\n      <button class=\"crumbbtn\" id=\"panelBtn\" hidden>Show panel</button>\n      <button class=\"crumbbtn\" id=\"fsBtn\">Full screen</button>\n    </div>\n    <div class=\"stage-scroll\">\n      <span class=\"zoomctl\" id=\"zoomCtl\" role=\"group\" aria-label=\"Canvas zoom\">\n        <button type=\"button\" class=\"crumbbtn\" id=\"zoomOut\" aria-label=\"Zoom out\" title=\"Zoom out\">−</button>\n        <button type=\"button\" class=\"crumbbtn\" id=\"zoomFit\" aria-label=\"Fit whole map\" title=\"Fit whole map\">Fit</button>\n        <button type=\"button\" class=\"crumbbtn\" id=\"zoomIn\" aria-label=\"Zoom in\" title=\"Zoom in\">+</button>\n      </span>\n      <svg id=\"map0\" class=\"mapsvg ml-canvas\" viewBox=\"{{overviewViewBox}}\" role=\"img\"\n        aria-label=\"{{overviewDescription}}\"></svg>\n      <svg id=\"map\" class=\"mapsvg ml-canvas\" viewBox=\"{{mapViewBox}}\" role=\"img\" style=\"display:none\"\n        aria-label=\"{{mapDescription}}\"></svg>\n    </div>\n    <div class=\"legend ml-canvas\">{{legend}}</div>\n    <div class=\"inside\" id=\"inside\" hidden>\n      <button class=\"crumbbtn\" id=\"insideBack\">&lsaquo; Back to the map</button>\n      <h2 id=\"insideTitle\"></h2>\n      <p class=\"i-sub\" id=\"insideSub\"></p>\n      <div id=\"insideScene\"></div>\n      <p class=\"i-cap\" id=\"insideCap\"></p>\n    </div>\n    <div class=\"files\" id=\"files\" hidden>\n      <div class=\"crumbbar files-head\">\n        <button class=\"crumbbtn\" id=\"filesBack\">&lsaquo; Back to the map</button>\n        <span class=\"crumbnote\" id=\"filesTitle\"></span>\n      </div>\n      <div class=\"files-body\">\n        <div class=\"ft\" id=\"filesTree\" role=\"tree\" aria-labelledby=\"filesTitle\"></div>\n      </div>\n    </div>\n    <div class=\"drawer\" id=\"drawer\">\n      <div class=\"panelhead\"><button type=\"button\" class=\"crumbbtn drawerclose\" id=\"drawerClose\" aria-label=\"Close panel\" title=\"Close panel\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"m6 6 12 12M18 6 6 18\"/></svg></button></div>\n      <div id=\"drawerBody\"></div>\n    </div>\n    <section class=\"tourcard\" id=\"tourCard\" aria-labelledby=\"tcTitle\" hidden>\n      <div class=\"tc-scroll\" id=\"tcScroll\">\n      <div aria-live=\"polite\">\n        <div class=\"tc-eyebrow\"><span class=\"tc-dot\" aria-hidden=\"true\"></span><span id=\"tcEyebrow\"></span></div>\n        <h2 id=\"tcTitle\" tabindex=\"-1\"></h2>\n        <div class=\"tc-body\" id=\"tcBody\"></div>\n        <ol class=\"tc-list\" id=\"tcList\" hidden></ol>\n        <div class=\"tc-why\" id=\"tcWhy\"><div class=\"tc-why-label\">Why it matters</div><p id=\"tcWhyText\"></p></div>\n      </div>\n      </div>\n      <p class=\"tc-hint\" id=\"tcHint\" hidden>Press Next to walk through each step.<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14m-6-6 6 6 6-6\"/></svg></p>\n      <div class=\"tc-foot\">\n        <span class=\"tc-count\" id=\"tcCount\"></span>\n        <button type=\"button\" class=\"tc-back\" id=\"tcBack\">Back</button>\n        <button type=\"button\" class=\"tc-next\" id=\"tcNext\">Next</button>\n      </div>\n      <p class=\"tc-keys\" aria-hidden=\"true\"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> to go back or next <span>&middot;</span> <kbd>Esc</kbd> to exit</p>\n    </section>\n    <div class=\"tourend\" id=\"tourEnd\" hidden>\n      <div class=\"tourend-card\" role=\"dialog\" aria-labelledby=\"teTitle\">\n        <div class=\"te-check\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12.5 4.5 4.5L19 7.5\"/></svg></div>\n        <div class=\"te-eyebrow\">{{completionCount}}</div>\n        <h1 id=\"teTitle\" tabindex=\"-1\">You've finished the tour</h1>\n        <p class=\"te-lede\">{{completionIntro}}</p>\n        <ul class=\"te-list\">{{completionLessons}}</ul>\n\n        <div class=\"te-links\">\n          <button type=\"button\" id=\"teBack\">Back to the map</button>\n          <span class=\"te-sep\" aria-hidden=\"true\" {{nextToolHidden}}>|</span>\n          <a id=\"teNext\" href=\"{{nextToolUrl}}\" {{nextToolHidden}}>{{nextToolLabel}}</a>\n        </div>\n      </div>\n    </div>\n  </div>\n  <span id=\"panelSlot\" hidden></span>\n  <aside class=\"panel\" id=\"panel\">\n    <div class=\"panelhead\"><button type=\"button\" class=\"crumbbtn panelclose\" id=\"panelClose\" aria-label=\"Close panel\" title=\"Close panel\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"m6 6 12 12M18 6 6 18\"/></svg></button></div>\n    <div id=\"panelBody\"></div>\n  </aside>\n</main>\n";
+var template_default = "\n\n\n\n<section class=\"controls\" aria-label=\"{{ui.controlsLabel}}\">\n  <div class=\"flow-controls\" id=\"flowControls\">\n    <div class=\"cgroup flow-field\">\n      <div class=\"clabel\" id=\"flowLabel\">{{ui.flowLabel}}</div>\n      <details class=\"flow-picker\" id=\"flowPicker\">\n        <summary aria-labelledby=\"flowLabel flowSelected\"><span class=\"flow-dot\" aria-hidden=\"true\"></span><span id=\"flowSelected\">{{ui.flowChoose}}</span><svg class=\"flow-chevron\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"/></svg></summary>\n        <div class=\"flow-menu\" aria-label=\"{{ui.flowMenu}}\">\n          <div class=\"flow-option-group\" role=\"group\" aria-labelledby=\"systemFlowsLabel\"><div class=\"flow-options-label\" id=\"systemFlowsLabel\">{{ui.flowsSystem}}</div><div id=\"storyOptions\"></div></div>\n          <div class=\"flow-option-group\" role=\"group\" aria-labelledby=\"failureFlowsLabel\"><div class=\"flow-options-label\" id=\"failureFlowsLabel\">{{ui.flowsFailure}}</div><div id=\"failureOptions\"></div></div>\n        </div>\n      </details>\n    </div>\n    <button type=\"button\" class=\"flow-play\" id=\"playFlow\"><svg viewBox=\"0 0 16 16\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M3 1.5 14 8 3 14.5Z\"/></svg><span>{{ui.flowPlay}}</span></button>\n  </div>\n  <div class=\"cgroup build-controls\">\n    <div class=\"clabel\">{{ui.buildControl}}</div>\n    <div class=\"seg\" id=\"weekSeg\"></div>\n  </div>\n  <div class=\"cgroup tour-controls\" id=\"tourControls\">\n    <div class=\"clabel\" id=\"tourLabel\" hidden>{{ui.tourNew}}</div>\n    <button type=\"button\" class=\"tour-entry\" id=\"tourBtn\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M10 8.6v6.8l5.6-3.4z\" fill=\"currentColor\"/></svg><span id=\"tourBtnText\">{{ui.tourEntry}}</span></button>\n    <button type=\"button\" class=\"files-entry\" id=\"filesBtn\" aria-pressed=\"false\" hidden><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 4v13a2 2 0 0 0 2 2h3M4 9h5\"/><rect x=\"11\" y=\"6\" width=\"9\" height=\"6\" rx=\"1.5\"/><rect x=\"11\" y=\"15\" width=\"9\" height=\"6\" rx=\"1.5\"/></svg><span id=\"filesBtnText\"></span></button>\n  </div>\n  <button type=\"button\" class=\"theme-toggle\" id=\"themeToggle\" aria-label=\"{{ui.themeToDark}}\" title=\"{{ui.themeTitle}}\"><svg class=\"ico-moon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401\"/></svg><svg class=\"ico-sun\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41\"/></svg></button>\n\n</section>\n<div id=\"ctrlSlot\" hidden></div>\n\n<main class=\"wrap\">\n  <div class=\"stagecard\">\n\n    <div class=\"tourbar\" id=\"tourBar\">\n      <div class=\"tb-text\"><div class=\"tb-eyebrow\">{{ui.tourTitle}}</div><div class=\"tb-status\" id=\"tourStatus\"></div></div>\n      <ol class=\"tb-chapters\" id=\"tourChapters\" aria-label=\"{{ui.tourChapters}}\"></ol>\n      <button type=\"button\" class=\"crumbbtn tb-exit\" id=\"tourExit\">{{ui.tourExit}}</button>\n    </div>\n    <div class=\"crumbbar\">\n      <button class=\"crumbbtn\" id=\"toL0\" hidden>&lsaquo; {{ui.backToBigPicture}}</button>\n      <span class=\"crumbnote\" id=\"crumbNote\">{{ui.bigPicture}}</span>\n      <button class=\"crumbbtn\" id=\"unfocus\" hidden></button>\n\n      <button class=\"crumbbtn\" id=\"panelBtn\" hidden>{{ui.showPanel}}</button>\n      <button class=\"crumbbtn\" id=\"fsBtn\">{{ui.fullScreen}}</button>\n    </div>\n    <div class=\"stage-scroll\">\n      <span class=\"zoomctl\" id=\"zoomCtl\" role=\"group\" aria-label=\"{{ui.zoomGroup}}\">\n        <button type=\"button\" class=\"crumbbtn\" id=\"zoomOut\" aria-label=\"{{ui.zoomOut}}\" title=\"{{ui.zoomOut}}\">−</button>\n        <button type=\"button\" class=\"crumbbtn\" id=\"zoomFit\" aria-label=\"{{ui.zoomFitTitle}}\" title=\"{{ui.zoomFitTitle}}\">{{ui.zoomFit}}</button>\n        <button type=\"button\" class=\"crumbbtn\" id=\"zoomIn\" aria-label=\"{{ui.zoomIn}}\" title=\"{{ui.zoomIn}}\">+</button>\n      </span>\n      <svg id=\"map0\" class=\"mapsvg ml-canvas\" viewBox=\"{{overviewViewBox}}\" role=\"img\"\n        aria-label=\"{{overviewDescription}}\"></svg>\n      <svg id=\"map\" class=\"mapsvg ml-canvas\" viewBox=\"{{mapViewBox}}\" role=\"img\" style=\"display:none\"\n        aria-label=\"{{mapDescription}}\"></svg>\n    </div>\n    <div class=\"legend ml-canvas\">{{legend}}</div>\n    <div class=\"inside\" id=\"inside\" hidden>\n      <button class=\"crumbbtn\" id=\"insideBack\">&lsaquo; {{ui.backToMap}}</button>\n      <h2 id=\"insideTitle\"></h2>\n      <p class=\"i-sub\" id=\"insideSub\"></p>\n      <div id=\"insideScene\"></div>\n      <p class=\"i-cap\" id=\"insideCap\"></p>\n    </div>\n    <div class=\"files\" id=\"files\" hidden>\n      <div class=\"crumbbar files-head\">\n        <button class=\"crumbbtn\" id=\"filesBack\">&lsaquo; {{ui.backToMap}}</button>\n        <span class=\"crumbnote\" id=\"filesTitle\"></span>\n      </div>\n      <div class=\"files-body\">\n        <div class=\"ft\" id=\"filesTree\" role=\"tree\" aria-labelledby=\"filesTitle\"></div>\n      </div>\n    </div>\n    <div class=\"drawer\" id=\"drawer\">\n      <div class=\"panelhead\"><button type=\"button\" class=\"crumbbtn drawerclose\" id=\"drawerClose\" aria-label=\"{{ui.closePanel}}\" title=\"{{ui.closePanel}}\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"m6 6 12 12M18 6 6 18\"/></svg></button></div>\n      <div id=\"drawerBody\"></div>\n    </div>\n    <section class=\"tourcard\" id=\"tourCard\" aria-labelledby=\"tcTitle\" hidden>\n      <div class=\"tc-scroll\" id=\"tcScroll\">\n      <div aria-live=\"polite\">\n        <div class=\"tc-eyebrow\"><span class=\"tc-dot\" aria-hidden=\"true\"></span><span id=\"tcEyebrow\"></span></div>\n        <h2 id=\"tcTitle\" tabindex=\"-1\"></h2>\n        <div class=\"tc-body\" id=\"tcBody\"></div>\n        <ol class=\"tc-list\" id=\"tcList\" hidden></ol>\n        <div class=\"tc-why\" id=\"tcWhy\"><div class=\"tc-why-label\">{{ui.why}}</div><p id=\"tcWhyText\"></p></div>\n      </div>\n      </div>\n      <p class=\"tc-hint\" id=\"tcHint\" hidden>{{ui.tourHint}}<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14m-6-6 6 6 6-6\"/></svg></p>\n      <div class=\"tc-foot\">\n        <span class=\"tc-count\" id=\"tcCount\"></span>\n        <button type=\"button\" class=\"tc-back\" id=\"tcBack\">{{ui.tourBack}}</button>\n        <button type=\"button\" class=\"tc-next\" id=\"tcNext\">{{ui.tourNext}}</button>\n      </div>\n      <p class=\"tc-keys\" aria-hidden=\"true\"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> {{ui.tourKeysMove}} <span>&middot;</span> <kbd>Esc</kbd> {{ui.tourKeysExit}}</p>\n    </section>\n    <div class=\"tourend\" id=\"tourEnd\" hidden>\n      <div class=\"tourend-card\" role=\"dialog\" aria-labelledby=\"teTitle\">\n        <div class=\"te-check\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12.5 4.5 4.5L19 7.5\"/></svg></div>\n        <div class=\"te-eyebrow\">{{ui.completionCount}}</div>\n        <h1 id=\"teTitle\" tabindex=\"-1\">{{ui.tourDone}}</h1>\n        <p class=\"te-lede\">{{completionIntro}}</p>\n        <ul class=\"te-list\">{{completionLessons}}</ul>\n\n        <div class=\"te-links\">\n          <button type=\"button\" id=\"teBack\">{{ui.backToMap}}</button>\n        </div>\n      </div>\n    </div>\n  </div>\n  <span id=\"panelSlot\" hidden></span>\n  <aside class=\"panel\" id=\"panel\">\n    <div class=\"panelhead\"><button type=\"button\" class=\"crumbbtn panelclose\" id=\"panelClose\" aria-label=\"{{ui.closePanel}}\" title=\"{{ui.closePanel}}\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"m6 6 12 12M18 6 6 18\"/></svg></button></div>\n    <div id=\"panelBody\"></div>\n  </aside>\n</main>\n";
 // src/rendering/ml-canvas.js
 var font = "\"Manrope\", system-ui, sans-serif";
 var setRole = (group, role) => {
@@ -412,7 +412,6 @@ function createPanels(ctx) {
 		const n = ctx.nodeEls[nodeId].def;
 		const sc = ctx.INSIDES[n.inside];
 		if (!sc) return;
-		ctx.T()?.step("inside", nodeId);
 		ctx.document.getElementById("insideTitle").textContent = sc.title;
 		ctx.document.getElementById("insideSub").innerHTML = sc.sub || "";
 		ctx.document.getElementById("insideCap").innerHTML = sc.cap || "";
@@ -509,36 +508,33 @@ function createPanels(ctx) {
 			return `<li><strong>${n.concept}</strong>: ${n.tool}</li>`;
 		}).join("");
 		ctx.panelHTML(`
-      <div class="p-eyebrow">${ctx.definition.panels.stageEyebrow}</div>
+      <div class="p-eyebrow">${ctx.t("stageEyebrow")}</div>
       <h2>${G.title}</h2>
       <p style="margin-top:8px">${G.text}</p>
-      <h3>${ctx.definition.panels.stageMembers}</h3><ul class="newlist">${items}</ul>
-      <p class="p-note" style="margin-top:12px">${ctx.definition.panels.stageNote}</p>
+      <h3>${ctx.t("stageMembers")}</h3><ul class="newlist">${items}</ul>
+      <p class="p-note" style="margin-top:12px">${ctx.t("stageNote")}</p>
     `, G.huekey);
 		ctx.openPanel();
 	}
 	function renderNode(id) {
 		const n = ctx.nodeEls[id].def;
-		const decision = n.decision ? `<h3>${ctx.definition.panels.decision}</h3><div class="decision">${n.decision}</div>` : "";
-		const look = n.inside ? `<div class="panel-actions"><button type="button" class="panel-action" id="lookInside">Look inside<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button></div>` : "";
+		const decision = n.decision ? `<h3>${ctx.t("decision")}</h3><div class="decision">${n.decision}</div>` : "";
+		const look = n.inside ? `<div class="panel-actions"><button type="button" class="panel-action" id="lookInside">${ctx.t("lookInside")}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button></div>` : "";
 		const paths = ctx.filesView?.available ? ctx.filesView.pathsFor(id) : [];
-		const repo = paths.length ? `<h3>${ctx.definition.panels.repository}</h3>
-      <div class="panel-actions xrepo">${paths.map((p) => `<button type="button" class="panel-action" data-files-path="${attr(p)}" aria-label="Show ${attr(p)} in the project files"><span class="mono">${p}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>`).join("")}</div>` : n.structure ? `<h3>${ctx.definition.panels.repository}</h3>
-      <div class="panel-actions xrepo"><a class="panel-action" href="${attr(ctx.structureHref(n.structure))}"${ctx.LINK_TARGET} aria-label="Open ${attr(n.structure)} in the project layout"><span class="mono">${n.structure}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a></div>` : "";
-		const bnote = ctx.BOOTCAMP && n.bootcampNote ? `<h3>${ctx.definition.panels.course}</h3><div class="bnote">${n.bootcampNote}</div>` : "";
+		const repo = paths.length ? `<h3>${ctx.t("repository")}</h3>
+      <div class="panel-actions xrepo">${paths.map((p) => `<button type="button" class="panel-action" data-files-path="${attr(p)}" aria-label="${attr(ctx.t("showInFiles", { path: p }))}"><span class="mono">${p}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>`).join("")}</div>` : "";
 		ctx.panelHTML(`
-      <div class="p-eyebrow">${ctx.catName(n.cat)}${n.art ? ctx.definition.panels.fileSuffix : ""}</div>
+      <div class="p-eyebrow">${ctx.catName(n.cat)}${n.art ? ctx.t("fileSuffix") : ""}</div>
       <h2>${ctx.viewMode === "tools" ? n.tool : n.concept}</h2>
       <p class="p-sub">${ctx.viewMode === "tools" ? n.concept : n.tool}</p>
-      <div class="p-chips"><span class="pchip">${ctx.format(ctx.BOOTCAMP ? ctx.definition.panels.nodeCourseLabel : ctx.definition.panels.nodeBuildLabel, {
-			step: n.week,
+      <div class="p-chips"><span class="pchip">${ctx.t("nodeBuildStep", {
+			step: n.step,
 			total: ctx.WEEKS.length - 1
 		})}</span></div>
-      <h3>${ctx.definition.panels.what}</h3><p>${n.what}</p>
-      <h3>${ctx.definition.panels.why}</h3><p>${n.why}</p>
-      ${bnote}
+      <h3>${ctx.t("what")}</h3><p>${n.what}</p>
+      <h3>${ctx.t("why")}</h3><p>${n.why}</p>
       ${decision}
-      <h3>${ctx.definition.panels.tools}</h3><p class="toolline">${n.tools}</p>
+      <h3>${ctx.t("tools")}</h3><p class="toolline">${n.tools}</p>
       ${repo}
       ${look}
     `, n.cat);
@@ -554,17 +550,17 @@ function createPanels(ctx) {
 			return `<li><strong>${n.concept}</strong>: ${n.tool}</li>`;
 		}).join("");
 		ctx.panelHTML(`
-      <div class="p-eyebrow">${ctx.format(ctx.BOOTCAMP ? ctx.definition.panels.courseLabel : ctx.definition.panels.buildLabel, {
+      <div class="p-eyebrow">${ctx.t("buildStepTitle", {
 			step: w,
 			total: ctx.WEEKS.length - 1
 		})}</div>
       <h2>${d.title}</h2>
-      <p style="margin-top:8px">${ctx.BOOTCAMP && d.you ? d.you : d.text}</p>
-      <h3>${ctx.definition.panels.newNodes}</h3><ul class="newlist">${items}</ul>
-      <h3>${ctx.definition.panels.decision}</h3><div class="decision">${d.decision}</div>
-      <h3>${ctx.definition.panels.runnable}</h3><pre class="cmd"><code>${d.runnable}</code></pre>
-      <p class="p-note">${ctx.PINNED ? ctx.definition.panels.pinnedNote : ctx.definition.panels.buildNote}</p>
-    `, ctx.definition.panels.buildRole);
+      <p style="margin-top:8px">${d.text}</p>
+      <h3>${ctx.t("newNodes")}</h3><ul class="newlist">${items}</ul>
+      <h3>${ctx.t("decision")}</h3><div class="decision">${d.decision}</div>
+      <h3>${ctx.t("runnable")}</h3><pre class="cmd"><code>${d.runnable}</code></pre>
+      <p class="p-note">${ctx.t("buildNote")}</p>
+    `, ctx.definition.settings.buildRole);
 		ctx.openPanel();
 	}
 	return {
@@ -681,7 +677,6 @@ function createFlowplayer(ctx) {
 		const quiet = Boolean(opts && opts.quiet);
 		const wide = Boolean(opts && opts.wide);
 		const from = opts && opts.from || 0;
-		if (!quiet) ctx.T()?.step("flow", key);
 		if (ctx.level !== 1) ctx.showLevel(1);
 		ctx.closeInside();
 		ctx.clearStory();
@@ -696,7 +691,7 @@ function createFlowplayer(ctx) {
 		if (!quiet) {
 			ctx.chooseFlow(key);
 			ctx.panelHTML(`
-        <div class="p-eyebrow">${s.kind === "failure" ? "Failure flow" : "Flow"}</div>
+        <div class="p-eyebrow">${ctx.t(s.kind === "failure" ? "failureFlowEyebrow" : "flowEyebrow")}</div>
         <h2>${s.title}</h2>
         <p class="p-sub">${s.desc}</p>
         <ol class="steps" id="stepList"></ol>
@@ -736,10 +731,6 @@ function createFlowplayer(ctx) {
 			if (token !== ctx.storyToken) return;
 			const hop = s.hops[i];
 			const landed = i < from;
-			if (ctx.PINNED) {
-				const d = ctx.edgeEls[hop.e].def;
-				if (ctx.nodeEls[d.from].def.week > ctx.PINNED || ctx.nodeEls[d.to].def.week > ctx.PINNED) break;
-			}
 			const hk = hop.bad || !s.ok ? s.hue : s.ok;
 			const ee = ctx.edgeEls[hop.e];
 			ee.path.classList.add("eactive");
@@ -846,12 +837,9 @@ function createFlowplayer(ctx) {
 		else {
 			const note = ctx.document.createElement("p");
 			note.className = "p-note";
-			note.textContent = ctx.definition.ui.flowComplete;
+			note.textContent = ctx.t("flowComplete");
 			ctx.panelBody.appendChild(note);
 		}
-		ctx.T()?.done("flow", key);
-		ctx.T()?.milestone(s.completionMilestone || "flow_complete");
-		if (s.markSeenOnComplete) ctx.T()?.seen();
 		ctx.revealInPanel(ctx.panelBody.lastElementChild);
 	}
 	function chooseFlow(key, { preview = false } = {}) {
@@ -864,7 +852,7 @@ function createFlowplayer(ctx) {
 		});
 		if (preview) {
 			const story = ctx.STORIES[key];
-			const label = story.kind === "failure" ? "Failure flow" : "Flow";
+			const label = ctx.t(story.kind === "failure" ? "failureFlowEyebrow" : "flowEyebrow");
 			const steps = story.hops.map((hop, index) => `<li><span class="n">${index + 1}</span>${hop.t}${hop.note ? `<span class="note">${hop.note}</span>` : ""}</li>`).join("");
 			ctx.panelHTML(`<div class="p-eyebrow">${label}</div><h2>${story.title}</h2><p class="p-sub">${story.desc}</p><ol class="steps">${steps}</ol>`, story.hue);
 			ctx.openPanel();
@@ -1339,12 +1327,12 @@ function createTourplayer(ctx) {
 	}
 	function refreshTourEntry() {
 		const r = ctx.resumeStep(), done = Boolean(ctx.readTour().done);
-		ctx.tourBtnText.textContent = r ? "Resume the tour · step " + r : ctx.definition.ui.tourEntry;
-		ctx.document.getElementById("tourLabel").textContent = done ? "Guided tour" : "New here?";
+		ctx.tourBtnText.textContent = r ? ctx.t("tourResume", { step: r }) : ctx.t("tourEntry");
+		ctx.document.getElementById("tourLabel").textContent = ctx.t(done ? "tourTitle" : "tourNew");
 	}
 	function timeLeft(n) {
 		const secs = ctx.TOUR.slice(n - 1).reduce((t, b) => t + (b.flow ? ctx.FLOW_BEAT_SECONDS : ctx.BEAT_SECONDS), 0);
-		return secs < 60 ? "less than a minute left" : "about " + Math.round(secs / 60) + " min left";
+		return secs < 60 ? ctx.t("tourLessThanMinute") : ctx.t("tourMinutesLeft", { minutes: Math.round(secs / 60) });
 	}
 	function renderTourBar(n) {
 		const b = n <= ctx.TOUR.length ? ctx.TOUR[n - 1] : null;
@@ -1359,12 +1347,20 @@ function createTourplayer(ctx) {
 			fill.style.width = i < cur ? "100%" : now ? pos / ctx.TOUR_CHAPTERS[i].span * 100 + "%" : "0%";
 			fill.style.background = now ? ctx.beatHue(b) : "";
 		});
-		ctx.tourStatus.textContent = b ? `Step ${n} of ${ctx.TOUR_TOTAL} · ${ctx.timeLeft(n)}` : "Complete";
+		ctx.tourStatus.textContent = b ? ctx.t("tourStatus", {
+			step: n,
+			total: ctx.TOUR_TOTAL,
+			left: ctx.timeLeft(n)
+		}) : ctx.t("tourComplete");
 	}
 	function renderTourCard(n) {
 		const b = ctx.TOUR[n - 1];
 		ctx.tourCard.style.setProperty("--tc-hue", ctx.beatHue(b));
-		ctx.tcEyebrow.textContent = `${ctx.TOUR_CHAPTERS[b.ch].name} · ${n} of ${ctx.TOUR_TOTAL}`;
+		ctx.tcEyebrow.textContent = ctx.t("tourCardCount", {
+			chapter: ctx.TOUR_CHAPTERS[b.ch].name,
+			step: n,
+			total: ctx.TOUR_TOTAL
+		});
 		ctx.tcTitle.textContent = b.title;
 		ctx.renderTourText(b);
 		ctx.tcScroll.scrollTop = 0;
@@ -1478,7 +1474,7 @@ function createTourplayer(ctx) {
 		ctx.tcBack.hidden = ctx.tour.step === 1;
 		if (backHadFocus && ctx.tcBack.disabled) ctx.tcNext.focus({ preventScroll: true });
 		const last = Boolean(b) && ctx.tour.step >= ctx.TOUR.length && !(b.flow && ctx.tour.phase <= ctx.edgeCount(b)) && ctx.tour.phase >= ctx.stageCount(b);
-		ctx.tcNext.textContent = ctx.tour.step === 1 ? "Begin" : last ? "Finish" : "Next";
+		ctx.tcNext.textContent = ctx.t(ctx.tour.step === 1 ? "tourBegin" : last ? "tourFinish" : "tourNext");
 		const total = !b ? 0 : b.flow ? ctx.edgeCount(b) + 1 : ctx.stageCount(b);
 		const done = Math.min(ctx.tour.phase, total);
 		ctx.tcCount.replaceChildren(...Array.from({ length: total }, (_, i) => {
@@ -1488,7 +1484,7 @@ function createTourplayer(ctx) {
 		}));
 		if (total) {
 			ctx.tcCount.setAttribute("role", "progressbar");
-			ctx.tcCount.setAttribute("aria-label", "Progress in this step");
+			ctx.tcCount.setAttribute("aria-label", ctx.t("tourProgress"));
 			ctx.tcCount.setAttribute("aria-valuemin", "0");
 			ctx.tcCount.setAttribute("aria-valuemax", String(total));
 			ctx.tcCount.setAttribute("aria-valuenow", String(done));
@@ -1669,7 +1665,6 @@ function createTourplayer(ctx) {
 		ctx.renderTourCard(n);
 		ctx.renderPlayer();
 		ctx.sizeTourCard();
-		ctx.T()?.step("tour", "step-" + n, n);
 		ctx.selected = null;
 		ctx.NODES.forEach((x) => ctx.nodeEls[x.id].g.classList.remove("sel"));
 		if (b.level === 0) {
@@ -1689,7 +1684,7 @@ function createTourplayer(ctx) {
 		ctx.tourCamShot(b, null, true);
 	}
 	function startTour(n, opts) {
-		if (ctx.tour.active || ctx.PINNED || ctx.BOOTCAMP) return;
+		if (ctx.tour.active) return;
 		const wantNative = Boolean(opts && opts.native) && Boolean(ctx.stagecard.requestFullscreen);
 		const wasNative = ctx.document.fullscreenElement === ctx.stagecard;
 		if (ctx.exploreNudge) ctx.exploreNudge.hide();
@@ -1707,7 +1702,6 @@ function createTourplayer(ctx) {
 			wasFs
 		};
 		ctx.tour.active = true;
-		ctx.T()?.milestone("tour_started");
 		ctx.clearStory();
 		ctx.stagecard.classList.add("touring", "fs-fixed");
 		ctx.applyFsDom(true);
@@ -1799,18 +1793,11 @@ function createTourplayer(ctx) {
 		}
 		ctx.tourEnd.hidden = false;
 		ctx.tourEnd.scrollTop = 0;
-		ctx.T()?.milestone("tour_complete");
-		ctx.T()?.seen();
 		ctx.teTitle.focus({ preventScroll: true });
 	}
 	function exitTour(toFullMap) {
 		if (!ctx.tour.active) return;
 		const atEnd = ctx.tour.atEnd;
-		if (!atEnd) ctx.T()?.track("tool_milestone", {
-			milestone: "tour_exit",
-			tool_area: "tour",
-			tool_step: "step-" + ctx.tour.step
-		});
 		ctx.clearStory();
 		ctx.tour.camToken++;
 		if (ctx.document.fullscreenElement) ctx.document.exitFullscreen().catch(() => {});
@@ -1924,7 +1911,6 @@ function createNavigation(ctx) {
 	}
 	function showLevel(l) {
 		ctx.level = l;
-		if (l === 1 && !ctx.tour.active) ctx.T()?.milestone("full_map_opened");
 		ctx.refreshWeekSeg();
 		ctx.closeInside();
 		ctx.svg0.style.display = l === 0 ? "block" : "none";
@@ -1932,7 +1918,7 @@ function createNavigation(ctx) {
 		ctx.document.querySelector(".legend").style.display = l === 0 ? "none" : "";
 		ctx.resetView();
 		ctx.toL0.hidden = l === 0;
-		ctx.crumbNote.textContent = l === 0 ? "The big picture" : "The full map";
+		ctx.crumbNote.textContent = ctx.t(l === 0 ? "bigPicture" : "fullMap");
 		if (l === 0) {
 			ctx.setFocus(null);
 			ctx.clearStory();
@@ -1956,8 +1942,8 @@ function createNavigation(ctx) {
 		if (g) {
 			ctx.control.label(ctx.unfocusBtn, ctx.GROUPS[g].title, "close");
 			ctx.unfocusBtn.style.setProperty("--focus-hue", ctx.hue(ctx.GROUPS[g].huekey));
-			ctx.unfocusBtn.setAttribute("aria-label", "Clear " + ctx.GROUPS[g].title + " stage filter");
-			ctx.unfocusBtn.title = "Show all stages";
+			ctx.unfocusBtn.setAttribute("aria-label", ctx.t("clearStage", { stage: ctx.GROUPS[g].title }));
+			ctx.unfocusBtn.title = ctx.t("showAllStages");
 		}
 	}
 	function focusGroup(g) {
@@ -1996,7 +1982,7 @@ function createNavigation(ctx) {
 			if (ctx.exploreNudge) ctx.exploreNudge.place();
 			ctx.updateDrawerBounds();
 			if (ctx.zoom !== 1 || ctx.tx || ctx.ty) ctx.resetView();
-			ctx.control.label(ctx.fsBtn, "Exit full screen", "collapse");
+			ctx.control.label(ctx.fsBtn, ctx.t("exitFullScreen"), "collapse");
 			ctx.panelBtn.hidden = false;
 		} else {
 			ctx.fsMode = false;
@@ -2007,12 +1993,11 @@ function createNavigation(ctx) {
 			ctx.drawer.classList.remove("open");
 			ctx.ctrlSlot.before(ctx.controlsEl);
 			if (ctx.exploreNudge) ctx.exploreNudge.place();
-			ctx.control.label(ctx.fsBtn, "Full screen", "expand");
+			ctx.control.label(ctx.fsBtn, ctx.t("fullScreen"), "expand");
 			ctx.panelBtn.hidden = ctx.preFsOpen;
 		}
 	}
 	function enterFs() {
-		ctx.T()?.milestone("fullscreen");
 		const go = () => {
 			if (!ctx.fsMode) ctx.applyFsDom(true);
 		};
@@ -2039,7 +2024,6 @@ function createNavigation(ctx) {
 	}
 	function selectNode(id) {
 		if (ctx.tour.active) return;
-		ctx.T()?.step("component", id);
 		ctx.clearStory();
 		if (ctx.focused && ctx.nodeEls[id].def.group !== ctx.focused) ctx.setFocus(null);
 		ctx.selected = id;
@@ -2047,23 +2031,16 @@ function createNavigation(ctx) {
 		ctx.renderNode(id);
 	}
 	function setWeek(w, opts) {
-		if (ctx.PINNED && (w === 0 || w > ctx.PINNED)) w = ctx.PINNED;
-		const quiet = Boolean(opts && opts.quiet);
-		if (w >= 1 && !quiet) ctx.T()?.step("build", "step-" + w, w);
-		if (w === ctx.WEEKS.length - 1 && !ctx.PINNED && !quiet) {
-			ctx.T()?.milestone("build_complete");
-			ctx.T()?.seen();
-		}
 		ctx.week = w;
 		ctx.refreshWeekSeg();
 		ctx.NODES.forEach((n) => {
 			const g = ctx.nodeEls[n.id].g;
-			g.classList.toggle("future", w > 0 && n.week > w);
-			g.classList.toggle("justbuilt", w > 0 && n.week === w);
+			g.classList.toggle("future", w > 0 && n.step > w);
+			g.classList.toggle("justbuilt", w > 0 && n.step === w);
 		});
-		ctx.zoneEls.forEach((z) => z.g.classList.toggle("future", w > 0 && z.members.length > 0 && z.members.every((n) => n.week > w)));
+		ctx.zoneEls.forEach((z) => z.g.classList.toggle("future", w > 0 && z.members.length > 0 && z.members.every((n) => n.step > w)));
 		ctx.EDGES.forEach((e) => {
-			const fw = ctx.nodeEls[e.from].def.week, tw = ctx.nodeEls[e.to].def.week;
+			const fw = ctx.nodeEls[e.from].def.step, tw = ctx.nodeEls[e.to].def.step;
 			const fut = w > 0 && Math.max(fw, tw) > w;
 			ctx.edgeEls[e.id].path.classList.toggle("future", fut);
 			if (ctx.edgeEls[e.id].label) ctx.edgeEls[e.id].label.classList.toggle("future", fut);
@@ -2166,7 +2143,6 @@ function createFilesView(ctx) {
 	};
 	const { root, byPath } = buildFileTree(files.entries);
 	const source = ctx.definition.source;
-	const ui = ctx.definition.ui;
 	const tree = box.querySelector("#filesTree");
 	const expanded = /* @__PURE__ */ new Set();
 	byPath.forEach((n) => {
@@ -2174,11 +2150,11 @@ function createFilesView(ctx) {
 	});
 	let selected = null;
 	btn.hidden = false;
-	const label = ui.filesEntry || "Project structure";
+	const label = ctx.t("filesEntry");
 	ctx.document.getElementById("filesBtnText").textContent = label;
 	const repoName = files.title || (source ? source.repo.replace(/^https:\/\/github\.com\//, "").replace(/\/$/, "") : "project");
 	root.name = repoName.split("/").pop();
-	box.querySelector("#filesTitle").innerHTML = `${esc(label)} · ${esc(repoName)}` + (source?.ref ? ` at <span class="mono">${esc(source.ref.slice(0, 7))}</span>` : "");
+	box.querySelector("#filesTitle").innerHTML = `${esc(label)} · ${esc(repoName)}` + (source?.ref ? ` ${esc(ctx.t("filesAt"))} <span class="mono">${esc(source.ref.slice(0, 7))}</span>` : "");
 	const nodeOf = (id) => ctx.nodeEls[id]?.def;
 	const roleOf = (n) => {
 		const own = n.entry?.nodes?.map(nodeOf).find(Boolean);
@@ -2194,7 +2170,7 @@ function createFilesView(ctx) {
 	const chip = (id) => {
 		const n = nodeOf(id);
 		if (!n) return "";
-		return `<button type="button" class="ft-chip" data-node="${esc(id)}" style="--chip-hue:var(--h-${n.cat})" title="Show ${esc(n.concept)} on the map" tabindex="-1"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ctx.ICONS[n.icon] || ""}</svg>${esc(n.concept)}</button>`;
+		return `<button type="button" class="ft-chip" data-node="${esc(id)}" style="--chip-hue:var(--h-${n.cat})" title="${esc(ctx.t("filesShowOnMap", { name: n.concept }))}" tabindex="-1"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ctx.ICONS[n.icon] || ""}</svg>${esc(n.concept)}</button>`;
 	};
 	function rowHTML(n, depth) {
 		const e = n.entry;
@@ -2217,14 +2193,17 @@ function createFilesView(ctx) {
 	}
 	function renderIntro() {
 		ctx.panelHTML(`
-      <div class="p-eyebrow">Start here</div>
-      <h2>${esc(files.heading || "Where each part lives")}</h2>
-      <p style="margin-top:8px">${files.panel || `The paths of <span class="mono">${esc(repoName)}</span> that matter for the map, ${files.entries.length} of them, each with a line on what it holds.`}</p>
-      <h3>How to read it</h3>
+      <div class="p-eyebrow">${esc(ctx.t("filesEyebrow"))}</div>
+      <h2>${esc(files.heading || ctx.t("filesHeading"))}</h2>
+      <p style="margin-top:8px">${files.panel || esc(ctx.t("filesIntro", {
+			repo: "\0",
+			count: files.entries.length
+		})).replace("\0", `<span class="mono">${esc(repoName)}</span>`)}</p>
+      <h3>${esc(ctx.t("filesHowTo"))}</h3>
       <ul class="newlist ft-toplist">
-        <li><b>Coloured tags</b> are components on the map; click one to jump there.</li>
-        <li><b>The folder colour</b> follows the role of its component. Grey means plumbing (config, docs, tooling) or a mix of roles.</li>
-        <li>Click a row for why it exists. <kbd>↑</kbd> <kbd>↓</kbd> walk the tree, <kbd>←</kbd> <kbd>→</kbd> fold it.</li>
+        <li><b>${esc(ctx.t("filesTagsTerm"))}</b> ${esc(ctx.t("filesTags"))}</li>
+        <li><b>${esc(ctx.t("filesFolderTerm"))}</b> ${esc(ctx.t("filesFolder"))}</li>
+        <li>${esc(ctx.t("filesClickRow"))} <kbd>↑</kbd> <kbd>↓</kbd> ${esc(ctx.t("filesKeysWalk"))} <kbd>←</kbd> <kbd>→</kbd> ${esc(ctx.t("filesKeysFold"))}</li>
       </ul>
     `, null);
 		ctx.openPanel();
@@ -2240,10 +2219,10 @@ function createFilesView(ctx) {
       <h2 class="ft-h">${esc(n.name + (n.dir ? "/" : ""))}</h2>
       <p class="p-sub mono">${esc(n.path + (n.dir ? "/" : ""))}</p>
       ${e.tag ? `<div class="p-chips ft-chips"><span class="pchip">${esc(e.tag)}</span></div>` : ""}
-      ${e.t ? `<h3>What lives here</h3><p>${e.t}</p>` : ""}
-      ${e.why ? `<h3>Why it exists</h3><p>${e.why}</p>` : ""}
-      ${onMap ? `<h3>On the map</h3><div class="panel-actions">${onMap}</div>` : ""}
-      ${kids ? `<h3>Inside</h3><ul class="newlist ft-toplist">${kids}</ul>` : ""}
+      ${e.t ? `<h3>${esc(ctx.t("filesWhat"))}</h3><p>${e.t}</p>` : ""}
+      ${e.why ? `<h3>${esc(ctx.t("filesWhy"))}</h3><p>${e.why}</p>` : ""}
+      ${onMap ? `<h3>${esc(ctx.t("filesOnMap"))}</h3><div class="panel-actions">${onMap}</div>` : ""}
+      ${kids ? `<h3>${esc(ctx.t("filesInside"))}</h3><ul class="newlist ft-toplist">${kids}</ul>` : ""}
     `, hue);
 		ctx.panelBody.querySelectorAll("[data-node]").forEach((b) => ctx.scope.listen(b, "click", () => goToNode(b.dataset.node)));
 		ctx.panelBody.querySelectorAll(".ft-link").forEach((b) => ctx.scope.listen(b, "click", () => select(b.dataset.path, { reveal: true })));
@@ -2382,6 +2361,169 @@ function createFilesView(ctx) {
 		pathsFor
 	};
 }
+// src/runtime/definition.js
+/** Validate and hydrate a trusted definition without mutating the author's data. */
+function prepareDefinition(input) {
+	const d = structuredClone(input);
+	const fail = (message) => {
+		throw new Error(`Invalid map definition: ${message}`);
+	};
+	if (typeof d.id !== "string" || !d.id) fail("id must be a non-empty string");
+	d.settings.storage = { tour: `${d.id}:tour` };
+	const unique = (items, key, section) => {
+		const ids = /* @__PURE__ */ new Set();
+		for (const item of items) {
+			if (!item[key] || ids.has(item[key])) fail(`${section}: missing or duplicate ${key} ${item[key]}`);
+			ids.add(item[key]);
+		}
+		return ids;
+	};
+	const nodes = unique(d.nodes, "id", "nodes");
+	const edges = unique(d.edges, "id", "edges");
+	const zones = unique(d.zones, "id", "zones");
+	const groups = new Set(Object.keys(d.groups));
+	const requireRef = (set, id, owner) => {
+		if (!set.has(id)) fail(`${owner}: unknown reference ${id}`);
+	};
+	for (const n of d.nodes) {
+		requireRef(groups, n.group, `node ${n.id}.group`);
+		if (n.zone) requireRef(zones, n.zone, `node ${n.id}.zone`);
+		if (n.inside && !d.insides[n.inside]) fail(`node ${n.id}.inside: ${n.inside}`);
+		if (n.logo && !d.logos[n.logo]) fail(`node ${n.id}.logo: ${n.logo}`);
+		if (!d.roles[n.cat]) fail(`node ${n.id}.cat: ${n.cat}`);
+		if (!d.icons[n.icon]) fail(`node ${n.id}.icon: ${n.icon}`);
+		if (n.shape != null && ![
+			"component",
+			"person",
+			"worker",
+			"database",
+			"queue",
+			"external"
+		].includes(n.shape)) fail(`node ${n.id}.shape: ${n.shape}`);
+		if (!d.buildSteps[n.step]) fail(`node ${n.id}.step: ${n.step}`);
+	}
+	for (const e of d.edges) {
+		requireRef(nodes, e.from, `edge ${e.id}.from`);
+		requireRef(nodes, e.to, `edge ${e.id}.to`);
+	}
+	for (const [id, g] of Object.entries(d.groups)) for (const n of g.members) {
+		requireRef(nodes, n, `group ${id}.members`);
+		if (d.nodes.find((x) => x.id === n).group !== id) fail(`group ${id}.members: inconsistent node ${n}`);
+	}
+	for (const b of d.overview) requireRef(groups, b.g, "overview");
+	for (const e of d.overviewEdges) {
+		requireRef(groups, e.from, `overview edge ${e.id}.from`);
+		requireRef(groups, e.to, `overview edge ${e.id}.to`);
+	}
+	for (const [id, f] of Object.entries(d.flows)) {
+		for (const h of f.hops) {
+			requireRef(edges, h.e, `flow ${id}.hops`);
+			if (h.breaks) requireRef(nodes, h.breaks, `flow ${id}.breaks`);
+			if (h.silent) requireRef(edges, h.silent.e, `flow ${id}.silent`);
+		}
+		for (const e of f.silent || []) requireRef(edges, e, `flow ${id}.silent`);
+	}
+	for (const step of d.buildSteps.filter(Boolean)) for (const n of step.nodes) requireRef(nodes, n, `build step ${step.title}`);
+	for (const b of d.tour) {
+		if (!d.tourChapters[b.ch]) fail(`tour ${b.title}.ch: ${b.ch}`);
+		if (b.flow && !d.flows[b.flow]) fail(`tour ${b.title}.flow: ${b.flow}`);
+	}
+	if (!d.tour.length) fail("tour: at least one step is required");
+	const finalBeat = d.tour[d.tour.length - 1];
+	if (!finalBeat.flow && !finalBeat.whole) fail("tour: the final step must walk a flow or recap the whole map");
+	d.tourChapters.forEach((chapter, index) => {
+		const beats = d.tour.filter((beat) => beat.ch === index).length;
+		if (!beats) fail(`tourChapters[${index}]: must contain at least one tour step`);
+		chapter.span = beats;
+	});
+	for (const g of d.settings.recapOrder) requireRef(groups, g, "settings.recapOrder");
+	if (!d.layout) fail("layout is required for authored geometry; automatic layout is not implemented");
+	for (const [section, key] of [
+		["nodes", "id"],
+		["edges", "id"],
+		["zones", "id"],
+		["overview", "g"]
+	]) for (const item of d[section]) {
+		const geometry = d.layout[section]?.[item[key]];
+		if (!geometry) fail(`layout.${section}.${item[key]} is missing`);
+		Object.assign(item, geometry);
+	}
+	for (const [id, scene] of Object.entries(d.insides)) {
+		if (scene.kind != null) {
+			if (scene.kind === "steps" && !(Array.isArray(scene.steps) && scene.steps.length)) fail(`insides.${id}.steps must be a non-empty list`);
+			else if (scene.kind === "schema" && !(Array.isArray(scene.tables) && scene.tables.length)) fail(`insides.${id}.tables must be a non-empty list`);
+			else if (!["steps", "schema"].includes(scene.kind)) fail(`insides.${id}.kind: ${scene.kind}`);
+			scene.source = d.source;
+			continue;
+		}
+		if (!d.layout.insides?.[id]) fail(`layout.insides.${id} is missing`);
+		Object.assign(scene, d.layout.insides[id]);
+	}
+	if (d.files != null) {
+		const entries = d.files.entries;
+		if (!Array.isArray(entries) || !entries.length) fail("files.entries must be a non-empty list of paths");
+		const paths = /* @__PURE__ */ new Set();
+		entries.forEach((e, i) => {
+			const path = e?.path, key = typeof path === "string" ? path.replace(/\/$/, "") : "";
+			if (!key || path.startsWith("/") || path.includes("//") || key.split("/").includes("..")) fail(`files.entries[${i}].path: ${path}`);
+			if (paths.has(key)) fail(`files.entries[${i}].path ${path} is listed twice`);
+			paths.add(key);
+			if (typeof e.t !== "string" || !e.t.trim()) fail(`files.entries[${i}] (${path}) needs t`);
+			for (const n of e.nodes || []) requireRef(nodes, n, `files.entries[${i}].nodes`);
+		});
+	}
+	for (const e of d.overviewEdges) if (!d.layout.overviewEdges[e.id]) fail(`layout.overviewEdges.${e.id} is missing`);
+	d.insideMarkers = d.layout.insideMarkers;
+	return d;
+}
+/** Authored markup is trusted project content, not user-submitted HTML.
+*  {{key}} is a page slot; {{ui.key}} is an interface string from d.ui, always plain text. */
+function renderShell(template, d) {
+	const pageSlots = d.page?.slots || {};
+	const description = pageSlots.mapDescription || pageSlots.overviewDescription || d.page.title;
+	const slots = {
+		completionIntro: "You have reached the end of this map.",
+		completionLessons: "",
+		overviewDescription: pageSlots.mapDescription || description,
+		mapDescription: pageSlots.overviewDescription || description,
+		legend: Object.entries(d.roles).map(([key, role]) => `<span class="lg"><span class="sw" style="--legend-hue:var(--h-${key})"></span>${role.label}</span>`).join(""),
+		...pageSlots,
+		overviewViewBox: "0 0 " + d.layout.viewBoxes.map0.join(" "),
+		mapViewBox: "0 0 " + d.layout.viewBoxes.map.join(" ")
+	};
+	const text = (value) => String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+	slots.overviewDescription = text(slots.overviewDescription);
+	slots.mapDescription = text(slots.mapDescription);
+	const ui = {
+		...d.ui,
+		completionCount: formatText(d.ui.completionCount, { steps: d.tour.length })
+	};
+	return template.replace(/\{\{(ui\.)?(\w+)\}\}/g, (_, isUi, key) => {
+		const source = isUi ? ui : slots;
+		if (!(key in source)) throw new Error(`Missing ${isUi ? "ui string" : "page slot"}: ${key}`);
+		return isUi ? text(source[key]) : source[key];
+	});
+}
+/** "{step} of {total}" with values filled in; unknown names become empty. */
+function formatText(pattern, values) {
+	return String(pattern).replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
+}
+/** Role names and palettes belong to the definition; selectors are shared UI. */
+function roleStyles(d) {
+	const hues = (theme) => Object.entries(d.roles).map(([key, r]) => `--h-${key}:${r[theme]};`).join("");
+	const fills = (theme) => Object.entries(d.roles).map(([key, r]) => `--ml-fill-${key}:${r[theme]};`).join("");
+	const aliases = Object.entries(d.settings.appearanceRoles).map(([key, role]) => `--map-${key}:var(--h-${role});--map-${key}-fill:var(--ml-fill-${role});`).join("");
+	const vb = d.layout.viewBoxes;
+	return `:root{${hues("light")}}
+    @media(prefers-color-scheme:dark){:root{${hues("dark")}}}
+    :root[data-theme="dark"]{${hues("dark")}}
+    :root[data-theme="light"]{${hues("light")}}
+    .stagecard{${fills("fillLight")}}
+    :root[data-theme="dark"] .stagecard{${fills("fillDark")}}
+    @media(prefers-color-scheme:dark){:root:not([data-theme]) .stagecard{${fills("fillDark")}}}
+    :root,.stagecard{${aliases}}
+    .stagecard{--map-ratio:${vb.map[0]} / ${vb.map[1]};--overview-ratio:${vb.map0[0]} / ${vb.map0[1]};}`;
+}
 // src/runtime/engine.js
 async function mountEngine(root, definition) {
 	"use strict";
@@ -2394,12 +2536,10 @@ async function mountEngine(root, definition) {
 	const ResizeObserver = scope.ResizeObserver;
 	const context = {
 		definition,
-		format: (pattern, values) => pattern.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? "")),
+		format: formatText,
+		t: (key, values = {}) => formatText(definition.ui[key] ?? key, values),
 		get BEAT_SECONDS() {
 			return BEAT_SECONDS;
-		},
-		get BOOTCAMP() {
-			return BOOTCAMP;
 		},
 		get EDGES() {
 			return EDGES;
@@ -2419,17 +2559,11 @@ async function mountEngine(root, definition) {
 		get INSIDES() {
 			return INSIDES;
 		},
-		get LINK_TARGET() {
-			return LINK_TARGET;
-		},
 		get NODES() {
 			return NODES;
 		},
 		get PATH_ZOOM_MAX() {
 			return PATH_ZOOM_MAX;
-		},
-		get PINNED() {
-			return PINNED;
 		},
 		get SHOT_SLACK() {
 			return SHOT_SLACK;
@@ -2439,9 +2573,6 @@ async function mountEngine(root, definition) {
 		},
 		get SWEEP() {
 			return SWEEP;
-		},
-		get T() {
-			return T;
 		},
 		get TOUR() {
 			return TOUR;
@@ -2869,9 +3000,6 @@ async function mountEngine(root, definition) {
 		get filesView() {
 			return filesView;
 		},
-		get structureHref() {
-			return structureHref;
-		},
 		get svg() {
 			return svg;
 		},
@@ -3036,19 +3164,8 @@ async function mountEngine(root, definition) {
 	const svg = document.getElementById("map");
 	const panel = document.getElementById("panel");
 	const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-	const T = () => null;
-	const HUB = definition.settings.zoomable;
+	const t = context.t;
 	const logos = definition.logos;
-	const STRUCTURE_URL = definition.links.projectStructure;
-	const LINK_TARGET = definition.settings.linkTarget ? ` target="${definition.settings.linkTarget}"` : "";
-	const structureHref = (path) => STRUCTURE_URL + "#path=" + encodeURIComponent(path);
-	if (definition.settings.embedded) document.documentElement.classList.add("embedded");
-	const PINNED = (() => {
-		const w = Number(param("week"));
-		return Number.isInteger(w) && w >= 1 && w < definition.buildSteps.length ? w : null;
-	})();
-	const BOOTCAMP = Boolean(param("bootcamp"));
-	if (PINNED) document.documentElement.classList.add("weekpinned");
 	function param(key) {
 		return new URLSearchParams(location.hash.slice(1)).get(key) || new URLSearchParams(location.search).get(key);
 	}
@@ -3079,9 +3196,9 @@ async function mountEngine(root, definition) {
 	]).catch(() => {});
 	const canvas = ml_canvas_default;
 	const control = ml_controls_default;
-	control.label(document.getElementById("toL0"), "Big picture", "back");
-	control.label(document.getElementById("fsBtn"), "Full screen", "expand");
-	control.label(document.getElementById("insideBack"), "Back to the map", "back");
+	control.label(document.getElementById("toL0"), t("backToBigPicture"), "back");
+	control.label(document.getElementById("fsBtn"), t("fullScreen"), "expand");
+	control.label(document.getElementById("insideBack"), t("backToMap"), "back");
 	const labelCtx = document.createElement("canvas").getContext("2d");
 	function longestRun(d) {
 		const pts = [...d.matchAll(/[ML]([\d.-]+),([\d.-]+)/g)].map((m) => ({
@@ -3173,7 +3290,7 @@ async function mountEngine(root, definition) {
 			y: footY + 24,
 			class: "bgo",
 			"text-anchor": "end"
-		}, g).textContent = "Open →";
+		}, g).textContent = t("cardOpen");
 		const act = () => focusGroup(b.g);
 		scope.listen(g, "click", act);
 		scope.listen(g, "keydown", (ev) => {
@@ -3572,9 +3689,9 @@ async function mountEngine(root, definition) {
 		return cameraModule.tourOcclusion(...args);
 	}
 	let zoom = 1, tx = 0, ty = 0;
-	if (HUB) stagecard.classList.add("zoomable");
+	stagecard.classList.add("zoomable");
 	const wideQuery = window.matchMedia("(min-width: 981px)");
-	const normalZoom = () => !fsMode && Boolean(HUB) && wideQuery.matches;
+	const normalZoom = () => !fsMode && wideQuery.matches;
 	const activeSvg = () => level === 0 ? svg0 : svg;
 	function clampPan(...args) {
 		return cameraModule.clampPan(...args);
@@ -3778,19 +3895,8 @@ async function mountEngine(root, definition) {
 			playStory(chosenFlow);
 		}
 	});
-	const storyAvailable = (st) => {
-		if (!PINNED) return true;
-		let playable = 0;
-		for (const h of st.hops) {
-			const e = EDGES.find((x) => x.id === h.e);
-			if (!e || nodeEls[e.from].def.week > PINNED || nodeEls[e.to].def.week > PINNED) break;
-			playable++;
-		}
-		return playable > 0 && playable >= st.hops.length * definition.settings.pinnedFlowFraction;
-	};
 	Object.keys(STORIES).forEach((key) => {
 		const story = STORIES[key];
-		if (!storyAvailable(story)) return;
 		const button = document.createElement("button");
 		button.type = "button";
 		button.className = "flow-option";
@@ -3829,13 +3935,13 @@ async function mountEngine(root, definition) {
 	function hideStepTip() {
 		stepTip.hidden = true;
 	}
-	WEEKS.map((_, i) => [String(i), i === 0 ? definition.ui.fullSystem : String(i)]).filter(([v]) => !PINNED || Number(v) >= 1 && Number(v) <= PINNED).forEach(([v, t]) => {
+	WEEKS.map((_, i) => [String(i), i === 0 ? t("fullSystem") : String(i)]).forEach(([v, label]) => {
 		const b = document.createElement("button");
 		b.dataset.w = v;
-		b.textContent = t;
+		b.textContent = label;
 		if (v !== "0" && WEEKS[v]?.title) {
 			b.dataset.tip = v + " · " + WEEKS[v].title;
-			b.setAttribute("aria-label", "Step " + b.dataset.tip);
+			b.setAttribute("aria-label", t("buildStepAria", { step: b.dataset.tip }));
 			for (const ev of ["mouseenter", "focus"]) scope.listen(b, ev, () => showStepTip(b));
 			for (const ev of [
 				"mouseleave",
@@ -3871,24 +3977,22 @@ async function mountEngine(root, definition) {
 			} catch (err) {}
 		}
 	};
-	if (param("reset")) [definition.settings.storage.tour, definition.settings.storage.nudge].forEach((key) => {
-		try {
-			localStorage.removeItem(key);
-		} catch (err) {}
-	});
+	if (param("reset")) try {
+		localStorage.removeItem(definition.settings.storage.tour);
+	} catch (err) {}
 	function readTour(...args) {
 		return tourplayerModule.readTour(...args);
 	}
 	function saveTour(...args) {
 		return tourplayerModule.saveTour(...args);
 	}
-	const tourControls = document.getElementById("tourControls");
+	document.getElementById("tourControls");
 	const tourBtn = document.getElementById("tourBtn");
 	const themeToggle = document.getElementById("themeToggle");
 	if (themeToggle) {
 		const rootEl = document.documentElement;
 		const isDark = () => rootEl.dataset.theme ? rootEl.dataset.theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-		const syncThemeLabel = () => themeToggle.setAttribute("aria-label", isDark() ? "Switch to light theme" : "Switch to dark theme");
+		const syncThemeLabel = () => themeToggle.setAttribute("aria-label", isDark() ? t("themeToLight") : t("themeToDark"));
 		try {
 			const saved = localStorage.getItem("imap-theme");
 			if (saved === "dark" || saved === "light") rootEl.dataset.theme = saved;
@@ -3919,13 +4023,8 @@ async function mountEngine(root, definition) {
 	const tcBack = document.getElementById("tcBack");
 	const tcNext = document.getElementById("tcNext");
 	const teTitle = document.getElementById("teTitle");
-	const teNext = document.getElementById("teNext");
-	control.label(tourExitBtn, "Exit", "exit");
-	tourExitBtn.setAttribute("aria-label", "Exit tour");
-	if (PINNED || BOOTCAMP) tourControls.hidden = true;
-	teNext.href = STRUCTURE_URL;
-	if (HUB) teNext.target = "_top";
-	scope.listen(teNext, "click", () => T()?.milestone("to_repo_tool"));
+	control.label(tourExitBtn, t("tourExitShort"), "exit");
+	tourExitBtn.setAttribute("aria-label", t("tourExit"));
 	TOUR_CHAPTERS.forEach((c) => {
 		const li = document.createElement("li");
 		li.innerHTML = "<span class=\"tb-bar\"><span class=\"tb-fill\"></span></span><span class=\"tb-name\"></span>";
@@ -4100,35 +4199,19 @@ async function mountEngine(root, definition) {
 		return navigationModule.setTheme(...args);
 	}
 	const forcedTheme = param("theme");
-	let storedTheme = null;
-	try {
-		storedTheme = localStorage.getItem(definition.settings.storage.theme);
-	} catch (err) {}
 	if (forcedTheme === "dark" || forcedTheme === "light") setTheme(forcedTheme);
-	else if (storedTheme === "dark" || storedTheme === "light") setTheme(storedTheme);
 	applyLabels();
-	if (PINNED) {
-		document.getElementById("pinTitleWeek").textContent = context.format(definition.ui.pinnedTitle, {
-			step: PINNED,
-			title: WEEKS[PINNED].title
-		});
-		document.getElementById("pinTitle").hidden = false;
-		showLevel(1);
-		setWeek(PINNED);
-		openPanel();
-	} else {
-		setWeek(0, { silent: true });
-		showLevel(0);
-		renderL0();
-		openPanel();
-	}
+	setWeek(0, { silent: true });
+	showLevel(0);
+	renderL0();
+	openPanel();
 	const wantNode = param("node");
 	if (wantNode && nodeEls[wantNode]) {
 		showLevel(1);
 		selectNode(wantNode);
 	}
 	refreshTourEntry();
-	if (!PINNED && !BOOTCAMP && param("tour") === "1") startTour(1);
+	if (param("tour") === "1") startTour(1);
 	return {
 		selectNode(id) {
 			if (!nodeEls[id]) return false;
@@ -4198,168 +4281,6 @@ async function mountEngine(root, definition) {
 			root.replaceChildren();
 		}
 	};
-}
-// src/runtime/definition.js
-/** Validate and hydrate a trusted definition without mutating the author's data. */
-function prepareDefinition(input) {
-	const d = structuredClone(input);
-	const fail = (message) => {
-		throw new Error(`Invalid map definition: ${message}`);
-	};
-	if (typeof d.id !== "string" || !d.id) fail("id must be a non-empty string");
-	d.settings.storage = {
-		tour: `${d.id}:tour`,
-		nudge: `${d.id}:nudge`,
-		theme: "map-viewer:theme"
-	};
-	const unique = (items, key, section) => {
-		const ids = /* @__PURE__ */ new Set();
-		for (const item of items) {
-			if (!item[key] || ids.has(item[key])) fail(`${section}: missing or duplicate ${key} ${item[key]}`);
-			ids.add(item[key]);
-		}
-		return ids;
-	};
-	const nodes = unique(d.nodes, "id", "nodes");
-	const edges = unique(d.edges, "id", "edges");
-	const zones = unique(d.zones, "id", "zones");
-	const groups = new Set(Object.keys(d.groups));
-	const requireRef = (set, id, owner) => {
-		if (!set.has(id)) fail(`${owner}: unknown reference ${id}`);
-	};
-	for (const n of d.nodes) {
-		requireRef(groups, n.group, `node ${n.id}.group`);
-		if (n.zone) requireRef(zones, n.zone, `node ${n.id}.zone`);
-		if (n.inside && !d.insides[n.inside]) fail(`node ${n.id}.inside: ${n.inside}`);
-		if (n.logo && !d.logos[n.logo]) fail(`node ${n.id}.logo: ${n.logo}`);
-		if (!d.roles[n.cat]) fail(`node ${n.id}.cat: ${n.cat}`);
-		if (!d.icons[n.icon]) fail(`node ${n.id}.icon: ${n.icon}`);
-		if (n.shape != null && ![
-			"component",
-			"person",
-			"worker",
-			"database",
-			"queue",
-			"external"
-		].includes(n.shape)) fail(`node ${n.id}.shape: ${n.shape}`);
-		if (!d.buildSteps[n.week]) fail(`node ${n.id}.week: ${n.week}`);
-	}
-	for (const e of d.edges) {
-		requireRef(nodes, e.from, `edge ${e.id}.from`);
-		requireRef(nodes, e.to, `edge ${e.id}.to`);
-	}
-	for (const [id, g] of Object.entries(d.groups)) for (const n of g.members) {
-		requireRef(nodes, n, `group ${id}.members`);
-		if (d.nodes.find((x) => x.id === n).group !== id) fail(`group ${id}.members: inconsistent node ${n}`);
-	}
-	for (const b of d.overview) requireRef(groups, b.g, "overview");
-	for (const e of d.overviewEdges) {
-		requireRef(groups, e.from, `overview edge ${e.id}.from`);
-		requireRef(groups, e.to, `overview edge ${e.id}.to`);
-	}
-	for (const [id, f] of Object.entries(d.flows)) {
-		for (const h of f.hops) {
-			requireRef(edges, h.e, `flow ${id}.hops`);
-			if (h.breaks) requireRef(nodes, h.breaks, `flow ${id}.breaks`);
-			if (h.silent) requireRef(edges, h.silent.e, `flow ${id}.silent`);
-		}
-		for (const e of f.silent || []) requireRef(edges, e, `flow ${id}.silent`);
-	}
-	for (const step of d.buildSteps.filter(Boolean)) for (const n of step.nodes) requireRef(nodes, n, `build step ${step.title}`);
-	for (const b of d.tour) {
-		if (!d.tourChapters[b.ch]) fail(`tour ${b.title}.ch: ${b.ch}`);
-		if (b.flow && !d.flows[b.flow]) fail(`tour ${b.title}.flow: ${b.flow}`);
-	}
-	if (!d.tour.length) fail("tour: at least one step is required");
-	const finalBeat = d.tour[d.tour.length - 1];
-	if (!finalBeat.flow && !finalBeat.whole) fail("tour: the final step must walk a flow or recap the whole map");
-	d.tourChapters.forEach((chapter, index) => {
-		const beats = d.tour.filter((beat) => beat.ch === index).length;
-		if (!beats) fail(`tourChapters[${index}]: must contain at least one tour step`);
-		chapter.span = beats;
-	});
-	for (const g of d.settings.recapOrder) requireRef(groups, g, "settings.recapOrder");
-	if (!d.layout) fail("layout is required for authored geometry; automatic layout is not implemented");
-	for (const [section, key] of [
-		["nodes", "id"],
-		["edges", "id"],
-		["zones", "id"],
-		["overview", "g"]
-	]) for (const item of d[section]) {
-		const geometry = d.layout[section]?.[item[key]];
-		if (!geometry) fail(`layout.${section}.${item[key]} is missing`);
-		Object.assign(item, geometry);
-	}
-	for (const [id, scene] of Object.entries(d.insides)) {
-		if (scene.kind != null) {
-			if (scene.kind === "steps" && !(Array.isArray(scene.steps) && scene.steps.length)) fail(`insides.${id}.steps must be a non-empty list`);
-			else if (scene.kind === "schema" && !(Array.isArray(scene.tables) && scene.tables.length)) fail(`insides.${id}.tables must be a non-empty list`);
-			else if (!["steps", "schema"].includes(scene.kind)) fail(`insides.${id}.kind: ${scene.kind}`);
-			scene.source = d.source;
-			continue;
-		}
-		if (!d.layout.insides?.[id]) fail(`layout.insides.${id} is missing`);
-		Object.assign(scene, d.layout.insides[id]);
-	}
-	if (d.files != null) {
-		const entries = d.files.entries;
-		if (!Array.isArray(entries) || !entries.length) fail("files.entries must be a non-empty list of paths");
-		const paths = /* @__PURE__ */ new Set();
-		entries.forEach((e, i) => {
-			const path = e?.path, key = typeof path === "string" ? path.replace(/\/$/, "") : "";
-			if (!key || path.startsWith("/") || path.includes("//") || key.split("/").includes("..")) fail(`files.entries[${i}].path: ${path}`);
-			if (paths.has(key)) fail(`files.entries[${i}].path ${path} is listed twice`);
-			paths.add(key);
-			if (typeof e.t !== "string" || !e.t.trim()) fail(`files.entries[${i}] (${path}) needs t`);
-			for (const n of e.nodes || []) requireRef(nodes, n, `files.entries[${i}].nodes`);
-		});
-	}
-	for (const e of d.overviewEdges) if (!d.layout.overviewEdges[e.id]) fail(`layout.overviewEdges.${e.id} is missing`);
-	d.insideMarkers = d.layout.insideMarkers;
-	return d;
-}
-/** Authored markup is trusted project content, not user-submitted HTML. */
-function renderShell(template, d) {
-	const pageSlots = d.page?.slots || {};
-	const description = pageSlots.mapDescription || pageSlots.overviewDescription || d.page.title;
-	const slots = {
-		completionCount: `Tour complete · ${d.tour.length} steps`,
-		completionIntro: "You have reached the end of this map.",
-		completionLessons: "",
-		nextToolUrl: "#",
-		nextToolLabel: "",
-		tourEntry: "Take the guided tour",
-		overviewDescription: pageSlots.mapDescription || description,
-		mapDescription: pageSlots.overviewDescription || description,
-		legend: Object.entries(d.roles).map(([key, role]) => `<span class="lg"><span class="sw" style="--legend-hue:var(--h-${key})"></span>${role.label}</span>`).join(""),
-		...pageSlots,
-		overviewViewBox: "0 0 " + d.layout.viewBoxes.map0.join(" "),
-		mapViewBox: "0 0 " + d.layout.viewBoxes.map.join(" ")
-	};
-	slots.nextToolHidden = slots.nextToolUrl && slots.nextToolLabel ? "" : "hidden";
-	const attr = (value) => String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-	slots.overviewDescription = attr(slots.overviewDescription);
-	slots.mapDescription = attr(slots.mapDescription);
-	return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
-		if (!(key in slots)) throw new Error(`Missing page slot: ${key}`);
-		return slots[key];
-	});
-}
-/** Role names and palettes belong to the definition; selectors are shared UI. */
-function roleStyles(d) {
-	const hues = (theme) => Object.entries(d.roles).map(([key, r]) => `--h-${key}:${r[theme]};`).join("");
-	const fills = (theme) => Object.entries(d.roles).map(([key, r]) => `--ml-fill-${key}:${r[theme]};`).join("");
-	const aliases = Object.entries(d.settings.appearanceRoles).map(([key, role]) => `--map-${key}:var(--h-${role});--map-${key}-fill:var(--ml-fill-${role});`).join("");
-	const vb = d.layout.viewBoxes;
-	return `:root{${hues("light")}}
-    @media(prefers-color-scheme:dark){:root{${hues("dark")}}}
-    :root[data-theme="dark"]{${hues("dark")}}
-    :root[data-theme="light"]{${hues("light")}}
-    .stagecard{${fills("fillLight")}}
-    :root[data-theme="dark"] .stagecard{${fills("fillDark")}}
-    @media(prefers-color-scheme:dark){:root:not([data-theme]) .stagecard{${fills("fillDark")}}}
-    :root,.stagecard{${aliases}}
-    .stagecard{--map-ratio:${vb.map[0]} / ${vb.map[1]};--overview-ratio:${vb.map0[0]} / ${vb.map0[1]};}`;
 }
 // src/app.js
 var mounted = false;

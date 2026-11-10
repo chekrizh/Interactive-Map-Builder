@@ -7,6 +7,7 @@ import { createCamera } from './camera.js';
 import { createTourplayer } from './tour-player.js';
 import { createNavigation } from './navigation.js';
 import { createFilesView } from './files-view.js';
+import { formatText } from './definition.js';
 
 export async function mountEngine(root, definition) {
   "use strict";
@@ -20,12 +21,11 @@ export async function mountEngine(root, definition) {
   const ResizeObserver = scope.ResizeObserver;
   const context = {
     definition,
-    format: (pattern, values) => pattern.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? "")),
+    format: formatText,
+    /* An interface string from definition.ui, with {name} filled in. */
+    t: (key, values = {}) => formatText(definition.ui[key] ?? key, values),
     get BEAT_SECONDS() {
       return BEAT_SECONDS;
-    },
-    get BOOTCAMP() {
-      return BOOTCAMP;
     },
     get EDGES() {
       return EDGES;
@@ -45,17 +45,11 @@ export async function mountEngine(root, definition) {
     get INSIDES() {
       return INSIDES;
     },
-    get LINK_TARGET() {
-      return LINK_TARGET;
-    },
     get NODES() {
       return NODES;
     },
     get PATH_ZOOM_MAX() {
       return PATH_ZOOM_MAX;
-    },
-    get PINNED() {
-      return PINNED;
     },
     get SHOT_SLACK() {
       return SHOT_SLACK;
@@ -65,9 +59,6 @@ export async function mountEngine(root, definition) {
     },
     get SWEEP() {
       return SWEEP;
-    },
-    get T() {
-      return T;
     },
     get TOUR() {
       return TOUR;
@@ -495,9 +486,6 @@ export async function mountEngine(root, definition) {
     get filesView() {
       return filesView;
     },
-    get structureHref() {
-      return structureHref;
-    },
     get svg() {
       return svg;
     },
@@ -663,24 +651,8 @@ export async function mountEngine(root, definition) {
   const panel = document.getElementById("panel");
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const T = () => null;
-
-
-  /* Inside the tools hub the structure opens on its own link, which is its
-     hub page, in the top window, so the visitor stays in the hub. */
-  const HUB = definition.settings.zoomable;
+  const t = context.t;
   const logos = definition.logos;
-  const STRUCTURE_URL = definition.links.projectStructure;
-  const LINK_TARGET = definition.settings.linkTarget ? ` target="${definition.settings.linkTarget}"` : "";
-  const structureHref = path => STRUCTURE_URL + "#path=" + encodeURIComponent(path);
-  if (definition.settings.embedded) document.documentElement.classList.add("embedded");
-
-  const PINNED = (() => {
-    const w = Number(param("week"));
-    return Number.isInteger(w) && w >= 1 && w < definition.buildSteps.length ? w : null;
-  })();
-  const BOOTCAMP = Boolean(param("bootcamp"));
-  if (PINNED) document.documentElement.classList.add("weekpinned");
   function param(key) {
     const fromHash = new URLSearchParams(location.hash.slice(1)).get(key);
     return fromHash || new URLSearchParams(location.search).get(key);
@@ -740,9 +712,9 @@ export async function mountEngine(root, definition) {
   await Promise.all([document.fonts.load('600 13.5px "Manrope"'), document.fonts.load('400 11px "Manrope"'), document.fonts.load('500 9.5px "Manrope"'), document.fonts.load('700 19px "Manrope"'), document.fonts.load('600 12px "Manrope"')]).catch(() => {});
   const canvas = canvasPrimitives;
   const control = controls;
-  control.label(document.getElementById("toL0"), "Big picture", "back");
-  control.label(document.getElementById("fsBtn"), "Full screen", "expand");
-  control.label(document.getElementById("insideBack"), "Back to the map", "back");
+  control.label(document.getElementById("toL0"), t("backToBigPicture"), "back");
+  control.label(document.getElementById("fsBtn"), t("fullScreen"), "expand");
+  control.label(document.getElementById("insideBack"), t("backToMap"), "back");
   const labelCtx = document.createElement("canvas").getContext("2d");
   // The middle of a path's longest straight run, and that run's length.
   function longestRun(d) {
@@ -807,7 +779,7 @@ export async function mountEngine(root, definition) {
     });
     el("line", { x1: b.x + pad, x2: b.x + BW - pad, y1: footY, y2: footY, class: "brule" }, g);
     el("text", { x: b.x + pad, y: footY + 24, class: "btools" }, g).textContent = G.chips;
-    el("text", { x: b.x + BW - pad, y: footY + 24, class: "bgo", "text-anchor": "end" }, g).textContent = "Open →";
+    el("text", { x: b.x + BW - pad, y: footY + 24, class: "bgo", "text-anchor": "end" }, g).textContent = t("cardOpen");
     const act = () => focusGroup(b.g);
     scope.listen(g, "click", act);
     scope.listen(g, "keydown", ev => {
@@ -1270,9 +1242,9 @@ export async function mountEngine(root, definition) {
     ty = 0;
   /* Zoom outside full screen: the hub's wide layout only. The lesson embeds
      stay as they are, and narrow screens scroll sideways natively. */
-  if (HUB) stagecard.classList.add("zoomable");
+  stagecard.classList.add("zoomable");
   const wideQuery = window.matchMedia("(min-width: 981px)");
-  const normalZoom = () => !fsMode && Boolean(HUB) && wideQuery.matches;
+  const normalZoom = () => !fsMode && wideQuery.matches;
   const activeSvg = () => level === 0 ? svg0 : svg;
 
   /* Pan limits: any point of the map can be brought to the middle of the
@@ -1524,19 +1496,8 @@ export async function mountEngine(root, definition) {
     }
   });
 
-  const storyAvailable = st => {
-    if (!PINNED) return true;
-    let playable = 0;
-    for (const h of st.hops) {
-      const e = EDGES.find(x => x.id === h.e);
-      if (!e || nodeEls[e.from].def.week > PINNED || nodeEls[e.to].def.week > PINNED) break;
-      playable++;
-    }
-    return playable > 0 && playable >= st.hops.length * definition.settings.pinnedFlowFraction;
-  };
   Object.keys(STORIES).forEach(key => {
     const story = STORIES[key];
-    if (!storyAvailable(story)) return;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "flow-option";
@@ -1574,15 +1535,13 @@ export async function mountEngine(root, definition) {
     stepTip.style.top = r.bottom + 8 + "px";
   }
   function hideStepTip() { stepTip.hidden = true; }
-  /* Pinned mode: students can revisit earlier steps but never look ahead,
-     and "Full system" (= everything, including the future) is not offered. */
-  WEEKS.map((_, i) => [String(i), i === 0 ? definition.ui.fullSystem : String(i)]).filter(([v]) => !PINNED || Number(v) >= 1 && Number(v) <= PINNED).forEach(([v, t]) => {
+  WEEKS.map((_, i) => [String(i), i === 0 ? t("fullSystem") : String(i)]).forEach(([v, label]) => {
     const b = document.createElement("button");
     b.dataset.w = v;
-    b.textContent = t;
+    b.textContent = label;
     if (v !== "0" && WEEKS[v]?.title) {
       b.dataset.tip = v + " · " + WEEKS[v].title;
-      b.setAttribute("aria-label", "Step " + b.dataset.tip);
+      b.setAttribute("aria-label", t("buildStepAria", { step: b.dataset.tip }));
       for (const ev of ["mouseenter", "focus"]) scope.listen(b, ev, () => showStepTip(b));
       for (const ev of ["mouseleave", "blur", "click"]) scope.listen(b, ev, hideStepTip);
     }
@@ -1636,15 +1595,12 @@ export async function mountEngine(root, definition) {
       } catch (err) {}
     }
   };
-  /* ?reset=1 (or #reset=1 inside the hub) forgets the tour's
-     saved step and the Explore message, so they can be tested again from a
+  /* ?reset=1 forgets the tour's saved step, so it can be tested again from a
      first visit. Every load with the flag resets, so remove it to keep state. */
   if (param("reset")) {
-    [definition.settings.storage.tour, definition.settings.storage.nudge].forEach(key => {
-      try {
-        localStorage.removeItem(key);
-      } catch (err) {}
-    });
+    try {
+      localStorage.removeItem(definition.settings.storage.tour);
+    } catch (err) {}
   }
   function readTour(...args) {
     return tourplayerModule.readTour(...args);
@@ -1661,7 +1617,7 @@ export async function mountEngine(root, definition) {
   if (themeToggle) {
     const rootEl = document.documentElement;
     const isDark = () => rootEl.dataset.theme ? rootEl.dataset.theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const syncThemeLabel = () => themeToggle.setAttribute("aria-label", isDark() ? "Switch to light theme" : "Switch to dark theme");
+    const syncThemeLabel = () => themeToggle.setAttribute("aria-label", isDark() ? t("themeToLight") : t("themeToDark"));
     try {
       const saved = localStorage.getItem("imap-theme");
       if (saved === "dark" || saved === "light") rootEl.dataset.theme = saved;
@@ -1690,13 +1646,8 @@ export async function mountEngine(root, definition) {
   const tcBack = document.getElementById("tcBack");
   const tcNext = document.getElementById("tcNext");
   const teTitle = document.getElementById("teTitle");
-  const teNext = document.getElementById("teNext");
-  control.label(tourExitBtn, "Exit", "exit");
-  tourExitBtn.setAttribute("aria-label", "Exit tour");
-  if (PINNED || BOOTCAMP) tourControls.hidden = true;
-  teNext.href = STRUCTURE_URL;
-  if (HUB) teNext.target = "_top";
-  scope.listen(teNext, "click", () => T()?.milestone("to_repo_tool"));
+  control.label(tourExitBtn, t("tourExitShort"), "exit");
+  tourExitBtn.setAttribute("aria-label", t("tourExit"));
   TOUR_CHAPTERS.forEach(c => {
     const li = document.createElement("li");
     li.innerHTML = '<span class="tb-bar"><span class="tb-fill"></span></span><span class="tb-name"></span>';
@@ -2020,39 +1971,22 @@ export async function mountEngine(root, definition) {
 
   /* ---------------- theme ---------------- */
 
-  /* The host passes the theme in ?theme= (the hub, and the lessons with
-     theme=light); without it the visitor's stored choice applies. The tool
-     has no theme button of its own: the hub's bar carries it (2026-11-02,
-     tools live only in the hub). */
+  /* A host page can pass the theme in ?theme=light or ?theme=dark; without it
+     the theme switch above restores the visitor's stored choice. */
   function setTheme(...args) {
     return navigationModule.setTheme(...args);
   }
   const forcedTheme = param("theme");
-  let storedTheme = null;
-  try {
-    storedTheme = localStorage.getItem(definition.settings.storage.theme);
-  } catch (err) {}
-  if (forcedTheme === "dark" || forcedTheme === "light") setTheme(forcedTheme);else if (storedTheme === "dark" || storedTheme === "light") setTheme(storedTheme);
-  /* Inside the hub the shell owns the theme: later switches arrive as a
-     message and repaint the tool in place, without writing storage. */
+  if (forcedTheme === "dark" || forcedTheme === "light") setTheme(forcedTheme);
 
   /* ---------------- init ---------------- */
   applyLabels();
-  if (PINNED) {
-
-    document.getElementById("pinTitleWeek").textContent = context.format(definition.ui.pinnedTitle, {step: PINNED, title: WEEKS[PINNED].title});
-    document.getElementById("pinTitle").hidden = false;
-    showLevel(1);
-    setWeek(PINNED);
-    openPanel();
-  } else {
-    setWeek(0, {
-      silent: true
-    });
-    showLevel(0);
-    renderL0();
-    openPanel();
-  }
+  setWeek(0, {
+    silent: true
+  });
+  showLevel(0);
+  renderL0();
+  openPanel();
   /* Arriving from the companion page: open the full map with that component
      already selected, rather than at the big picture. */
   const wantNode = param("node");
@@ -2062,7 +1996,7 @@ export async function mountEngine(root, definition) {
   }
   /* ?tour=1 (posts and emails) goes straight into the tour. */
   refreshTourEntry();
-  if (!PINNED && !BOOTCAMP && param("tour") === "1") startTour(1);
+  if (param("tour") === "1") startTour(1);
   return {
     selectNode(id) {
       if (!nodeEls[id]) return false;

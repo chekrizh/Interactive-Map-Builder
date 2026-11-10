@@ -1,35 +1,31 @@
 
 
 
-<div class="pintitle" id="pinTitle" hidden>
-  <span class="eyebrow">Your system so far</span>
-  <h1 id="pinTitleWeek"></h1>
-</div>
 
-<section class="controls" aria-label="Explore the map">
+<section class="controls" aria-label="{{ui.controlsLabel}}">
   <div class="flow-controls" id="flowControls">
     <div class="cgroup flow-field">
-      <div class="clabel" id="flowLabel">Watch a flow</div>
+      <div class="clabel" id="flowLabel">{{ui.flowLabel}}</div>
       <details class="flow-picker" id="flowPicker">
-        <summary aria-labelledby="flowLabel flowSelected"><span class="flow-dot" aria-hidden="true"></span><span id="flowSelected">Choose a flow</span><svg class="flow-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
-        <div class="flow-menu" aria-label="Available flows">
-          <div class="flow-option-group" role="group" aria-labelledby="systemFlowsLabel"><div class="flow-options-label" id="systemFlowsLabel">System flows</div><div id="storyOptions"></div></div>
-          <div class="flow-option-group" role="group" aria-labelledby="failureFlowsLabel"><div class="flow-options-label" id="failureFlowsLabel">Failure scenario</div><div id="failureOptions"></div></div>
+        <summary aria-labelledby="flowLabel flowSelected"><span class="flow-dot" aria-hidden="true"></span><span id="flowSelected">{{ui.flowChoose}}</span><svg class="flow-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <div class="flow-menu" aria-label="{{ui.flowMenu}}">
+          <div class="flow-option-group" role="group" aria-labelledby="systemFlowsLabel"><div class="flow-options-label" id="systemFlowsLabel">{{ui.flowsSystem}}</div><div id="storyOptions"></div></div>
+          <div class="flow-option-group" role="group" aria-labelledby="failureFlowsLabel"><div class="flow-options-label" id="failureFlowsLabel">{{ui.flowsFailure}}</div><div id="failureOptions"></div></div>
         </div>
       </details>
     </div>
-    <button type="button" class="flow-play" id="playFlow"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 1.5 14 8 3 14.5Z"/></svg><span>Play flow</span></button>
+    <button type="button" class="flow-play" id="playFlow"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 1.5 14 8 3 14.5Z"/></svg><span>{{ui.flowPlay}}</span></button>
   </div>
   <div class="cgroup build-controls">
-    <div class="clabel">Build it step by step</div>
+    <div class="clabel">{{ui.buildControl}}</div>
     <div class="seg" id="weekSeg"></div>
   </div>
   <div class="cgroup tour-controls" id="tourControls">
-    <div class="clabel" id="tourLabel" hidden>New here?</div>
-    <button type="button" class="tour-entry" id="tourBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 8.6v6.8l5.6-3.4z" fill="currentColor"/></svg><span id="tourBtnText">{{tourEntry}}</span></button>
+    <div class="clabel" id="tourLabel" hidden>{{ui.tourNew}}</div>
+    <button type="button" class="tour-entry" id="tourBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 8.6v6.8l5.6-3.4z" fill="currentColor"/></svg><span id="tourBtnText">{{ui.tourEntry}}</span></button>
     <button type="button" class="files-entry" id="filesBtn" aria-pressed="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v13a2 2 0 0 0 2 2h3M4 9h5"/><rect x="11" y="6" width="9" height="6" rx="1.5"/><rect x="11" y="15" width="9" height="6" rx="1.5"/></svg><span id="filesBtnText"></span></button>
   </div>
-  <button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to dark theme" title="Switch theme"><svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg><svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></button>
+  <button type="button" class="theme-toggle" id="themeToggle" aria-label="{{ui.themeToDark}}" title="{{ui.themeTitle}}"><svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg><svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></button>
 
 </section>
 <div id="ctrlSlot" hidden></div>
@@ -38,23 +34,23 @@
   <div class="stagecard">
 
     <div class="tourbar" id="tourBar">
-      <div class="tb-text"><div class="tb-eyebrow">Guided tour</div><div class="tb-status" id="tourStatus"></div></div>
-      <ol class="tb-chapters" id="tourChapters" aria-label="Tour chapters"></ol>
-      <button type="button" class="crumbbtn tb-exit" id="tourExit">Exit tour</button>
+      <div class="tb-text"><div class="tb-eyebrow">{{ui.tourTitle}}</div><div class="tb-status" id="tourStatus"></div></div>
+      <ol class="tb-chapters" id="tourChapters" aria-label="{{ui.tourChapters}}"></ol>
+      <button type="button" class="crumbbtn tb-exit" id="tourExit">{{ui.tourExit}}</button>
     </div>
     <div class="crumbbar">
-      <button class="crumbbtn" id="toL0" hidden>&lsaquo; Big picture</button>
-      <span class="crumbnote" id="crumbNote">The big picture</span>
+      <button class="crumbbtn" id="toL0" hidden>&lsaquo; {{ui.backToBigPicture}}</button>
+      <span class="crumbnote" id="crumbNote">{{ui.bigPicture}}</span>
       <button class="crumbbtn" id="unfocus" hidden></button>
 
-      <button class="crumbbtn" id="panelBtn" hidden>Show panel</button>
-      <button class="crumbbtn" id="fsBtn">Full screen</button>
+      <button class="crumbbtn" id="panelBtn" hidden>{{ui.showPanel}}</button>
+      <button class="crumbbtn" id="fsBtn">{{ui.fullScreen}}</button>
     </div>
     <div class="stage-scroll">
-      <span class="zoomctl" id="zoomCtl" role="group" aria-label="Canvas zoom">
-        <button type="button" class="crumbbtn" id="zoomOut" aria-label="Zoom out" title="Zoom out">−</button>
-        <button type="button" class="crumbbtn" id="zoomFit" aria-label="Fit whole map" title="Fit whole map">Fit</button>
-        <button type="button" class="crumbbtn" id="zoomIn" aria-label="Zoom in" title="Zoom in">+</button>
+      <span class="zoomctl" id="zoomCtl" role="group" aria-label="{{ui.zoomGroup}}">
+        <button type="button" class="crumbbtn" id="zoomOut" aria-label="{{ui.zoomOut}}" title="{{ui.zoomOut}}">−</button>
+        <button type="button" class="crumbbtn" id="zoomFit" aria-label="{{ui.zoomFitTitle}}" title="{{ui.zoomFitTitle}}">{{ui.zoomFit}}</button>
+        <button type="button" class="crumbbtn" id="zoomIn" aria-label="{{ui.zoomIn}}" title="{{ui.zoomIn}}">+</button>
       </span>
       <svg id="map0" class="mapsvg ml-canvas" viewBox="{{overviewViewBox}}" role="img"
         aria-label="{{overviewDescription}}"></svg>
@@ -63,7 +59,7 @@
     </div>
     <div class="legend ml-canvas">{{legend}}</div>
     <div class="inside" id="inside" hidden>
-      <button class="crumbbtn" id="insideBack">&lsaquo; Back to the map</button>
+      <button class="crumbbtn" id="insideBack">&lsaquo; {{ui.backToMap}}</button>
       <h2 id="insideTitle"></h2>
       <p class="i-sub" id="insideSub"></p>
       <div id="insideScene"></div>
@@ -71,7 +67,7 @@
     </div>
     <div class="files" id="files" hidden>
       <div class="crumbbar files-head">
-        <button class="crumbbtn" id="filesBack">&lsaquo; Back to the map</button>
+        <button class="crumbbtn" id="filesBack">&lsaquo; {{ui.backToMap}}</button>
         <span class="crumbnote" id="filesTitle"></span>
       </div>
       <div class="files-body">
@@ -79,7 +75,7 @@
       </div>
     </div>
     <div class="drawer" id="drawer">
-      <div class="panelhead"><button type="button" class="crumbbtn drawerclose" id="drawerClose" aria-label="Close panel" title="Close panel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      <div class="panelhead"><button type="button" class="crumbbtn drawerclose" id="drawerClose" aria-label="{{ui.closePanel}}" title="{{ui.closePanel}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
       <div id="drawerBody"></div>
     </div>
     <section class="tourcard" id="tourCard" aria-labelledby="tcTitle" hidden>
@@ -89,36 +85,34 @@
         <h2 id="tcTitle" tabindex="-1"></h2>
         <div class="tc-body" id="tcBody"></div>
         <ol class="tc-list" id="tcList" hidden></ol>
-        <div class="tc-why" id="tcWhy"><div class="tc-why-label">Why it matters</div><p id="tcWhyText"></p></div>
+        <div class="tc-why" id="tcWhy"><div class="tc-why-label">{{ui.why}}</div><p id="tcWhyText"></p></div>
       </div>
       </div>
-      <p class="tc-hint" id="tcHint" hidden>Press Next to walk through each step.<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14m-6-6 6 6 6-6"/></svg></p>
+      <p class="tc-hint" id="tcHint" hidden>{{ui.tourHint}}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14m-6-6 6 6 6-6"/></svg></p>
       <div class="tc-foot">
         <span class="tc-count" id="tcCount"></span>
-        <button type="button" class="tc-back" id="tcBack">Back</button>
-        <button type="button" class="tc-next" id="tcNext">Next</button>
+        <button type="button" class="tc-back" id="tcBack">{{ui.tourBack}}</button>
+        <button type="button" class="tc-next" id="tcNext">{{ui.tourNext}}</button>
       </div>
-      <p class="tc-keys" aria-hidden="true"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> to go back or next <span>&middot;</span> <kbd>Esc</kbd> to exit</p>
+      <p class="tc-keys" aria-hidden="true"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> {{ui.tourKeysMove}} <span>&middot;</span> <kbd>Esc</kbd> {{ui.tourKeysExit}}</p>
     </section>
     <div class="tourend" id="tourEnd" hidden>
       <div class="tourend-card" role="dialog" aria-labelledby="teTitle">
         <div class="te-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div>
-        <div class="te-eyebrow">{{completionCount}}</div>
-        <h1 id="teTitle" tabindex="-1">You've finished the tour</h1>
+        <div class="te-eyebrow">{{ui.completionCount}}</div>
+        <h1 id="teTitle" tabindex="-1">{{ui.tourDone}}</h1>
         <p class="te-lede">{{completionIntro}}</p>
         <ul class="te-list">{{completionLessons}}</ul>
 
         <div class="te-links">
-          <button type="button" id="teBack">Back to the map</button>
-          <span class="te-sep" aria-hidden="true" {{nextToolHidden}}>|</span>
-          <a id="teNext" href="{{nextToolUrl}}" {{nextToolHidden}}>{{nextToolLabel}}</a>
+          <button type="button" id="teBack">{{ui.backToMap}}</button>
         </div>
       </div>
     </div>
   </div>
   <span id="panelSlot" hidden></span>
   <aside class="panel" id="panel">
-    <div class="panelhead"><button type="button" class="crumbbtn panelclose" id="panelClose" aria-label="Close panel" title="Close panel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div class="panelhead"><button type="button" class="crumbbtn panelclose" id="panelClose" aria-label="{{ui.closePanel}}" title="{{ui.closePanel}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
     <div id="panelBody"></div>
   </aside>
 </main>

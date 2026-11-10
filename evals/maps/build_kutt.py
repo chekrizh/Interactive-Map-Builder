@@ -16,8 +16,8 @@ def at(c, r):
     return {"x": C[c], "y": R[r], "w": W, "h": H}
 
 
-def node(id, group, cat, week, icon, tool, concept, what, why, tools, zone):
-    return dict(id=id, group=group, cat=cat, week=week, icon=icon, tool=concept, concept=tool,
+def node(id, group, cat, step, icon, tool, concept, what, why, tools, zone):
+    return dict(id=id, group=group, cat=cat, step=step, icon=icon, tool=concept, concept=tool,
                 what=what, why=why, tools=tools, zone=zone)
 
 
@@ -309,24 +309,13 @@ d = {
                  "overviewDescription": "Kutt in context: who uses it, what it is made of and which outside services it needs.",
                  "mapDescription": "Containers and the components inside the Kutt server, with the paths a click and a new link take.",
                  "completionLessons": "<li>Why the redirect reads from cache and defers writes</li><li>How one API serves pages and scripts</li><li>What runs in the background</li>",
-                 "tourEntry": "Take the guided tour · 4 min",
                  "completionIntro": "You followed a click and a new link through Kutt."}},
     "panels": {
         "introHtml": "<div class=\"p-eyebrow\">Start here</div><h2>Kutt, the URL shortener</h2><p style=\"margin-top:8px\">A map of <a href=\"https://github.com/thedevs-network/kutt\">thedevs-network/kutt</a> v3.2.6 in C4 terms: context on the overview, containers and components on the full map.</p><h3>Try it</h3><ul class=\"newlist\"><li>Open a card to see its part of the system.</li><li>Play <b>Open a short link</b> to follow a click.</li><li>Click a component for what it does and where it lives in the code.</li></ul><div class=\"panel-actions\"><button type=\"button\" class=\"panel-action\" id=\"gofull\">Open full map</button></div>",
-        "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>One container does almost everything</h2><p style=\"margin-top:8px\">docker-compose runs three containers: the Node server, a SQL database and Redis. The server zone is opened up into its components.</p><h3>How to read it</h3><p>People and outside services on the left, the server in the middle, data on the right.</p>",
-        "stageEyebrow": "Part", "stageMembers": "Components in this part",
-        "stageNote": "Flows follow the connections between these components.",
-        "decision": "Design choice", "repository": "In the code", "course": "Note",
-        "what": "What it does", "why": "Why it matters", "tools": "Technology and files",
-        "newNodes": "Components added", "runnable": "Try it",
-        "pinnedNote": "This view shows the system at this step.",
-        "buildNote": "The steps build the shortener up from the bare redirect.",
-        "fileSuffix": " · File", "nodeBuildLabel": "Build step {step} of {total}",
-        "nodeCourseLabel": "Step {step}", "buildLabel": "Build order · Step {step} of {total}",
-        "courseLabel": "Kutt · Step {step}", "buildRole": "component"},
-    "ui": {"fullSystem": "Full system", "pinnedTitle": "Step {step}: {title}",
-           "tourEntry": "Take the guided tour · 4 min", "filesEntry": "Project structure",
-           "flowComplete": "Flow complete. Choose another flow or open a component."},
+        "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>One container does almost everything</h2><p style=\"margin-top:8px\">docker-compose runs three containers: the Node server, a SQL database and Redis. The server zone is opened up into its components.</p><h3>How to read it</h3><p>People and outside services on the left, the server in the middle, data on the right.</p>"},
+    # Interface strings: render.py fills in the rest from scripts/defaults.py.
+    "ui": {"tourEntry": "Take the guided tour · 4 min",
+           "buildNote": "The steps build the shortener up from the bare redirect."},
     "groups": groups, "overview": overview,
     "overviewEdges": [{"id": i, "from": f, "to": t, "label": l} for i, f, t, l, *_ in oedges],
     "nodes": nodes,
@@ -336,26 +325,19 @@ d = {
               {"id": "outside-mail", "label": "Outside · email", "hue": "external"}],
     "edges": E, "flows": flows, "buildSteps": build,
     "tourChapters": tour_chapters, "tour": tour,
-    "beatSeconds": 15, "flowBeatSeconds": 15, "insides": INSIDES,
-    "roles": {}, "icons": {}, "logos": {},
-    "settings": {"embedded": True, "zoomable": True, "linkTarget": "_top",
-                 "recapOrder": ["people", "redirect", "outside", "manage", "data", "background"],
-                 "pinnedFlowFraction": 0.5,
-                 "appearanceRoles": {"accent": "component", "artifact": "store", "error": "external"}},
-    "links": {"projectStructure": "https://github.com/thedevs-network/kutt"},
+    "insides": INSIDES,
     "files": FILES,
     "source": {"repo": "https://github.com/thedevs-network/kutt", "ref": "029da42b2459693681886665589fd9512d6b473c"},
     "layout": {
         "viewBoxes": {"map": [1510, 740], "map0": [1230, 580]},
-        "overviewCard": {"width": 270, "height": 200}, "scale": {"x": 1, "y": 1},
+        "overviewCard": {"width": 270, "height": 200},
         "nodes": pos, "edges": LE,
         "zones": {"outside": {"x": 30, "y": 60, "w": 250, "h": 650},
                   "server": {"x": 310, "y": 60, "w": 870, "h": 650},
                   "data": {"x": 1210, "y": 60, "w": 270, "h": 330},
                   "outside-mail": {"x": 1210, "y": 600, "w": 270, "h": 110}},
         "overview": {g: {"x": x, "y": y} for g, (x, y) in OP.items()},
-        "overviewEdges": {i: {"d": dd, "x": x, "y": y, "anchor": a} for i, f, t, l, dd, x, y, a in oedges},
-        "annotations": [], "insideMarkers": ""},
+        "overviewEdges": {i: {"d": dd, "x": x, "y": y, "anchor": a} for i, f, t, l, dd, x, y, a in oedges}},
 }
 SHAPE = {"visitor": "person", "user": "person", "target": "external", "oidc": "external", "smtp": "external",
          "visitq": "worker", "db": "database", "redis": "queue"}

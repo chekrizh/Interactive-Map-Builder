@@ -9,17 +9,21 @@ You build a map by writing one JSON map definition and filling a prebuilt viewer
 
 ## 1. Write the map definition
 
-Start from an example, copy its structure and replace the content. Every section in the examples is read by the viewer.
+Start from an example, copy its structure and replace the content. Write only the content: `render.py` fills in the interface strings, settings and timings (see `scripts/defaults.py`), and icons, logos and roles from the library.
 
 - `examples/kutt-url-shortener.json`: a full map of a real repository (the Kutt URL shortener) in C4 terms: context on the overview, containers and components on the map, node shapes, library icons and logos, four flows, a build order, a tour and the project structure. Use it as the main reference.
-- `examples/fastapi-service.json`: the smallest complete map, useful for seeing which parts are essential.
+- `examples/fastapi-service.json`: the smallest complete map, showing what a map must contain.
 
-- `nodes` and `edges`: the components and the connections between them. `groups`, `zones` and `overview` decide how components cluster and what the big-picture view shows.
+- `nodes` and `edges`: the components and the connections between them. A node's `step` is the build step that adds it. `groups`, `zones` and `overview` decide how components cluster and what the big-picture view shows.
 - `flows`: animated scenarios, each a list of hops along edges.
 - `buildSteps`, `tourChapters` and `tour`: the build order and the guided tour. The last tour step must play a flow or recap the whole map.
 - `layout`: exact geometry for every node, edge path, zone, overview card and inside scene. It is required; there is no automatic layout yet.
   - Leave room for edge labels: the viewer draws a label as a chip on its line only when the line has a straight run about 30 units longer than the label. On the overview, keep about 140 to 150 units between card columns (and between rows that are joined by an edge); the Kutt example uses 150. On the full map, give every labelled edge a straight segment that long.
-- `page`, `panels`, `ui`, `roles`, `icons` and `settings`: page copy, panel copy, colours and icons.
+- `page` and `panels`: the title, the page descriptions, the end-of-tour text and the two start panels (`introHtml` on the big picture, `overviewHtml` on the full map).
+- Optional, only to change what render.py fills in:
+  - `ui`: any interface string, e.g. `{"tourEntry": "Take the guided tour · 4 min"}`. The keys and English defaults are in `scripts/defaults.py`; the interface is English unless the map overrides them.
+  - `settings`: `recapOrder` (the order the final recap sweeps the parts; defaults to the overview order), `appearanceRoles` (which role colours links, files in close-ups and failure marks; picked from the roles in use) and `buildRole` (the colour of the build-step panel; defaults to the accent).
+  - `roles`, `icons` and `logos`: your own colours and marks (see the asset library below). `beatSeconds` and `flowBeatSeconds`: how long the tour estimates a step takes (15).
 - IDs connect the sections. If you rename an ID, update every reference to it.
 - Text follows one contract, the same in panels, the tour, flows and close-ups:
   - **Labels are plain text**: no tags, no entities (write `&`, not `&amp;`). They are drawn on the map or used as titles and tooltips: `page.title`, node `concept` and `tool`, edge, zone and annotation `label`, group `title`, `line1`, `line2` and `chips`, flow `title` and `desc`, build step, tour step, chapter and inside-scene titles, role `label`, `files` paths and tags, and everything in `ui`. `render.py` rejects markup in a label.
@@ -65,4 +69,4 @@ The file needs no server. Show it with the first option your environment has:
 2. A way to share or attach files in the chat: share the HTML file itself.
 3. Neither: give the path and tell the user to open it in any browser.
 
-Never retype, shorten or edit the HTML into a chat artifact or code block. The file is about 450 KB because the viewer, styles and font are inlined, and it must stay byte-identical. Tell the user the file name and that it works offline in any browser.
+Never retype, shorten or edit the HTML into a chat artifact or code block. The file is about 340 KB because the viewer, styles and font are inlined, and it must stay byte-identical. Tell the user the file name and that it works offline in any browser.

@@ -16,6 +16,8 @@ import html
 import re
 from html.parser import HTMLParser
 
+import defaults
+
 ANY = '*'
 
 # The fields the viewer reads. A dict lists an object's keys; {ANY: x} is a map keyed by ids;
@@ -25,31 +27,25 @@ LEAF = None
 SCHEMA = {
     'id': LEAF,
     'page': {'title': LEAF, 'slots': {k: LEAF for k in (
-        'overviewDescription', 'mapDescription', 'completionCount', 'completionIntro', 'completionLessons',
-        'nextToolUrl', 'nextToolLabel', 'tourEntry', 'legend')}},
-    'panels': {k: LEAF for k in (
-        'introHtml', 'overviewHtml', 'stageEyebrow', 'stageMembers', 'stageNote', 'decision', 'repository',
-        'course', 'what', 'why', 'tools', 'newNodes', 'runnable', 'pinnedNote', 'buildNote', 'fileSuffix',
-        'nodeBuildLabel', 'nodeCourseLabel', 'buildLabel', 'courseLabel', 'buildRole')},
-    'ui': {k: LEAF for k in ('fullSystem', 'pinnedTitle', 'tourEntry', 'filesEntry', 'flowComplete')},
+        'overviewDescription', 'mapDescription', 'completionIntro', 'completionLessons', 'legend')}},
+    'panels': {'introHtml': LEAF, 'overviewHtml': LEAF},
+    'ui': {k: LEAF for k in defaults.UI},
     'roles': {ANY: {k: LEAF for k in ('label', 'light', 'dark', 'fillLight', 'fillDark')}},
     'icons': {ANY: LEAF},
     'logos': {ANY: {k: LEAF for k in ('name', 'src', 'size', 'tile')}},
-    'settings': {k: LEAF for k in (
-        'appearanceRoles', 'recapOrder', 'zoomable', 'linkTarget', 'embedded', 'pinnedFlowFraction')},
-    'links': {'projectStructure': LEAF},
+    'settings': {'appearanceRoles': {k: LEAF for k in ('accent', 'artifact', 'error')}, 'recapOrder': LEAF,
+                 'buildRole': LEAF},
     'nodes': [{k: LEAF for k in (
-        'id', 'group', 'zone', 'cat', 'icon', 'logo', 'shape', 'inside', 'week', 'concept', 'tool', 'tools',
-        'what', 'why', 'decision', 'art', 'structure', 'bootcampNote')}],
+        'id', 'group', 'zone', 'cat', 'icon', 'logo', 'shape', 'inside', 'step', 'concept', 'tool', 'tools',
+        'what', 'why', 'decision', 'art')}],
     'edges': [{k: LEAF for k in ('id', 'from', 'to', 'label', 'bidir')}],
     'zones': [{k: LEAF for k in ('id', 'label', 'hue')}],
     'groups': {ANY: {k: LEAF for k in (
-        'title', 'line1', 'line2', 'chips', 'text', 'icon', 'huekey', 'members', 'decision', 'runnable', 'you')}},
+        'title', 'line1', 'line2', 'chips', 'text', 'icon', 'huekey', 'members', 'decision', 'runnable')}},
     'overview': [{'g': LEAF}],
     'overviewEdges': [{k: LEAF for k in ('id', 'from', 'to', 'label')}],
     'flows': {ANY: {
-        'title': LEAF, 'desc': LEAF, 'hue': LEAF, 'kind': LEAF, 'ok': LEAF, 'ending': LEAF,
-        'completionMilestone': LEAF, 'markSeenOnComplete': LEAF, 'silent': LEAF,
+        'title': LEAF, 'desc': LEAF, 'hue': LEAF, 'kind': LEAF, 'ok': LEAF, 'ending': LEAF, 'silent': LEAF,
         'hops': [{'e': LEAF, 't': LEAF, 'rev': LEAF, 'note': LEAF, 'bad': LEAF, 'breaks': LEAF,
                   'silent': {'e': LEAF, 't': LEAF}}]}},
     'buildSteps': [{k: LEAF for k in ('title', 'text', 'nodes', 'decision', 'runnable')}],
@@ -81,10 +77,30 @@ SCHEMA = {
     },
 }
 
+# Fields older maps carried that the viewer no longer reads, with the reason.
+RETIRED = {
+    'links': 'the Project structure view replaced the outside structure link',
+    'settings.zoomable': 'zoom is always on',
+    'settings.embedded': 'the compact layout is always on',
+    'settings.linkTarget': 'only the retired structure link used it',
+    'settings.pinnedFlowFraction': 'the pinned build-step view is gone',
+    'page.slots.nextToolUrl': 'the end of the tour has no next-tool link',
+    'page.slots.nextToolLabel': 'the end of the tour has no next-tool link',
+    'page.slots.tourEntry': 'set ui.tourEntry instead',
+    'page.slots.completionCount': 'set ui.completionCount instead',
+    'panels.buildRole': 'set settings.buildRole instead, or leave it to default to the accent role',
+    'ui.pinnedTitle': 'the pinned build-step view is gone',
+}
+for _key in ('course', 'nodeCourseLabel', 'courseLabel', 'pinnedNote'):
+    RETIRED[f'panels.{_key}'] = 'course mode is gone'
+for _key in ('structure', 'bootcampNote'):
+    RETIRED[f'nodes[].{_key}'] = 'course mode and the outside structure link are gone'
+RETIRED['groups.*.you'] = 'course mode is gone'
+
 # Field patterns: "nodes[].concept" is the concept of any node, "groups.*.title" the title of any group.
 LABELS = {
     'id', 'page.title', 'page.slots.overviewDescription', 'page.slots.mapDescription', 'ui.*', 'roles.*.label', 'logos.*.name',
-    'nodes[].concept', 'nodes[].tool', 'nodes[].structure',
+    'nodes[].concept', 'nodes[].tool',
     'edges[].label', 'overviewEdges[].label', 'zones[].label',
     'groups.*.title', 'groups.*.line1', 'groups.*.line2', 'groups.*.chips',
     'flows.*.title', 'flows.*.desc', 'flows.*.hops[].silent.t',
@@ -92,7 +108,7 @@ LABELS = {
     'layout.annotations[].label', 'files.title', 'files.heading', 'files.entries[].path', 'files.entries[].tag',
 }
 SVG_FIELDS = {'icons.*', 'insides.*.svg', 'layout.insideMarkers'}
-URL_FIELDS = {'links.*', 'page.slots.nextToolUrl', 'source.repo', 'logos.*.src'}
+URL_FIELDS = {'source.repo', 'logos.*.src'}
 CODE_FIELDS = {'insides.*.steps[].code', 'insides.*.steps[].exit.code', 'insides.*.tables[].code'}
 COLOR_FIELDS = {f'roles.*.{k}' for k in ('light', 'dark', 'fillLight', 'fillDark')}
 ID_MAPS = ('groups', 'flows', 'insides', 'roles', 'icons', 'logos')
@@ -231,6 +247,15 @@ def walk(value, schema=SCHEMA, path='', pattern=''):
             yield from walk(item, sub, f'{path}[{i}]', f'{pattern}[]')
 
 
+def retired(path):
+    """Why a field older maps carried is gone, or None when it never existed."""
+    for key, why in RETIRED.items():
+        rule = re.escape(key).replace(r'\[\]', r'\[[0-9]+\]').replace(r'\*', r'[^.\[]+')
+        if re.fullmatch(rule, path):
+            return why
+    return None
+
+
 def unknown_fields(d):
     """Fields the viewer would silently drop, outermost first (a dropped object is reported once)."""
     found = []
@@ -262,7 +287,7 @@ def check_text(d):
             if MARKUP.search(value):
                 problems.append(f'{path} is a label, shown as plain text: remove the HTML tags and entities from {value[:60]!r}')
             return value
-        if pattern in URL_FIELDS or pattern.startswith('links.'):
+        if pattern in URL_FIELDS:
             return value  # render.py checks the scheme
         if pattern in COLOR_FIELDS:
             if not COLOR.match(value.strip()):

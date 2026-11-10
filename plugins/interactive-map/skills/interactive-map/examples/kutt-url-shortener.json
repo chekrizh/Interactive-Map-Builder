@@ -6,39 +6,16 @@
    "overviewDescription": "Kutt in context: who uses it, what it is made of and which outside services it needs.",
    "mapDescription": "Containers and the components inside the Kutt server, with the paths a click and a new link take.",
    "completionLessons": "<li>Why the redirect reads from cache and defers writes</li><li>How one API serves pages and scripts</li><li>What runs in the background</li>",
-   "tourEntry": "Take the guided tour · 4 min",
    "completionIntro": "You followed a click and a new link through Kutt."
   }
  },
  "panels": {
   "introHtml": "<div class=\"p-eyebrow\">Start here</div><h2>Kutt, the URL shortener</h2><p style=\"margin-top:8px\">A map of <a href=\"https://github.com/thedevs-network/kutt\">thedevs-network/kutt</a> v3.2.6 in C4 terms: context on the overview, containers and components on the full map.</p><h3>Try it</h3><ul class=\"newlist\"><li>Open a card to see its part of the system.</li><li>Play <b>Open a short link</b> to follow a click.</li><li>Click a component for what it does and where it lives in the code.</li></ul><div class=\"panel-actions\"><button type=\"button\" class=\"panel-action\" id=\"gofull\">Open full map</button></div>",
-  "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>One container does almost everything</h2><p style=\"margin-top:8px\">docker-compose runs three containers: the Node server, a SQL database and Redis. The server zone is opened up into its components.</p><h3>How to read it</h3><p>People and outside services on the left, the server in the middle, data on the right.</p>",
-  "stageEyebrow": "Part",
-  "stageMembers": "Components in this part",
-  "stageNote": "Flows follow the connections between these components.",
-  "decision": "Design choice",
-  "repository": "In the code",
-  "course": "Note",
-  "what": "What it does",
-  "why": "Why it matters",
-  "tools": "Technology and files",
-  "newNodes": "Components added",
-  "runnable": "Try it",
-  "pinnedNote": "This view shows the system at this step.",
-  "buildNote": "The steps build the shortener up from the bare redirect.",
-  "fileSuffix": " · File",
-  "nodeBuildLabel": "Build step {step} of {total}",
-  "nodeCourseLabel": "Step {step}",
-  "buildLabel": "Build order · Step {step} of {total}",
-  "courseLabel": "Kutt · Step {step}",
-  "buildRole": "component"
+  "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>One container does almost everything</h2><p style=\"margin-top:8px\">docker-compose runs three containers: the Node server, a SQL database and Redis. The server zone is opened up into its components.</p><h3>How to read it</h3><p>People and outside services on the left, the server in the middle, data on the right.</p>"
  },
  "ui": {
-  "fullSystem": "Full system",
-  "pinnedTitle": "Step {step}: {title}",
   "tourEntry": "Take the guided tour · 4 min",
-  "filesEntry": "Project structure",
-  "flowComplete": "Flow complete. Choose another flow or open a component."
+  "buildNote": "The steps build the shortener up from the bare redirect."
  },
  "groups": {
   "people": {
@@ -193,7 +170,7 @@
    "id": "visitor",
    "group": "people",
    "cat": "person",
-   "week": 1,
+   "step": 1,
    "icon": "user",
    "tool": "Person",
    "concept": "Visitor",
@@ -207,7 +184,7 @@
    "id": "target",
    "group": "outside",
    "cat": "external",
-   "week": 1,
+   "step": 1,
    "icon": "globe",
    "tool": "External",
    "concept": "Target website",
@@ -221,7 +198,7 @@
    "id": "user",
    "group": "people",
    "cat": "person",
-   "week": 2,
+   "step": 2,
    "icon": "user",
    "tool": "Person",
    "concept": "Link owner",
@@ -235,7 +212,7 @@
    "id": "oidc",
    "group": "outside",
    "cat": "external",
-   "week": 3,
+   "step": 3,
    "icon": "key-round",
    "tool": "External · optional",
    "concept": "OIDC provider",
@@ -250,7 +227,7 @@
    "id": "redirect",
    "group": "redirect",
    "cat": "component",
-   "week": 1,
+   "step": 1,
    "icon": "zap",
    "tool": "Component · Express",
    "concept": "Redirect handler",
@@ -264,7 +241,7 @@
    "id": "web",
    "group": "manage",
    "cat": "component",
-   "week": 2,
+   "step": 2,
    "icon": "app-window",
    "tool": "Component · Handlebars, htmx",
    "concept": "Web pages",
@@ -277,7 +254,7 @@
    "id": "api",
    "group": "manage",
    "cat": "component",
-   "week": 2,
+   "step": 2,
    "icon": "code",
    "tool": "Component · Express",
    "concept": "REST API",
@@ -290,7 +267,7 @@
    "id": "links",
    "group": "manage",
    "cat": "component",
-   "week": 2,
+   "step": 2,
    "icon": "link",
    "tool": "Component · Node.js",
    "concept": "Link logic",
@@ -303,7 +280,7 @@
    "id": "auth",
    "group": "manage",
    "cat": "component",
-   "week": 3,
+   "step": 3,
    "icon": "lock",
    "tool": "Component · Passport",
    "concept": "Auth",
@@ -316,7 +293,7 @@
    "id": "queries",
    "group": "data",
    "cat": "component",
-   "week": 1,
+   "step": 1,
    "icon": "layers",
    "tool": "Component · Knex",
    "concept": "Data access + cache",
@@ -329,7 +306,7 @@
    "id": "visitq",
    "group": "background",
    "cat": "background",
-   "week": 4,
+   "step": 4,
    "icon": "inbox",
    "tool": "Component · Bull worker",
    "concept": "Visit processor",
@@ -343,7 +320,7 @@
    "id": "cron",
    "group": "background",
    "cat": "background",
-   "week": 3,
+   "step": 3,
    "icon": "clock",
    "tool": "Component · setInterval",
    "concept": "Expiry job",
@@ -356,7 +333,7 @@
    "id": "mail",
    "group": "background",
    "cat": "background",
-   "week": 3,
+   "step": 3,
    "icon": "mail",
    "tool": "Component · nodemailer",
    "concept": "Mailer",
@@ -369,7 +346,7 @@
    "id": "redis",
    "group": "data",
    "cat": "store",
-   "week": 4,
+   "step": 4,
    "icon": "database-zap",
    "tool": "Container · optional",
    "concept": "Redis",
@@ -385,7 +362,7 @@
    "id": "db",
    "group": "data",
    "cat": "store",
-   "week": 1,
+   "step": 1,
    "icon": "database",
    "tool": "Container · SQL",
    "concept": "Database",
@@ -401,7 +378,7 @@
    "id": "smtp",
    "group": "outside",
    "cat": "external",
-   "week": 3,
+   "step": 3,
    "icon": "send",
    "tool": "External",
    "concept": "Mail server",
@@ -824,8 +801,6 @@
    ]
   }
  ],
- "beatSeconds": 15,
- "flowBeatSeconds": 15,
  "insides": {
   "redirect": {
    "kind": "steps",
@@ -1141,31 +1116,6 @@
    ]
   }
  },
- "roles": {},
- "icons": {},
- "logos": {},
- "settings": {
-  "embedded": true,
-  "zoomable": true,
-  "linkTarget": "_top",
-  "recapOrder": [
-   "people",
-   "redirect",
-   "outside",
-   "manage",
-   "data",
-   "background"
-  ],
-  "pinnedFlowFraction": 0.5,
-  "appearanceRoles": {
-   "accent": "component",
-   "artifact": "store",
-   "error": "external"
-  }
- },
- "links": {
-  "projectStructure": "https://github.com/thedevs-network/kutt"
- },
  "files": {
   "entries": [
    {
@@ -1374,10 +1324,6 @@
   "overviewCard": {
    "width": 270,
    "height": 200
-  },
-  "scale": {
-   "x": 1,
-   "y": 1
   },
   "nodes": {
    "visitor": {
@@ -1632,8 +1578,6 @@
     "y": 295,
     "anchor": "start"
    }
-  },
-  "annotations": [],
-  "insideMarkers": ""
+  }
  }
 }

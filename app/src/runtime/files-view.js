@@ -51,7 +51,6 @@ export function createFilesView(ctx) {
 
   const { root, byPath } = buildFileTree(files.entries);
   const source = ctx.definition.source;
-  const ui = ctx.definition.ui;
   const tree = box.querySelector("#filesTree");
   const expanded = new Set();
   byPath.forEach(n => {
@@ -60,12 +59,12 @@ export function createFilesView(ctx) {
   let selected = null;
 
   btn.hidden = false;
-  const label = ui.filesEntry || "Project structure";
+  const label = ctx.t("filesEntry");
   ctx.document.getElementById("filesBtnText").textContent = label;
   const repoName = files.title || (source ? source.repo.replace(/^https:\/\/github\.com\//, "").replace(/\/$/, "") : "project");
   root.name = repoName.split("/").pop();
   box.querySelector("#filesTitle").innerHTML = `${esc(label)} · ${esc(repoName)}` +
-    (source?.ref ? ` at <span class="mono">${esc(source.ref.slice(0, 7))}</span>` : "");
+    (source?.ref ? ` ${esc(ctx.t("filesAt"))} <span class="mono">${esc(source.ref.slice(0, 7))}</span>` : "");
 
   const nodeOf = id => ctx.nodeEls[id]?.def;
   /* A path takes the role of its first component. A folder without its own
@@ -85,7 +84,7 @@ export function createFilesView(ctx) {
   const chip = id => {
     const n = nodeOf(id);
     if (!n) return "";
-    return `<button type="button" class="ft-chip" data-node="${esc(id)}" style="--chip-hue:var(--h-${n.cat})" title="Show ${esc(n.concept)} on the map" tabindex="-1">` +
+    return `<button type="button" class="ft-chip" data-node="${esc(id)}" style="--chip-hue:var(--h-${n.cat})" title="${esc(ctx.t("filesShowOnMap", { name: n.concept }))}" tabindex="-1">` +
       `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ctx.ICONS[n.icon] || ""}</svg>${esc(n.concept)}</button>`;
   };
 
@@ -119,14 +118,14 @@ export function createFilesView(ctx) {
 
   function renderIntro() {
     ctx.panelHTML(`
-      <div class="p-eyebrow">Start here</div>
-      <h2>${esc(files.heading || "Where each part lives")}</h2>
-      <p style="margin-top:8px">${files.panel || `The paths of <span class="mono">${esc(repoName)}</span> that matter for the map, ${files.entries.length} of them, each with a line on what it holds.`}</p>
-      <h3>How to read it</h3>
+      <div class="p-eyebrow">${esc(ctx.t("filesEyebrow"))}</div>
+      <h2>${esc(files.heading || ctx.t("filesHeading"))}</h2>
+      <p style="margin-top:8px">${files.panel || esc(ctx.t("filesIntro", { repo: "\u0000", count: files.entries.length })).replace("\u0000", `<span class="mono">${esc(repoName)}</span>`)}</p>
+      <h3>${esc(ctx.t("filesHowTo"))}</h3>
       <ul class="newlist ft-toplist">
-        <li><b>Coloured tags</b> are components on the map; click one to jump there.</li>
-        <li><b>The folder colour</b> follows the role of its component. Grey means plumbing (config, docs, tooling) or a mix of roles.</li>
-        <li>Click a row for why it exists. <kbd>↑</kbd> <kbd>↓</kbd> walk the tree, <kbd>←</kbd> <kbd>→</kbd> fold it.</li>
+        <li><b>${esc(ctx.t("filesTagsTerm"))}</b> ${esc(ctx.t("filesTags"))}</li>
+        <li><b>${esc(ctx.t("filesFolderTerm"))}</b> ${esc(ctx.t("filesFolder"))}</li>
+        <li>${esc(ctx.t("filesClickRow"))} <kbd>↑</kbd> <kbd>↓</kbd> ${esc(ctx.t("filesKeysWalk"))} <kbd>←</kbd> <kbd>→</kbd> ${esc(ctx.t("filesKeysFold"))}</li>
       </ul>
     `, null);
     ctx.openPanel();
@@ -147,10 +146,10 @@ export function createFilesView(ctx) {
       <h2 class="ft-h">${esc(n.name + (n.dir ? "/" : ""))}</h2>
       <p class="p-sub mono">${esc(n.path + (n.dir ? "/" : ""))}</p>
       ${e.tag ? `<div class="p-chips ft-chips"><span class="pchip">${esc(e.tag)}</span></div>` : ""}
-      ${e.t ? `<h3>What lives here</h3><p>${e.t}</p>` : ""}
-      ${e.why ? `<h3>Why it exists</h3><p>${e.why}</p>` : ""}
-      ${onMap ? `<h3>On the map</h3><div class="panel-actions">${onMap}</div>` : ""}
-      ${kids ? `<h3>Inside</h3><ul class="newlist ft-toplist">${kids}</ul>` : ""}
+      ${e.t ? `<h3>${esc(ctx.t("filesWhat"))}</h3><p>${e.t}</p>` : ""}
+      ${e.why ? `<h3>${esc(ctx.t("filesWhy"))}</h3><p>${e.why}</p>` : ""}
+      ${onMap ? `<h3>${esc(ctx.t("filesOnMap"))}</h3><div class="panel-actions">${onMap}</div>` : ""}
+      ${kids ? `<h3>${esc(ctx.t("filesInside"))}</h3><ul class="newlist ft-toplist">${kids}</ul>` : ""}
     `, hue);
     ctx.panelBody.querySelectorAll("[data-node]").forEach(b => ctx.scope.listen(b, "click", () => goToNode(b.dataset.node)));
     ctx.panelBody.querySelectorAll(".ft-link").forEach(b => ctx.scope.listen(b, "click", () => select(b.dataset.path, { reveal: true })));

@@ -13,7 +13,6 @@ function refreshWeekSeg() {
 function showLevel(l) {
   ctx.level = l;
   // The tour opens the full map itself; only an explorer's own visit counts.
-  if (l === 1 && !ctx.tour.active) ctx.T()?.milestone("full_map_opened");
   ctx.refreshWeekSeg();
   ctx.closeInside();
   ctx.svg0.style.display = l === 0 ? "block" : "none";
@@ -28,7 +27,7 @@ function showLevel(l) {
      map off to the bottom right. */
   ctx.resetView();
   ctx.toL0.hidden = l === 0;
-  ctx.crumbNote.textContent = l === 0 ? "The big picture" : "The full map";
+  ctx.crumbNote.textContent = ctx.t(l === 0 ? "bigPicture" : "fullMap");
   if (l === 0) {
     ctx.setFocus(null);
     ctx.clearStory();
@@ -55,8 +54,8 @@ function setFocus(g) {
   if (g) {
     ctx.control.label(ctx.unfocusBtn, ctx.GROUPS[g].title, "close");
     ctx.unfocusBtn.style.setProperty("--focus-hue", ctx.hue(ctx.GROUPS[g].huekey));
-    ctx.unfocusBtn.setAttribute("aria-label", "Clear " + ctx.GROUPS[g].title + " stage filter");
-    ctx.unfocusBtn.title = "Show all stages";
+    ctx.unfocusBtn.setAttribute("aria-label", ctx.t("clearStage", { stage: ctx.GROUPS[g].title }));
+    ctx.unfocusBtn.title = ctx.t("showAllStages");
   }
 }
 
@@ -108,7 +107,7 @@ function applyFsDom(on) {
     ctx.updateDrawerBounds();
     // The two views scale differently, so a normal-view zoom does not carry over.
     if (ctx.zoom !== 1 || ctx.tx || ctx.ty) ctx.resetView();
-    ctx.control.label(ctx.fsBtn, "Exit full screen", "collapse");
+    ctx.control.label(ctx.fsBtn, ctx.t("exitFullScreen"), "collapse");
     ctx.panelBtn.hidden = false;
   } else {
     ctx.fsMode = false;
@@ -119,13 +118,12 @@ function applyFsDom(on) {
     ctx.drawer.classList.remove("open");
     ctx.ctrlSlot.before(ctx.controlsEl);
     if (ctx.exploreNudge) ctx.exploreNudge.place();
-    ctx.control.label(ctx.fsBtn, "Full screen", "expand");
+    ctx.control.label(ctx.fsBtn, ctx.t("fullScreen"), "expand");
     ctx.panelBtn.hidden = ctx.preFsOpen;
   }
 }
 
 function enterFs() {
-  ctx.T()?.milestone("fullscreen");
   const go = () => {
     if (!ctx.fsMode) ctx.applyFsDom(true);
   };
@@ -154,7 +152,6 @@ function clearSelection() {
 function selectNode(id) {
   /* The tour's map is for looking, not selecting (keyboard included). */
   if (ctx.tour.active) return;
-  ctx.T()?.step("component", id);
   ctx.clearStory();
   /* Exploring inside a focused stage keeps the rest of the map dimmed;
      clicking outside the stage means the user has navigated away. */
@@ -165,29 +162,17 @@ function selectNode(id) {
 }
 
 function setWeek(w, opts) {
-  /* Pinned mode never leaves the 1..PINNED range. This one clamp covers
-     every reset path (showLevel(0), focusGroup, playStory, init) without
-     touching them: they may ask for week 0, they get the pinned week. */
-  if (ctx.PINNED && (w === 0 || w > ctx.PINNED)) w = ctx.PINNED;
-  /* quiet: the tour (and restoring Explore after it) sets a build step
-     without counting it as the visitor stepping the build order. */
-  const quiet = Boolean(opts && opts.quiet);
-  if (w >= 1 && !quiet) ctx.T()?.step("build", "step-" + w, w);
-  if (w === ctx.WEEKS.length - 1 && !ctx.PINNED && !quiet) {
-    ctx.T()?.milestone("build_complete");
-    ctx.T()?.seen();
-  }
   ctx.week = w;
   ctx.refreshWeekSeg();
   ctx.NODES.forEach(n => {
     const g = ctx.nodeEls[n.id].g;
-    g.classList.toggle("future", w > 0 && n.week > w);
-    g.classList.toggle("justbuilt", w > 0 && n.week === w);
+    g.classList.toggle("future", w > 0 && n.step > w);
+    g.classList.toggle("justbuilt", w > 0 && n.step === w);
   });
-  ctx.zoneEls.forEach(z => z.g.classList.toggle("future", w > 0 && z.members.length > 0 && z.members.every(n => n.week > w)));
+  ctx.zoneEls.forEach(z => z.g.classList.toggle("future", w > 0 && z.members.length > 0 && z.members.every(n => n.step > w)));
   ctx.EDGES.forEach(e => {
-    const fw = ctx.nodeEls[e.from].def.week,
-      tw = ctx.nodeEls[e.to].def.week;
+    const fw = ctx.nodeEls[e.from].def.step,
+      tw = ctx.nodeEls[e.to].def.step;
     const fut = w > 0 && Math.max(fw, tw) > w;
     ctx.edgeEls[e.id].path.classList.toggle("future", fut);
     if (ctx.edgeEls[e.id].label) ctx.edgeEls[e.id].label.classList.toggle("future", fut);

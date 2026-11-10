@@ -3,8 +3,8 @@ export function prepareDefinition(input) {
   const d = structuredClone(input);
   const fail = message => { throw new Error(`Invalid map definition: ${message}`); };
   if (typeof d.id !== 'string' || !d.id) fail('id must be a non-empty string');
-  // Keys follow the map id: every file:// page shares one storage, so authored keys could collide.
-  d.settings.storage = { tour: `${d.id}:tour`, nudge: `${d.id}:nudge`, theme: 'map-viewer:theme' };
+  // The key follows the map id: every file:// page shares one storage, so authored keys could collide.
+  d.settings.storage = { tour: `${d.id}:tour` };
   const unique = (items, key, section) => {
     const ids = new Set();
     for (const item of items) {
@@ -26,7 +26,7 @@ export function prepareDefinition(input) {
     if (!d.roles[n.cat]) fail(`node ${n.id}.cat: ${n.cat}`);
     if (!d.icons[n.icon]) fail(`node ${n.id}.icon: ${n.icon}`);
     if (n.shape != null && !['component','person','worker','database','queue','external'].includes(n.shape)) fail(`node ${n.id}.shape: ${n.shape}`);
-    if (!d.buildSteps[n.week]) fail(`node ${n.id}.week: ${n.week}`);
+    if (!d.buildSteps[n.step]) fail(`node ${n.id}.step: ${n.step}`);
   }
   for (const e of d.edges) {
     requireRef(nodes,e.from,`edge ${e.id}.from`); requireRef(nodes,e.to,`edge ${e.id}.to`);
@@ -100,17 +100,14 @@ export function prepareDefinition(input) {
   return d;
 }
 
-/** Authored markup is trusted project content, not user-submitted HTML. */
+/** Authored markup is trusted project content, not user-submitted HTML.
+ *  {{key}} is a page slot; {{ui.key}} is an interface string from d.ui, always plain text. */
 export function renderShell(template, d) {
   const pageSlots = d.page?.slots || {};
   const description = pageSlots.mapDescription || pageSlots.overviewDescription || d.page.title;
   const slots = {
-    completionCount: `Tour complete · ${d.tour.length} steps`,
     completionIntro: 'You have reached the end of this map.',
     completionLessons: '',
-    nextToolUrl: '#',
-    nextToolLabel: '',
-    tourEntry: 'Take the guided tour',
     overviewDescription: pageSlots.mapDescription || description,
     mapDescription: pageSlots.overviewDescription || description,
     legend: Object.entries(d.roles).map(([key, role]) =>
@@ -120,15 +117,21 @@ export function renderShell(template, d) {
     overviewViewBox: '0 0 '+d.layout.viewBoxes.map0.join(' '),
     mapViewBox: '0 0 '+d.layout.viewBoxes.map.join(' '),
   };
-  slots.nextToolHidden = slots.nextToolUrl && slots.nextToolLabel ? '' : 'hidden';
-  // The descriptions are plain-text labels that land in aria-label attributes.
-  const attr = value => String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-  slots.overviewDescription = attr(slots.overviewDescription);
-  slots.mapDescription = attr(slots.mapDescription);
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
-    if (!(key in slots)) throw new Error(`Missing page slot: ${key}`);
-    return slots[key];
+  // Plain-text values: the descriptions land in aria-label attributes, ui strings anywhere.
+  const text = value => String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  slots.overviewDescription = text(slots.overviewDescription);
+  slots.mapDescription = text(slots.mapDescription);
+  const ui = { ...d.ui, completionCount: formatText(d.ui.completionCount, { steps: d.tour.length }) };
+  return template.replace(/\{\{(ui\.)?(\w+)\}\}/g, (_, isUi, key) => {
+    const source = isUi ? ui : slots;
+    if (!(key in source)) throw new Error(`Missing ${isUi ? 'ui string' : 'page slot'}: ${key}`);
+    return isUi ? text(source[key]) : source[key];
   });
+}
+
+/** "{step} of {total}" with values filled in; unknown names become empty. */
+export function formatText(pattern, values) {
+  return String(pattern).replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ''));
 }
 
 /** Role names and palettes belong to the definition; selectors are shared UI. */

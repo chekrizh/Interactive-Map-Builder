@@ -13,9 +13,10 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 SKILL = ROOT / 'plugins' / 'interactive-map' / 'skills' / 'interactive-map'
 sys.path.insert(0, str(SKILL / 'scripts'))
 import contract  # noqa: E402
+import defaults  # noqa: E402
 import render  # noqa: E402
 
-EXAMPLES = {p.stem: render.with_library(json.loads(p.read_text(encoding='utf-8'))) for p in sorted((SKILL / 'examples').glob('*.json'))}
+EXAMPLES = {p.stem: render.complete(json.loads(p.read_text(encoding='utf-8'))) for p in sorted((SKILL / 'examples').glob('*.json'))}
 EXAMPLE = EXAMPLES['fastapi-service']  # the smallest map; broken variants start from it
 NODE = shutil.which('node')
 PLAYWRIGHT = NODE and subprocess.run([NODE, '-e', 'require.resolve("playwright")'], capture_output=True).returncode == 0
@@ -43,7 +44,7 @@ BROKEN = {
     'edge to unknown node': lambda d: d['edges'][0].update(to='ghost'),
     'node in unknown group': lambda d: d['nodes'][0].update(group='ghost'),
     'duplicate node id': lambda d: d['nodes'].append(dict(d['nodes'][0])),
-    'node week without build step': lambda d: d['nodes'][0].update(week=99),
+    'node step without build step': lambda d: d['nodes'][0].update(step=99),
     'node icon not in icons': lambda d: d['nodes'][0].update(icon='ghost'),
     'group lists a node of another group': lambda d: next(iter(d['groups'].values()))['members'].append(d['nodes'][-1]['id']),
     'flow hop on unknown edge': lambda d: next(iter(d['flows'].values()))['hops'][0].update(e='ghost'),
@@ -68,13 +69,14 @@ BROKEN_TEXT = {
     'markup in a label': lambda d: d['nodes'][0].update(concept='<img src=x onerror=alert(1)>'),
     'entity in a label': lambda d: d['edges'][0].update(label='R&amp;D'),
     'markup in a tour title': lambda d: d['tour'][0].update(title='<b>Start</b>'),
-    'javascript link': lambda d: d['links'].update(x='javascript:alert(1)'),
-    'next tool link with a script': lambda d: d['page'].setdefault('slots', {}).update(nextToolUrl='javascript:alert(1)'),
+    'javascript repository link': lambda d: d.update(source={'repo': 'javascript:alert(1)'}),
+    'markup in an interface string': lambda d: d['ui'].update(tourNext='<img src=x onerror=alert(1)>'),
     'logo outside the assets': lambda d: d['logos'].update(x={'name': 'x', 'src': 'https://example.com/x.svg'}),
     'colour that escapes its rule': lambda d: next(iter(d['roles'].values())).update(light='red;}*{background:url(//x)'),
     'id with a quote': lambda d: d['edges'].append(dict(d['edges'][0], id='a"b')),
     'role key with a brace': lambda d: d['roles'].update({'x}': {'label': 'x'}}),
-    'unknown link target': lambda d: d['settings'].update(linkTarget='javascript:'),
+    'interface colour from an unknown role': lambda d: d['settings']['appearanceRoles'].update(accent='ghost'),
+    'node still using week': lambda d: d['nodes'][0].update(week=d['nodes'][0].pop('step')),
     'code reference with markup': lambda d: d['insides'].update(x={'kind': 'steps', 'title': 'x', 'steps': [{'t': 'x', 'code': '<b>a.py</b>:1'}]}),
 }
 HOSTILE = '<img src=x onerror="window.__pwned=1"><script>window.__pwned=2</script><a href="javascript:window.__pwned=3">x</a>'
@@ -177,7 +179,7 @@ class RenderTest(unittest.TestCase):
         skip = contract.URL_FIELDS | contract.COLOR_FIELDS | contract.CODE_FIELDS | contract.SVG_FIELDS
 
         def poison(value, path, pattern):
-            if ' ' not in value or pattern in skip or pattern.startswith(('layout', 'settings', 'links')) or pattern == 'page.title':
+            if ' ' not in value or pattern in skip or pattern.startswith(('layout', 'settings')) or pattern == 'page.title':
                 return value  # ids, references and geometry have no spaces
             if pattern in contract.LABELS or pattern.startswith('ui.'):
                 return value + ' "q" onmouseover="window.__pwned=4"'
@@ -244,13 +246,46 @@ class RenderTest(unittest.TestCase):
         run = subprocess.run([NODE, '--input-type=module', '-e', script], capture_output=True, text=True, check=True)
         self.assertEqual(json.loads(run.stdout), ['docs/', 'server/ (implied)', 'README.md', 'server/handlers/ (implied)', 'server/handlers/links.js'])
 
+    def test_defaults_fill_everything_but_authored_values_win(self):
+        authored = json.loads((SKILL / 'examples' / 'fastapi-service.json').read_text(encoding='utf-8'))
+        for key in ('ui', 'settings', 'beatSeconds', 'links'):
+            self.assertNotIn(key, authored)  # the smallest example relies on the defaults
+        full = render.complete(authored)
+        self.assertEqual(set(full['ui']), set(defaults.UI))
+        self.assertEqual(full['settings']['recapOrder'], [b['g'] for b in authored['overview']])
+        self.assertEqual(full['settings']['appearanceRoles'], {'accent': 'service', 'artifact': 'service', 'error': 'error'})
+        self.assertEqual(full['beatSeconds'], defaults.BEAT_SECONDS)
+        mine = render.complete(dict(authored, ui={'tourNext': 'Onward'}, beatSeconds=9))
+        self.assertEqual((mine['ui']['tourNext'], mine['ui']['tourBack'], mine['beatSeconds']), ('Onward', 'Back', 9))
+
+    def test_retired_fields_say_what_replaced_them(self):
+        d = broken(lambda d: (d['panels'].update(decision='Why', course='Note'), d.update(links={'x': '#'})))
+        notes = '\n'.join(render.warnings(d))
+        self.assertIn('panels.decision moved to ui.decision', notes)
+        self.assertIn('panels.course is no longer used', notes)
+        self.assertIn('links is no longer used', notes)
+
+    def test_every_ui_string_in_the_viewer_has_a_default(self):
+        """Keys the viewer asks for (t("key") in JS, {{ui.key}} in the template) all exist in defaults.UI, and none is unused."""
+        src = ROOT / 'app' / 'src'
+        code = '\n'.join(p.read_text(encoding='utf-8') for p in src.rglob('*.js'))
+        used = set(re.findall(r'\bt\("(\w+)"', code)) | set(re.findall(r'\{\{ui\.(\w+)\}\}', (src / 'template.html').read_text(encoding='utf-8')))
+        used |= {'flowEyebrow', 'failureFlowEyebrow', 'tourTitle', 'tourNew', 'tourBegin', 'tourFinish', 'tourNext', 'bigPicture', 'fullMap', 'completionCount'}  # picked by a ternary
+        self.assertEqual(used - set(defaults.UI), set())
+        self.assertEqual(set(defaults.UI) - used, set())
+
+    def test_page_names_the_plugin_version(self):
+        version = json.loads(render.PLUGIN.read_text(encoding='utf-8'))['version']
+        page = render.render(render.viewer_page(), EXAMPLE)
+        self.assertIn(f'<meta name="generator" content="interactive-map {version}">', page)
+
     def test_viewer_page_is_self_contained_with_one_empty_placeholder(self):
         page = render.viewer_page()
         self.assertEqual(page.count(render.PLACEHOLDER), 1)
         self.assertNotIn('src="./', page)
         self.assertNotIn('href="./', page)
         self.assertNotIn('url("./', page)
-        self.assertIn('data:font/ttf;base64,', page)
+        self.assertIn('data:font/woff2;base64,', page)
 
     def test_plugin_files_stay_readable_for_the_security_scan(self):
         """The plugin scan holds any non-image, non-font file over 256 KiB as one it couldn't inspect."""
