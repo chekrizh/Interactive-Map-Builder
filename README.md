@@ -133,7 +133,7 @@ The skills are the folders in `plugins/interactive-map/skills/`.
 ```
 
 - **Two skills.** `interactive-map-repo` is the method for repositories: find the evidence (deployment files, entry points, contracts), model it in [C4](https://c4model.com) terms (context on the overview, containers and components on the full map) and pick the flows worth animating. `interactive-map` is the format: how to write the map JSON and render it.
-- **The agent never writes HTML.** It writes one JSON definition. `render.py` (Python 3, standard library only) validates it with the same checks the page runs, lists every problem at once, and puts it into the prebuilt viewer.
+- **The agent never writes HTML.** It writes one JSON definition. `render.py` (Python 3, standard library only) validates it with the same checks the page runs, lists every problem at once, sanitises its text, and puts it into the prebuilt viewer.
 - **An asset library is built in.** About 2,300 [Lucide](https://lucide.dev) icons, about 3,500 brand logos from [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos), and role presets with tested light and dark colours. A map only names them.
 - **The output is self-contained.** Each HTML file carries its own copy of the viewer, the map and the font, so it keeps working when the skill changes.
 
@@ -148,7 +148,7 @@ open /tmp/map.html
 ## What the plugin does on your machine
 
 - **Only instructions and two scripts.** The plugin adds two skills. It has no hooks, no MCP servers and no settings changes.
-- **Two Python scripts, standard library only.** `render.py` reads the map JSON, the viewer in `assets/viewer/` and the asset library, and writes one HTML file to the path you give it. `find_asset.py` searches the asset library and prints names. Neither makes network requests, runs other programs or reads anything outside the skill folder and the map you pass.
+- **Python scripts, standard library only.** `render.py` reads the map JSON, the viewer in `assets/viewer/` and the asset library, strips any HTML outside a small allowlist from the map's text (`contract.py`), and writes one HTML file to the path you give it. With `--repo-dir` it also reads the repository checkout you name, to check that code references and paths exist. `find_asset.py` searches the asset library and prints names. None of them makes network requests, runs other programs or reads anything outside the skill folder, the map and the checkout you pass.
 - **The generated page works offline.** Its script, styles, font, icons and logos are inlined; it makes no network requests and sends nothing anywhere.
 - **Everything shipped is readable.** The viewer is committed unminified (built from `app/`), and the icon and logo library is split into JSON files with one item per line (built by `tools/build_library.py`), so every file stays under 256 KB and can be reviewed.
 

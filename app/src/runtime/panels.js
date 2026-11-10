@@ -1,5 +1,7 @@
 /** panels: extracted original behavior; dependencies supplied by the instance controller. */
 import { renderInsideScene, wireInsideScene } from "../rendering/inside-scenes.js";
+// Labels are plain text; inside an attribute they still need their quotes escaped.
+const attr = value => String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 export function createPanels(ctx) {
 /* ---------------- inside overlay ---------------- */
 
@@ -9,12 +11,10 @@ function openInside(nodeId) {
   if (!sc) return;
   ctx.T()?.step("inside", nodeId);
   ctx.document.getElementById("insideTitle").textContent = sc.title;
-  ctx.document.getElementById("insideSub").textContent = sc.sub;
-  ctx.document.getElementById("insideCap").textContent = sc.cap || "";
+  // Subtitle and caption are rich text, like every other text field that is not a label.
+  ctx.document.getElementById("insideSub").innerHTML = sc.sub || "";
+  ctx.document.getElementById("insideCap").innerHTML = sc.cap || "";
   if (sc.kind) {
-    // Structured scenes take authored markup in their copy, like every other text field.
-    ctx.document.getElementById("insideSub").innerHTML = sc.sub || "";
-    ctx.document.getElementById("insideCap").innerHTML = sc.cap || "";
     const box = ctx.document.getElementById("insideScene");
     box.innerHTML = renderInsideScene(sc, sc.source);
     box.firstElementChild.style.setProperty("--ins-hue", `var(--h-${n.cat})`);
@@ -22,7 +22,7 @@ function openInside(nodeId) {
     ctx.insideBox.hidden = false;
     return;
   }
-  ctx.document.getElementById("insideScene").innerHTML = `<svg class="iscene ml-canvas" viewBox="0 0 ${sc.w} ${sc.h}" role="img" aria-label="${sc.title}">${ctx.IMARK}${sc.svg}</svg>`;
+  ctx.document.getElementById("insideScene").innerHTML = `<svg class="iscene ml-canvas" viewBox="0 0 ${sc.w} ${sc.h}" role="img" aria-label="${attr(sc.title)}">${ctx.IMARK}${sc.svg}</svg>`;
   const scene = ctx.document.querySelector("#insideScene svg");
   ctx.canvas.setRole(scene, n.cat);
   // Round close-up connector elbows with the same primitive as the full map.
@@ -150,8 +150,8 @@ function renderNode(id) {
 
   const paths = ctx.filesView?.available ? ctx.filesView.pathsFor(id) : [];
   const repo = paths.length ? `<h3>${ctx.definition.panels.repository}</h3>
-      <div class="panel-actions xrepo">${paths.map(p => `<button type="button" class="panel-action" data-files-path="${p}" aria-label="Show ${p} in the project files"><span class="mono">${p}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>`).join("")}</div>` : n.structure ? `<h3>${ctx.definition.panels.repository}</h3>
-      <div class="panel-actions xrepo"><a class="panel-action" href="${ctx.structureHref(n.structure)}"${ctx.LINK_TARGET} aria-label="Open ${n.structure} in the project layout"><span class="mono">${n.structure}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a></div>` : "";
+      <div class="panel-actions xrepo">${paths.map(p => `<button type="button" class="panel-action" data-files-path="${attr(p)}" aria-label="Show ${attr(p)} in the project files"><span class="mono">${p}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>`).join("")}</div>` : n.structure ? `<h3>${ctx.definition.panels.repository}</h3>
+      <div class="panel-actions xrepo"><a class="panel-action" href="${attr(ctx.structureHref(n.structure))}"${ctx.LINK_TARGET} aria-label="Open ${attr(n.structure)} in the project layout"><span class="mono">${n.structure}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a></div>` : "";
 
   const bnote = ctx.BOOTCAMP && n.bootcampNote ? `<h3>${ctx.definition.panels.course}</h3><div class="bnote">${n.bootcampNote}</div>` : "";
   ctx.panelHTML(`

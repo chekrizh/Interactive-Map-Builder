@@ -121,6 +121,10 @@ export function renderShell(template, d) {
     mapViewBox: '0 0 '+d.layout.viewBoxes.map.join(' '),
   };
   slots.nextToolHidden = slots.nextToolUrl && slots.nextToolLabel ? '' : 'hidden';
+  // The descriptions are plain-text labels that land in aria-label attributes.
+  const attr = value => String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  slots.overviewDescription = attr(slots.overviewDescription);
+  slots.mapDescription = attr(slots.mapDescription);
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
     if (!(key in slots)) throw new Error(`Missing page slot: ${key}`);
     return slots[key];

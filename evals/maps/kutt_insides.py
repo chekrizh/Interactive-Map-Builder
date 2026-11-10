@@ -19,7 +19,7 @@ INSIDES = {
              "code": f"{H}:505-529", "exit": {"when": "password", "t": "Password form", "code": f"{H}:524-527"}},
             {"t": "Queue the visit", "d": "Only for links with an owner and visitors that are not bots. Nothing waits for the job.",
              "code": f"{H}:531-541", "async": True,
-             "exit": {"when": "later", "t": "Worker parses the agent, looks up the country and stores the visit", "code": "server/queues/visit.js:8-35"}},
+             "exit": {"when": "later", "t": "Worker parses the agent, looks up the country and stores the visit", "code": "server/queues/visit.js:8-34"}},
             {"t": "302 to the target", "d": "The browser leaves Kutt.", "code": f"{H}:543-544"},
         ],
     },

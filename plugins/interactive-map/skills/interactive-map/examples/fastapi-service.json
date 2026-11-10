@@ -353,7 +353,6 @@
   "beatSeconds": 15,
   "flowBeatSeconds": 15,
   "insides": {},
-  "insideMarkers": "",
   "roles": {
     "input": {
       "label": "Request",
