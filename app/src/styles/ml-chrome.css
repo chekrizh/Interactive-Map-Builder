@@ -241,6 +241,9 @@
   .eyebrow { font-family: var(--ml-font); letter-spacing: 0; }
   .stagecard, aside.panel { border-radius: 16px; }
   button.lookbtn, button.panel-action { border-radius: var(--ml-control-radius); }
+  /* Look inside is the panel's main action: filled ink, like Play flow and the tour entry. */
+  button#lookInside { color: var(--bg); background: var(--ink); border-color: var(--ink); font-weight: 600; }
+  button#lookInside:hover { background: color-mix(in srgb,var(--ink) 86%,var(--bg)); border-color: color-mix(in srgb,var(--ink) 86%,var(--bg)); }
   .crumbbar button[hidden] { display: none; }
 
   .panel .panelclose, .drawer .drawerclose { border-radius: 8px; min-height: 28px; }
