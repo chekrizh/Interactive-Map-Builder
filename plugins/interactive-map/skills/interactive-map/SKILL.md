@@ -61,7 +61,22 @@ Warnings go to stderr and do not stop the build. Fix each one anyway: a field th
 
 Save the file where the user can reach it: the current working folder in a coding agent, or `/mnt/user-data/outputs/` in Claude apps with code execution.
 
-## 3. Show it and return it
+## 3. Check it before you hand it over
+
+A map with an edge through a card or a hidden label teaches the wrong thing, so check what the reader will see. Do this every time, before step 4.
+
+1. **Read render.py's layout report.** After building, `render.py` redraws the map the way the viewer does (cards resized to their text, edge ends snapped onto them, labels placed) and prints to stderr:
+   - `layout problems`: something a reader will see as broken: cards that overlap or stick out of their zone, an edge drawn through a card, a label covering a card or crossed by another edge, two edges on top of each other, text cut off on an overview card, anything outside the visible area. Fix every one: move the card in `layout.nodes`, reroute the edge in `layout.edges`, or widen the zone.
+   - `layout notes`: worth a look but often fine, such as a label that sits beside its line because the line has no straight run long enough for a chip.
+2. **Look at it.** Run `python3 scripts/preview.py <map.html>`. It saves screenshots of the overview, the full map and every flow and prints their paths. Open each image and check, as a first-time reader would:
+   - every card, label and arrow is readable, and nothing overlaps or hides under the zoom buttons;
+   - each flow lights a path you can follow from start to end, and its numbered steps do not cover each other;
+   - the map reads in one direction (people and inputs on the left or top, stores and outside services on the right or bottom) and related cards sit together.
+3. **Fix and repeat, at most three rounds.** Rerun `render.py` and `preview.py` after each fix. If something still looks wrong after three rounds, hand the map over and name what is left.
+
+`preview.py` needs Playwright with Chromium, from Python or Node; it installs nothing. If it exits with status 3, rely on the layout report alone and tell the user the map was not checked by eye.
+
+## 4. Show it and return it
 
 The file needs no server. Show it with the first option your environment has:
 

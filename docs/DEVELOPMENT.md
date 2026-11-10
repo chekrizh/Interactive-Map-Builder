@@ -20,6 +20,9 @@ plugins/interactive-map/
     scripts/defaults.py             what a map may leave out: every interface string (English), settings, timings
     scripts/contract.py             fields the viewer reads, the text contract and the HTML sanitizer
     scripts/find_asset.py           search the library for icon, logo and role names
+    scripts/layout_check.py         redraws the map as the viewer does and reports layout problems
+    scripts/metrics.json            Manrope character widths for layout_check.py (tools/build_metrics.js)
+    scripts/preview.py, preview.js  screenshots of a rendered map (overview, full map, each flow)
   skills/interactive-map-repo/      repo mode: how to read a repository and model it in C4 terms
 app/                                viewer source (Vite): dev server + template build
   src/app.d.ts                      the map format as TypeScript types
@@ -41,7 +44,7 @@ npm run build:template   # rebuilds plugins/interactive-map/skills/interactive-m
 
 Rebuild the viewer only when viewer code or styles change.
 
-Keep every file in the plugin readable and under 256 KiB (fonts and images aside): Claude's plugin security scan cannot inspect larger or minified files and shows users a warning that the plugin "couldn't be confirmed". `tests/test_render.py` checks the sizes. Rebuild the asset library with `tools/build_library.py`; it splits each section into numbered parts. New maps never need a rebuild. Run the tests with `python3 -m unittest discover tests`; with Node and Playwright installed they also open a map full of hostile text in Chromium and check that none of it runs.
+Keep every file in the plugin readable and under 256 KiB (fonts and images aside): Claude's plugin security scan cannot inspect larger or minified files and shows users a warning that the plugin "couldn't be confirmed". `tests/test_render.py` checks the sizes. Rebuild the asset library with `tools/build_library.py`; it splits each section into numbered parts. New maps never need a rebuild. Run the tests with `python3 -m unittest discover tests`; with Node and Playwright installed they also open a map full of hostile text in Chromium and check that none of it runs. When the viewer font changes, rerun `node tools/build_metrics.js`; a test compares the layout check's card widths and label chips with what Chromium draws.
 
 ### Release an update
 

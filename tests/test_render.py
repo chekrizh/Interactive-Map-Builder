@@ -301,3 +301,56 @@ class RenderTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class LayoutCheckTest(unittest.TestCase):
+    """layout_check.py redraws the map as the viewer does; these keep it honest."""
+
+    def setUp(self):
+        import layout_check
+        self.check = layout_check.check
+        self.lc = layout_check
+
+    def test_small_example_has_no_layout_problems(self):
+        self.assertEqual(self.check(EXAMPLE)[0], [])
+
+    def test_overlapping_cards_and_an_edge_through_a_card_are_reported(self):
+        d = copy.deepcopy(EXAMPLES['kutt-url-shortener'])
+        d['layout']['nodes']['cron']['x'] = 700  # onto queries
+        d['layout']['edges']['us_ap']['d'] = 'M260,499 L630,499'  # user -> api, straight through web
+        d['layout']['overview']['data']['x'] = 200  # onto manage
+        problems = '\n'.join(self.check(d)[0])
+        self.assertIn('nodes queries and cron overlap', problems)
+        self.assertIn('edge us_ap (user -> api) is drawn through node web', problems)
+        self.assertIn('overview cards manage and data overlap', problems)
+
+    def test_cut_overview_title_is_reported(self):
+        d = copy.deepcopy(EXAMPLE)
+        group = d['overview'][0]['g']
+        d['groups'][group]['title'] = 'A title far too long to fit on two lines of an overview card'
+        self.assertTrue(any('only 2 show' in p for p in self.check(d)[0]))
+
+    @unittest.skipUnless(PLAYWRIGHT, 'needs Node and Playwright')
+    def test_python_sizes_match_the_page(self):
+        """Card widths and which labels get a chip agree with what Chromium draws."""
+        probe = ('const { chromium } = require("playwright"); (async () => {'
+                 ' const b = await chromium.launch(); const p = await b.newPage();'
+                 ' await p.goto("file://" + process.argv[1]); await p.waitForFunction(() => window.mapViewer);'
+                 ' console.log(JSON.stringify(await p.evaluate(() => ({'
+                 '  widths: Object.fromEntries([...document.querySelectorAll("#map g.node")].map(g => [g.dataset.node, g.querySelector("rect.nrect")?.width.baseVal.value])),'
+                 '  chips: [...document.querySelectorAll("#map g.echip text")].map(t => t.textContent) }))));'
+                 ' await b.close(); })();')
+        for name, d in EXAMPLES.items():
+            with self.subTest(name), tempfile.TemporaryDirectory() as tmp:
+                page = pathlib.Path(tmp) / 'map.html'
+                page.write_text(render.render(render.viewer_page(), contract.check_text(d)[2]), encoding='utf-8')
+                seen = json.loads(subprocess.run([NODE, '-e', probe, str(page)], capture_output=True, text=True, check=True).stdout)
+                boxes = self.lc.card_boxes(d)[0]
+                for node, width in seen['widths'].items():
+                    if width is None:
+                        continue  # a drawn shape (database, person) has no box to read
+                    self.assertAlmostEqual(boxes[node].w, width, delta=2, msg=node)
+                notes = '\n'.join(self.check(d)[1])
+                for e in d['edges']:
+                    if e.get('label'):
+                        self.assertEqual(e['label'] in seen['chips'], f'edge {e["id"]}: label' not in notes, e['id'])
