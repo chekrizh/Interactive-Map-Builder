@@ -1,6 +1,6 @@
 ---
 name: interactive-map
-description: Builds an interactive system map (components, connections, animated flows, build order and a guided tour) and delivers it as a single self-contained HTML file that opens offline from file://, with no server. Use when the user asks to map, diagram or explain how a system, a repository or a topic works as an interactive map. Prototype; the method for choosing what goes on the map is still being designed.
+description: Builds an interactive system map (components, connections, animated flows, build order and a guided tour) and delivers it as a single self-contained HTML file that opens offline from file://, with no server. Use when the user asks to map, diagram or explain how a system or a repository works as an interactive map. For a repository, the interactive-map-repo skill decides what goes on the map.
 ---
 
 # Interactive Map
