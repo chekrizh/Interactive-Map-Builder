@@ -41,7 +41,9 @@ The first screen. Who uses the system, what it is made of and what it depends on
 
 ### Full map
 
-All the components and the connections between them, grouped into zones. Click any component to see what it does, why it matters and which files it lives in.
+All the parts of the system and the connections between them, grouped into zones. Click any of them to see what it does, why it matters and which files it lives in.
+
+For a repository the map follows the [C4 model](https://c4model.com): *containers* are the pieces that run separately (a server, a database, a queue), *components* are the main parts inside them. You do not need to know C4 to read the map.
 
 <img alt="The full map: components grouped into zones, with labelled connections" src="docs/readme/fullmap-light.png" width="100%">
 
