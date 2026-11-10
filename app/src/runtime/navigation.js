@@ -19,7 +19,14 @@ function showLevel(l) {
   ctx.svg.style.display = l === 1 ? "block" : "none";
   /* The legend explains the full map's color roles; on the big picture
      none of those distinctions are drawn yet, so it only confuses. */
-  ctx.document.querySelector(".legend").style.display = l === 0 ? "none" : "";
+  const legend = ctx.document.querySelector(".legend");
+  legend.style.display = l === 0 ? "none" : "";
+  /* On the full map the zoom control sits at the right end of the legend
+     bar, where it never covers a card at Fit; the big picture has no
+     legend, so there it floats in the canvas corner (2026-11-10). */
+  const zoomCtl = ctx.document.getElementById("zoomCtl");
+  if (l === 0) ctx.document.querySelector(".stage-scroll").prepend(zoomCtl);
+  else legend.append(zoomCtl);
   /* Reset only once the new level's svg (and the legend, which sets the
      canvas height) is displayed: resetView clamps the pan against the
      active svg's rect, and a display:none svg measures 0x0 at the origin,

@@ -7,6 +7,7 @@ import { createCamera } from './camera.js';
 import { createTourplayer } from './tour-player.js';
 import { createNavigation } from './navigation.js';
 import { createFilesView } from './files-view.js';
+import { createHelp } from './help.js';
 import { formatText } from './definition.js';
 
 export async function mountEngine(root, definition) {
@@ -1664,6 +1665,8 @@ export async function mountEngine(root, definition) {
   }
   /* Files view: the repository tree beside the tour entry, when the map lists files. */
   filesView = createFilesView(context);
+  /* The "?" card and hover hints on the controls: what each mode is for. */
+  createHelp(context);
   scope.listen(tourBtn, "click", () => startTour(resumeStep() || 1, {
     native: true
   }));

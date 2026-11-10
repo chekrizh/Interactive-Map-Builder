@@ -241,6 +241,11 @@
   .zoomctl .crumbbtn:hover { background: color-mix(in srgb,var(--ink) 5%,var(--surface)); }
   .zoomctl #zoomFit { font-size: 12px; }
   .zoomctl .crumbbtn:focus-visible { outline-offset: -3px; }
+  /* On the full map the control sits in the legend bar (showLevel), a
+     little taller than the bar's text line without making the bar taller. */
+  .legend .zoomctl { position: static; margin: -5px 0 -5px auto; box-shadow: none; }
+  .legend .zoomctl .crumbbtn { width: 28px; height: 28px; min-height: 0; }
+  .legend .zoomctl #zoomFit { width: 40px; }
   /* Whichever right-side control comes first takes the auto margin; the
      rest sit beside it. Show panel only exists while the panel is closed. */
   .crumbbar #panelBtn { margin-left: auto; }
@@ -907,6 +912,39 @@
     background: var(--ink); color: var(--bg); font: 600 12px/1.3 "Manrope", sans-serif; white-space: nowrap;
     box-shadow: 0 4px 14px rgba(0,0,0,.18); }
   .steptip[hidden] { display: none; }
+  /* Help (2026-11-10): a "?" beside the theme switch opens one short card
+     on what each mode is for; the same lines are the controls' hover hints. */
+  .help-toggle {
+    margin-left: auto; width: 30px; height: 30px; display: inline-grid; place-items: center;
+    border: 1px solid var(--line); border-radius: var(--ml-control-radius); background: var(--surface); color: var(--muted); cursor: pointer;
+    transition: color .15s var(--ml-ease), border-color .15s var(--ml-ease);
+  }
+  .help-toggle:hover, .help-toggle[aria-expanded="true"] { color: var(--ink); border-color: var(--muted); }
+  .help-toggle svg { width: 16px; height: 16px; }
+  .help-toggle ~ .theme-toggle { margin-left: -8px; }
+  .help-pop {
+    position: absolute; right: 0; top: calc(100% + 8px); z-index: 12;
+    width: min(360px, calc(100vw - 32px)); padding: 8px;
+    border: 1px solid var(--line); border-radius: 12px;
+    background: var(--surface); box-shadow: var(--ml-float-shadow);
+  }
+  .help-pop[hidden] { display: none; }
+  .help-pop:focus { outline: none; }
+  .help-head { padding: 8px 8px 4px; font-size: 12px; line-height: 16px; color: var(--muted); font-weight: 500; }
+  .help-list { list-style: none; margin: 0; padding: 0; }
+  .help-row {
+    display: block; width: 100%; padding: 8px; border: 0; border-radius: 4px; background: transparent;
+    color: var(--ink); text-align: left; font: inherit; font-size: 13px; line-height: 19px; cursor: pointer;
+    transition: background-color .15s var(--ml-ease);
+  }
+  .help-row:hover { background: color-mix(in srgb,var(--ink) 5%,var(--surface)); }
+  .help-ask { display: block; font-weight: 600; }
+  .help-text { display: block; color: var(--muted); }
+  .modetip { position: fixed; z-index: 50; pointer-events: none; max-width: 280px; padding: 7px 10px; border-radius: 7px;
+    background: var(--ink); color: var(--bg); font: 500 12px/1.4 "Manrope", sans-serif;
+    box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+  .modetip b { font-weight: 700; }
+  .modetip[hidden] { display: none; }
 /* Journey Board primitives for ML diagrams. The contract lives in
    docs/tools/ml-canvas/DESIGN.md. Theme and control typography live in ml-chrome.css. */
 .stagecard {

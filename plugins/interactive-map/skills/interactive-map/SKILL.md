@@ -12,13 +12,17 @@ You build a map by writing one JSON map definition and filling a prebuilt viewer
 Start from an example, copy its structure and replace the content. Write only the content: `render.py` fills in the interface strings, settings and timings (see `scripts/defaults.py`), and icons, logos and roles from the library.
 
 - `examples/kutt-url-shortener.json`: a full map of a real repository (the Kutt URL shortener) in C4 terms: context on the overview, containers and components on the map, node shapes, library icons and logos, four flows, a build order, a tour and the project structure. Use it as the main reference.
+- `examples/privatebin-pastebin.json`: a second repository map (the PrivateBin pastebin) written with no `layout` at all; render.py places everything. Start from it when you let the layout be automatic.
 - `examples/fastapi-service.json`: the smallest complete map, showing what a map must contain.
 
 - `nodes` and `edges`: the components and the connections between them. A node's `step` is the build step that adds it. `groups`, `zones` and `overview` decide how components cluster and what the big-picture view shows.
 - `flows`: animated scenarios, each a list of hops along edges.
-- `buildSteps`, `tourChapters` and `tour`: the build order and the guided tour. The last tour step must play a flow or recap the whole map.
-- `layout`: exact geometry for every node, edge path, zone, overview card and inside scene. It is required; there is no automatic layout yet.
-  - Leave room for edge labels: the viewer draws a label as a chip on its line only when the line has a straight run about 30 units longer than the label. On the overview, keep about 140 to 150 units between card columns (and between rows that are joined by an edge); the Kutt example uses 150. On the full map, give every labelled edge a straight segment that long.
+- `buildSteps`, `tourChapters` and `tour`: the build order (shown as "How to build it": a sensible order to assemble the system in your head, not the project's history) and the guided tour. The last tour step must play a flow or recap the whole map.
+- `layout`: leave it out and `render.py` lays the map out for you (`scripts/auto_layout.py`): zones become blocks of columns ordered along the edges, people on the left; cards are placed on a grid so connected cards line up and edges cross as little as possible; every card is sized to its text; edges are routed as horizontal and vertical runs around the cards with room for their labels; the overview gets a grid of cards in reading order. Steer it rather than writing coordinates:
+  - `layout.grid`: `{"node-id": [column, row]}` fixes a card's cell (both from 0); the rest are placed around it. `python3 scripts/auto_layout.py map.json out.json` writes the map with the grid the layout chose, so you can move one card and render again.
+  - Anything you write in `layout` wins: an edge's own `d` (a path such as `M260,159 L340,159`), `lside` (`below` or `left`) to flip which side its label sits on, a zone's box, an overview card's position. `python3 scripts/auto_layout.py map.json out.json --freeze` writes every computed position and path, to fine-tune by hand.
+  - A map that gives every card in `layout.nodes` keeps its hand layout; only what is missing is computed. The examples are laid out by hand.
+  - Leave room for edge labels when you place things yourself: the viewer draws a label as a chip on its line only when the line has a straight run about 30 units longer than the label.
 - `page` and `panels`: the title, the page descriptions, the end-of-tour text and the two start panels (`introHtml` on the big picture, `overviewHtml` on the full map).
 - Optional, only to change what render.py fills in:
   - `ui`: any interface string, e.g. `{"tourEntry": "Start the tour"}`. The keys and English defaults are in `scripts/defaults.py`; the interface is English unless the map overrides them.
@@ -61,7 +65,22 @@ Warnings go to stderr and do not stop the build. Fix each one anyway: a field th
 
 Save the file where the user can reach it: the current working folder in a coding agent, or `/mnt/user-data/outputs/` in Claude apps with code execution.
 
-## 3. Show it and return it
+## 3. Check it before you hand it over
+
+A map with an edge through a card or a hidden label teaches the wrong thing, so check what the reader will see. Do this every time, before step 4.
+
+1. **Read render.py's layout report.** After building, `render.py` redraws the map the way the viewer does (cards resized to their text, edge ends snapped onto them, labels placed) and prints to stderr:
+   - `layout problems`: something a reader will see as broken: cards that overlap or stick out of their zone, an edge drawn through a card, a label covering a card or crossed by another edge, two edges on top of each other, text cut off on an overview card, anything outside the visible area. Fix every one: move the card to another cell in `layout.grid` (or in `layout.nodes` on a hand layout), give the edge its own path in `layout.edges`, or widen the zone.
+   - `layout notes`: worth a look but often fine, such as a label that sits beside its line because the line has no straight run long enough for a chip.
+2. **Look at it.** Run `python3 scripts/preview.py <map.html>`. It saves screenshots of the overview, the full map and every flow and prints their paths. Open each image and check, as a first-time reader would:
+   - every card, label and arrow is readable, and nothing overlaps or hides under the zoom buttons;
+   - each flow lights a path you can follow from start to end, and its numbered steps do not cover each other;
+   - the map reads in one direction (people and inputs on the left or top, stores and outside services on the right or bottom) and related cards sit together.
+3. **Fix and repeat, at most three rounds.** Rerun `render.py` and `preview.py` after each fix. If something still looks wrong after three rounds, hand the map over and name what is left.
+
+`preview.py` needs Playwright with Chromium, from Python or Node; it installs nothing. If it exits with status 3, rely on the layout report alone and tell the user the map was not checked by eye.
+
+## 4. Show it and return it
 
 The file needs no server. Show it with the first option your environment has:
 

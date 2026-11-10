@@ -301,3 +301,121 @@ class RenderTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class LayoutCheckTest(unittest.TestCase):
+    """layout_check.py redraws the map as the viewer does; these keep it honest."""
+
+    def setUp(self):
+        import layout_check
+        self.check = layout_check.check
+        self.lc = layout_check
+
+    def test_small_example_has_no_layout_problems(self):
+        self.assertEqual(self.check(EXAMPLE)[0], [])
+
+    def test_overlapping_cards_and_an_edge_through_a_card_are_reported(self):
+        d = copy.deepcopy(EXAMPLES['kutt-url-shortener'])
+        d['layout']['nodes']['cron']['x'] = 700  # onto queries
+        d['layout']['edges']['us_ap']['d'] = 'M260,499 L630,499'  # user -> api, straight through web
+        d['layout']['overview']['data']['x'] = 200  # onto manage
+        problems = '\n'.join(self.check(d)[0])
+        self.assertIn('nodes queries and cron overlap', problems)
+        self.assertIn('edge us_ap (user -> api) is drawn through node web', problems)
+        self.assertIn('overview cards manage and data overlap', problems)
+
+    def test_cut_overview_title_is_reported(self):
+        d = copy.deepcopy(EXAMPLE)
+        group = d['overview'][0]['g']
+        d['groups'][group]['title'] = 'A title far too long to fit on two lines of an overview card'
+        self.assertTrue(any('only 2 show' in p for p in self.check(d)[0]))
+
+    @unittest.skipUnless(PLAYWRIGHT, 'needs Node and Playwright')
+    def test_python_sizes_match_the_page(self):
+        """Card widths and which labels get a chip agree with what Chromium draws."""
+        probe = ('const { chromium } = require("playwright"); (async () => {'
+                 ' const b = await chromium.launch(); const p = await b.newPage();'
+                 ' await p.goto("file://" + process.argv[1]); await p.waitForFunction(() => window.mapViewer);'
+                 ' console.log(JSON.stringify(await p.evaluate(() => ({'
+                 '  widths: Object.fromEntries([...document.querySelectorAll("#map g.node")].map(g => [g.dataset.node, g.querySelector("rect.nrect")?.width.baseVal.value])),'
+                 '  chips: [...document.querySelectorAll("#map g.echip text")].map(t => t.textContent) }))));'
+                 ' await b.close(); })();')
+        for name, d in EXAMPLES.items():
+            with self.subTest(name), tempfile.TemporaryDirectory() as tmp:
+                page = pathlib.Path(tmp) / 'map.html'
+                page.write_text(render.render(render.viewer_page(), contract.check_text(d)[2]), encoding='utf-8')
+                seen = json.loads(subprocess.run([NODE, '-e', probe, str(page)], capture_output=True, text=True, check=True).stdout)
+                boxes = self.lc.card_boxes(d)[0]
+                for node, width in seen['widths'].items():
+                    if width is None:
+                        continue  # a drawn shape (database, person) has no box to read
+                    self.assertAlmostEqual(boxes[node].w, width, delta=2, msg=node)
+                notes = '\n'.join(self.check(d)[1])
+                for e in d['edges']:
+                    if e.get('label'):
+                        self.assertEqual(e['label'] in seen['chips'], f'edge {e["id"]}: label' not in notes, e['id'])
+
+
+def without_layout(d):
+    d = copy.deepcopy(d)
+    d['layout'] = {k: v for k, v in d['layout'].items() if k in ('insides', 'annotations', 'insideMarkers')}
+    return d
+
+
+class AutoLayoutTest(unittest.TestCase):
+    """auto_layout.py fills what `layout` leaves out; a hand layout stays as written."""
+
+    def setUp(self):
+        import auto_layout
+        import layout_check
+        self.fill, self.check, self.al = auto_layout.fill, layout_check.check, auto_layout
+
+    def test_hand_layouts_are_untouched(self):
+        for name, d in EXAMPLES.items():
+            with self.subTest(name):
+                self.assertEqual(render.with_layout(d)['layout'], json.loads(json.dumps(d['layout'])))
+
+    def test_examples_without_layout_render_with_no_layout_problems(self):
+        for name, d in EXAMPLES.items():
+            with self.subTest(name):
+                laid = render.complete(without_layout(d))
+                self.assertEqual(render.problems(laid), [])
+                self.assertEqual(self.check(laid)[0], [])
+                for e in laid['edges']:  # every edge routed, horizontal and vertical runs only
+                    pts = layout_check_points(laid['layout']['edges'][e['id']]['d'])
+                    self.assertTrue(all(a[0] == b[0] or a[1] == b[1] for a, b in zip(pts, pts[1:])), e['id'])
+
+    def test_people_lead_and_zones_stay_together(self):
+        laid = self.fill(without_layout(EXAMPLES['kutt-url-shortener']), keep_grid=True)
+        grid = laid['layout']['grid']
+        self.assertEqual({grid['visitor'][0], grid['user'][0]}, {0})
+        zones = laid['layout']['zones']
+        for n in laid['nodes']:
+            box, card = zones[n['zone']], laid['layout']['nodes'][n['id']]
+            self.assertTrue(box['x'] <= card['x'] and card['x'] + card['w'] <= box['x'] + box['w'], n['id'])
+
+    def test_grid_hints_steer_and_round_trip(self):
+        bare = without_layout(EXAMPLES['kutt-url-shortener'])
+        first = self.fill(bare, keep_grid=True)
+        again = copy.deepcopy(bare)
+        again['layout']['grid'] = first['layout']['grid']
+        self.assertEqual(self.fill(again)['layout']['nodes'], first['layout']['nodes'])
+        moved = copy.deepcopy(again)
+        moved['layout']['grid']['visitor'], moved['layout']['grid']['target'] = (
+            first['layout']['grid']['target'], first['layout']['grid']['visitor'])
+        nodes = self.fill(moved)['layout']['nodes']
+        self.assertLess(nodes['target']['y'], nodes['visitor']['y'])
+        self.assertNotIn('grid', self.fill(moved)['layout'])  # the page does not carry it
+
+    def test_an_authored_edge_path_is_kept(self):
+        bare = without_layout(EXAMPLE)
+        laid = self.fill(bare)
+        bare['layout']['nodes'] = laid['layout']['nodes']
+        edge = EXAMPLE['edges'][0]['id']
+        bare['layout']['edges'] = {edge: {'d': 'M1,1 L2,2', 'lside': 'below'}}
+        self.assertEqual(self.fill(bare)['layout']['edges'][edge], {'d': 'M1,1 L2,2', 'lside': 'below'})
+
+
+def layout_check_points(d):
+    import layout_check
+    return layout_check.points(d)

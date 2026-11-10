@@ -1,5 +1,5 @@
 // src/template.html?raw
-var template_default = "\n\n\n\n<section class=\"controls\" aria-label=\"{{ui.controlsLabel}}\">\n  <div class=\"flow-controls\" id=\"flowControls\">\n    <div class=\"cgroup flow-field\">\n      <div class=\"clabel\" id=\"flowLabel\">{{ui.flowLabel}}</div>\n      <details class=\"flow-picker\" id=\"flowPicker\">\n        <summary aria-labelledby=\"flowLabel flowSelected\"><span class=\"flow-dot\" aria-hidden=\"true\"></span><span id=\"flowSelected\">{{ui.flowChoose}}</span><svg class=\"flow-chevron\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"/></svg></summary>\n        <div class=\"flow-menu\" aria-label=\"{{ui.flowMenu}}\">\n          <div class=\"flow-option-group\" role=\"group\" aria-labelledby=\"systemFlowsLabel\"><div class=\"flow-options-label\" id=\"systemFlowsLabel\">{{ui.flowsSystem}}</div><div id=\"storyOptions\"></div></div>\n          <div class=\"flow-option-group\" role=\"group\" aria-labelledby=\"failureFlowsLabel\"><div class=\"flow-options-label\" id=\"failureFlowsLabel\">{{ui.flowsFailure}}</div><div id=\"failureOptions\"></div></div>\n        </div>\n      </details>\n    </div>\n    <button type=\"button\" class=\"flow-play\" id=\"playFlow\"><svg viewBox=\"0 0 16 16\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M3 1.5 14 8 3 14.5Z\"/></svg><span>{{ui.flowPlay}}</span></button>\n  </div>\n  <div class=\"cgroup build-controls\">\n    <div class=\"clabel\">{{ui.buildControl}}</div>\n    <div class=\"seg\" id=\"weekSeg\"></div>\n  </div>\n  <div class=\"cgroup tour-controls\" id=\"tourControls\">\n    <div class=\"clabel\" id=\"tourLabel\" hidden>{{ui.tourNew}}</div>\n    <button type=\"button\" class=\"tour-entry\" id=\"tourBtn\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M10 8.6v6.8l5.6-3.4z\" fill=\"currentColor\"/></svg><span id=\"tourBtnText\">{{ui.tourEntry}}</span></button>\n    <button type=\"button\" class=\"files-entry\" id=\"filesBtn\" aria-pressed=\"false\" hidden><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 4v13a2 2 0 0 0 2 2h3M4 9h5\"/><rect x=\"11\" y=\"6\" width=\"9\" height=\"6\" rx=\"1.5\"/><rect x=\"11\" y=\"15\" width=\"9\" height=\"6\" rx=\"1.5\"/></svg><span id=\"filesBtnText\"></span></button>\n  </div>\n  <button type=\"button\" class=\"theme-toggle\" id=\"themeToggle\" aria-label=\"{{ui.themeToDark}}\" title=\"{{ui.themeTitle}}\"><svg class=\"ico-moon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401\"/></svg><svg class=\"ico-sun\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41\"/></svg></button>\n\n</section>\n<div id=\"ctrlSlot\" hidden></div>\n\n<main class=\"wrap\">\n  <div class=\"stagecard\">\n\n    <div class=\"tourbar\" id=\"tourBar\">\n      <div class=\"tb-text\"><div class=\"tb-eyebrow\">{{ui.tourTitle}}</div><div class=\"tb-status\" id=\"tourStatus\"></div></div>\n      <ol class=\"tb-chapters\" id=\"tourChapters\" aria-label=\"{{ui.tourChapters}}\"></ol>\n      <button type=\"button\" class=\"crumbbtn tb-exit\" id=\"tourExit\">{{ui.tourExit}}</button>\n    </div>\n    <div class=\"crumbbar\">\n      <button class=\"crumbbtn\" id=\"toL0\" hidden>&lsaquo; {{ui.backToBigPicture}}</button>\n      <span class=\"crumbnote\" id=\"crumbNote\">{{ui.bigPicture}}</span>\n      <button class=\"crumbbtn\" id=\"unfocus\" hidden></button>\n\n      <button class=\"crumbbtn\" id=\"panelBtn\" hidden>{{ui.showPanel}}</button>\n      <button class=\"crumbbtn\" id=\"fsBtn\">{{ui.fullScreen}}</button>\n    </div>\n    <div class=\"stage-scroll\">\n      <span class=\"zoomctl\" id=\"zoomCtl\" role=\"group\" aria-label=\"{{ui.zoomGroup}}\">\n        <button type=\"button\" class=\"crumbbtn\" id=\"zoomOut\" aria-label=\"{{ui.zoomOut}}\" title=\"{{ui.zoomOut}}\">−</button>\n        <button type=\"button\" class=\"crumbbtn\" id=\"zoomFit\" aria-label=\"{{ui.zoomFitTitle}}\" title=\"{{ui.zoomFitTitle}}\">{{ui.zoomFit}}</button>\n        <button type=\"button\" class=\"crumbbtn\" id=\"zoomIn\" aria-label=\"{{ui.zoomIn}}\" title=\"{{ui.zoomIn}}\">+</button>\n      </span>\n      <svg id=\"map0\" class=\"mapsvg ml-canvas\" viewBox=\"{{overviewViewBox}}\" role=\"img\"\n        aria-label=\"{{overviewDescription}}\"></svg>\n      <svg id=\"map\" class=\"mapsvg ml-canvas\" viewBox=\"{{mapViewBox}}\" role=\"img\" style=\"display:none\"\n        aria-label=\"{{mapDescription}}\"></svg>\n    </div>\n    <div class=\"legend ml-canvas\">{{legend}}</div>\n    <div class=\"inside\" id=\"inside\" hidden>\n      <button class=\"crumbbtn\" id=\"insideBack\">&lsaquo; {{ui.backToMap}}</button>\n      <h2 id=\"insideTitle\"></h2>\n      <p class=\"i-sub\" id=\"insideSub\"></p>\n      <div id=\"insideScene\"></div>\n      <p class=\"i-cap\" id=\"insideCap\"></p>\n    </div>\n    <div class=\"files\" id=\"files\" hidden>\n      <div class=\"crumbbar files-head\">\n        <button class=\"crumbbtn\" id=\"filesBack\">&lsaquo; {{ui.backToMap}}</button>\n        <span class=\"crumbnote\" id=\"filesTitle\"></span>\n      </div>\n      <div class=\"files-body\">\n        <div class=\"ft\" id=\"filesTree\" role=\"tree\" aria-labelledby=\"filesTitle\"></div>\n      </div>\n    </div>\n    <div class=\"drawer\" id=\"drawer\">\n      <div class=\"panelhead\"><button type=\"button\" class=\"crumbbtn drawerclose\" id=\"drawerClose\" aria-label=\"{{ui.closePanel}}\" title=\"{{ui.closePanel}}\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"m6 6 12 12M18 6 6 18\"/></svg></button></div>\n      <div id=\"drawerBody\"></div>\n    </div>\n    <section class=\"tourcard\" id=\"tourCard\" aria-labelledby=\"tcTitle\" hidden>\n      <div class=\"tc-scroll\" id=\"tcScroll\">\n      <div aria-live=\"polite\">\n        <div class=\"tc-eyebrow\"><span class=\"tc-dot\" aria-hidden=\"true\"></span><span id=\"tcEyebrow\"></span></div>\n        <h2 id=\"tcTitle\" tabindex=\"-1\"></h2>\n        <div class=\"tc-body\" id=\"tcBody\"></div>\n        <ol class=\"tc-list\" id=\"tcList\" hidden></ol>\n        <div class=\"tc-why\" id=\"tcWhy\"><div class=\"tc-why-label\">{{ui.why}}</div><p id=\"tcWhyText\"></p></div>\n      </div>\n      </div>\n      <p class=\"tc-hint\" id=\"tcHint\" hidden>{{ui.tourHint}}<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14m-6-6 6 6 6-6\"/></svg></p>\n      <div class=\"tc-foot\">\n        <span class=\"tc-count\" id=\"tcCount\"></span>\n        <button type=\"button\" class=\"tc-back\" id=\"tcBack\">{{ui.tourBack}}</button>\n        <button type=\"button\" class=\"tc-next\" id=\"tcNext\">{{ui.tourNext}}</button>\n      </div>\n      <p class=\"tc-keys\" aria-hidden=\"true\"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> {{ui.tourKeysMove}} <span>&middot;</span> <kbd>Esc</kbd> {{ui.tourKeysExit}}</p>\n    </section>\n    <div class=\"tourend\" id=\"tourEnd\" hidden>\n      <div class=\"tourend-card\" role=\"dialog\" aria-labelledby=\"teTitle\">\n        <div class=\"te-check\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12.5 4.5 4.5L19 7.5\"/></svg></div>\n        <div class=\"te-eyebrow\">{{ui.completionCount}}</div>\n        <h1 id=\"teTitle\" tabindex=\"-1\">{{ui.tourDone}}</h1>\n        <p class=\"te-lede\">{{completionIntro}}</p>\n        <ul class=\"te-list\">{{completionLessons}}</ul>\n\n        <div class=\"te-links\">\n          <button type=\"button\" id=\"teBack\">{{ui.backToMap}}</button>\n        </div>\n      </div>\n    </div>\n  </div>\n  <span id=\"panelSlot\" hidden></span>\n  <aside class=\"panel\" id=\"panel\">\n    <div class=\"panelhead\"><button type=\"button\" class=\"crumbbtn panelclose\" id=\"panelClose\" aria-label=\"{{ui.closePanel}}\" title=\"{{ui.closePanel}}\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"m6 6 12 12M18 6 6 18\"/></svg></button></div>\n    <div id=\"panelBody\"></div>\n  </aside>\n</main>\n";
+var template_default = "\n\n\n\n<section class=\"controls\" aria-label=\"{{ui.controlsLabel}}\">\n  <div class=\"flow-controls\" id=\"flowControls\">\n    <div class=\"cgroup flow-field\">\n      <div class=\"clabel\" id=\"flowLabel\">{{ui.flowLabel}}</div>\n      <details class=\"flow-picker\" id=\"flowPicker\">\n        <summary aria-labelledby=\"flowLabel flowSelected\"><span class=\"flow-dot\" aria-hidden=\"true\"></span><span id=\"flowSelected\">{{ui.flowChoose}}</span><svg class=\"flow-chevron\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"/></svg></summary>\n        <div class=\"flow-menu\" aria-label=\"{{ui.flowMenu}}\">\n          <div class=\"flow-option-group\" role=\"group\" aria-labelledby=\"systemFlowsLabel\"><div class=\"flow-options-label\" id=\"systemFlowsLabel\">{{ui.flowsSystem}}</div><div id=\"storyOptions\"></div></div>\n          <div class=\"flow-option-group\" role=\"group\" aria-labelledby=\"failureFlowsLabel\"><div class=\"flow-options-label\" id=\"failureFlowsLabel\">{{ui.flowsFailure}}</div><div id=\"failureOptions\"></div></div>\n        </div>\n      </details>\n    </div>\n    <button type=\"button\" class=\"flow-play\" id=\"playFlow\"><svg viewBox=\"0 0 16 16\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M3 1.5 14 8 3 14.5Z\"/></svg><span>{{ui.flowPlay}}</span></button>\n  </div>\n  <div class=\"cgroup build-controls\">\n    <div class=\"clabel\">{{ui.buildControl}}</div>\n    <div class=\"seg\" id=\"weekSeg\"></div>\n  </div>\n  <div class=\"cgroup tour-controls\" id=\"tourControls\">\n    <div class=\"clabel\" id=\"tourLabel\" hidden>{{ui.tourNew}}</div>\n    <button type=\"button\" class=\"tour-entry\" id=\"tourBtn\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M10 8.6v6.8l5.6-3.4z\" fill=\"currentColor\"/></svg><span id=\"tourBtnText\">{{ui.tourEntry}}</span></button>\n    <button type=\"button\" class=\"files-entry\" id=\"filesBtn\" aria-pressed=\"false\" hidden><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 4v13a2 2 0 0 0 2 2h3M4 9h5\"/><rect x=\"11\" y=\"6\" width=\"9\" height=\"6\" rx=\"1.5\"/><rect x=\"11\" y=\"15\" width=\"9\" height=\"6\" rx=\"1.5\"/></svg><span id=\"filesBtnText\"></span></button>\n  </div>\n  <button type=\"button\" class=\"help-toggle\" id=\"helpBtn\" aria-expanded=\"false\" aria-controls=\"helpPop\" aria-label=\"{{ui.helpTitle}}\" title=\"{{ui.helpTitle}}\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M9.6 9.3a2.5 2.5 0 0 1 4.85.85c0 1.65-2.45 2.2-2.45 3.6\"/><path d=\"M12 17h.01\"/></svg></button>\n  <div class=\"help-pop\" id=\"helpPop\" role=\"dialog\" aria-labelledby=\"helpHead\" tabindex=\"-1\" hidden>\n    <div class=\"help-head\" id=\"helpHead\">{{ui.helpTitle}}</div>\n    <ul class=\"help-list\" id=\"helpList\"></ul>\n  </div>\n  <button type=\"button\" class=\"theme-toggle\" id=\"themeToggle\" aria-label=\"{{ui.themeToDark}}\" title=\"{{ui.themeTitle}}\"><svg class=\"ico-moon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401\"/></svg><svg class=\"ico-sun\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41\"/></svg></button>\n\n</section>\n<div id=\"ctrlSlot\" hidden></div>\n\n<main class=\"wrap\">\n  <div class=\"stagecard\">\n\n    <div class=\"tourbar\" id=\"tourBar\">\n      <div class=\"tb-text\"><div class=\"tb-eyebrow\">{{ui.tourTitle}}</div><div class=\"tb-status\" id=\"tourStatus\"></div></div>\n      <ol class=\"tb-chapters\" id=\"tourChapters\" aria-label=\"{{ui.tourChapters}}\"></ol>\n      <button type=\"button\" class=\"crumbbtn tb-exit\" id=\"tourExit\">{{ui.tourExit}}</button>\n    </div>\n    <div class=\"crumbbar\">\n      <button class=\"crumbbtn\" id=\"toL0\" hidden>&lsaquo; {{ui.backToBigPicture}}</button>\n      <span class=\"crumbnote\" id=\"crumbNote\">{{ui.bigPicture}}</span>\n      <button class=\"crumbbtn\" id=\"unfocus\" hidden></button>\n\n      <button class=\"crumbbtn\" id=\"panelBtn\" hidden>{{ui.showPanel}}</button>\n      <button class=\"crumbbtn\" id=\"fsBtn\">{{ui.fullScreen}}</button>\n    </div>\n    <div class=\"stage-scroll\">\n      <span class=\"zoomctl\" id=\"zoomCtl\" role=\"group\" aria-label=\"{{ui.zoomGroup}}\">\n        <button type=\"button\" class=\"crumbbtn\" id=\"zoomOut\" aria-label=\"{{ui.zoomOut}}\" title=\"{{ui.zoomOut}}\">−</button>\n        <button type=\"button\" class=\"crumbbtn\" id=\"zoomFit\" aria-label=\"{{ui.zoomFitTitle}}\" title=\"{{ui.zoomFitTitle}}\">{{ui.zoomFit}}</button>\n        <button type=\"button\" class=\"crumbbtn\" id=\"zoomIn\" aria-label=\"{{ui.zoomIn}}\" title=\"{{ui.zoomIn}}\">+</button>\n      </span>\n      <svg id=\"map0\" class=\"mapsvg ml-canvas\" viewBox=\"{{overviewViewBox}}\" role=\"img\"\n        aria-label=\"{{overviewDescription}}\"></svg>\n      <svg id=\"map\" class=\"mapsvg ml-canvas\" viewBox=\"{{mapViewBox}}\" role=\"img\" style=\"display:none\"\n        aria-label=\"{{mapDescription}}\"></svg>\n    </div>\n    <div class=\"legend ml-canvas\">{{legend}}</div>\n    <div class=\"inside\" id=\"inside\" hidden>\n      <button class=\"crumbbtn\" id=\"insideBack\">&lsaquo; {{ui.backToMap}}</button>\n      <h2 id=\"insideTitle\"></h2>\n      <p class=\"i-sub\" id=\"insideSub\"></p>\n      <div id=\"insideScene\"></div>\n      <p class=\"i-cap\" id=\"insideCap\"></p>\n    </div>\n    <div class=\"files\" id=\"files\" hidden>\n      <div class=\"crumbbar files-head\">\n        <button class=\"crumbbtn\" id=\"filesBack\">&lsaquo; {{ui.backToMap}}</button>\n        <span class=\"crumbnote\" id=\"filesTitle\"></span>\n      </div>\n      <div class=\"files-body\">\n        <div class=\"ft\" id=\"filesTree\" role=\"tree\" aria-labelledby=\"filesTitle\"></div>\n      </div>\n    </div>\n    <div class=\"drawer\" id=\"drawer\">\n      <div class=\"panelhead\"><button type=\"button\" class=\"crumbbtn drawerclose\" id=\"drawerClose\" aria-label=\"{{ui.closePanel}}\" title=\"{{ui.closePanel}}\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"m6 6 12 12M18 6 6 18\"/></svg></button></div>\n      <div id=\"drawerBody\"></div>\n    </div>\n    <section class=\"tourcard\" id=\"tourCard\" aria-labelledby=\"tcTitle\" hidden>\n      <div class=\"tc-scroll\" id=\"tcScroll\">\n      <div aria-live=\"polite\">\n        <div class=\"tc-eyebrow\"><span class=\"tc-dot\" aria-hidden=\"true\"></span><span id=\"tcEyebrow\"></span></div>\n        <h2 id=\"tcTitle\" tabindex=\"-1\"></h2>\n        <div class=\"tc-body\" id=\"tcBody\"></div>\n        <ol class=\"tc-list\" id=\"tcList\" hidden></ol>\n        <div class=\"tc-why\" id=\"tcWhy\"><div class=\"tc-why-label\">{{ui.why}}</div><p id=\"tcWhyText\"></p></div>\n      </div>\n      </div>\n      <p class=\"tc-hint\" id=\"tcHint\" hidden>{{ui.tourHint}}<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14m-6-6 6 6 6-6\"/></svg></p>\n      <div class=\"tc-foot\">\n        <span class=\"tc-count\" id=\"tcCount\"></span>\n        <button type=\"button\" class=\"tc-back\" id=\"tcBack\">{{ui.tourBack}}</button>\n        <button type=\"button\" class=\"tc-next\" id=\"tcNext\">{{ui.tourNext}}</button>\n      </div>\n      <p class=\"tc-keys\" aria-hidden=\"true\"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> {{ui.tourKeysMove}} <span>&middot;</span> <kbd>Esc</kbd> {{ui.tourKeysExit}}</p>\n    </section>\n    <div class=\"tourend\" id=\"tourEnd\" hidden>\n      <div class=\"tourend-card\" role=\"dialog\" aria-labelledby=\"teTitle\">\n        <div class=\"te-check\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12.5 4.5 4.5L19 7.5\"/></svg></div>\n        <div class=\"te-eyebrow\">{{ui.completionCount}}</div>\n        <h1 id=\"teTitle\" tabindex=\"-1\">{{ui.tourDone}}</h1>\n        <p class=\"te-lede\">{{completionIntro}}</p>\n        <ul class=\"te-list\">{{completionLessons}}</ul>\n\n        <div class=\"te-links\">\n          <button type=\"button\" id=\"teBack\">{{ui.backToMap}}</button>\n        </div>\n      </div>\n    </div>\n  </div>\n  <span id=\"panelSlot\" hidden></span>\n  <aside class=\"panel\" id=\"panel\">\n    <div class=\"panelhead\"><button type=\"button\" class=\"crumbbtn panelclose\" id=\"panelClose\" aria-label=\"{{ui.closePanel}}\" title=\"{{ui.closePanel}}\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"m6 6 12 12M18 6 6 18\"/></svg></button></div>\n    <div id=\"panelBody\"></div>\n  </aside>\n</main>\n";
 // src/rendering/ml-canvas.js
 var font = "\"Manrope\", system-ui, sans-serif";
 var setRole = (group, role) => {
@@ -673,6 +673,61 @@ function createFlowplayer(ctx) {
 		g.getBBox();
 		g.classList.add("badge-pop");
 	}
+	function chipSpot(ee, w, own) {
+		const grow = (b, m) => ({
+			x: b.x - m,
+			y: b.y - m,
+			width: b.width + 2 * m,
+			height: b.height + 2 * m
+		});
+		const hits = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+		const shown = (id) => ctx.edgeEls[id].label && !ctx.edgeEls[id].label.classList.contains("inchip");
+		const busy = ctx.EDGES.map((e) => e.id).filter(shown).map((id) => grow(ctx.edgeEls[id].label.getBBox(), 2)).concat([...ctx.storyLayer.querySelectorAll("g.fchip > .fchip-r")].filter((r) => r.parentNode !== own).map((r) => grow(r.getBBox(), 2))).concat(ctx.NODES.map((n) => grow({
+			x: n.x,
+			y: n.y,
+			width: n.w,
+			height: n.h
+		}, 4)));
+		const free = (p) => !busy.some((b) => hits({
+			x: p.x - w / 2,
+			y: p.y - 10,
+			width: w,
+			height: 20
+		}, b));
+		const L = ee.path.getTotalLength(), lo = w / 2 + 6, hi = L - w / 2 - 12;
+		for (let d = 0; d <= L / 2; d += 4) for (const t of d ? [L / 2 - d, L / 2 + d] : [L / 2]) {
+			if (t < lo || t > hi) continue;
+			const p = ee.path.getPointAtLength(t);
+			if (free(p)) return p;
+		}
+		if (ee.label) {
+			const b = ee.label.getBBox(), cx = b.x + b.width / 2, cy = b.y + b.height / 2;
+			const above = cy - b.height / 2 - 13, below = cy + b.height / 2 + 13;
+			const right = b.x + b.width + 3 + w / 2, left = b.x - 3 - w / 2;
+			const across = [
+				[cx, above],
+				[cx + w + 2, above],
+				[cx, below],
+				[cx + w + 2, below]
+			];
+			const along = [
+				[right, cy],
+				[right, cy - 22],
+				[left, cy],
+				[left, cy - 22]
+			];
+			const a = ee.path.getPointAtLength(L * .45), z = ee.path.getPointAtLength(L * .55);
+			const spots = Math.abs(z.x - a.x) >= Math.abs(z.y - a.y) ? across.concat(along) : along.concat(across);
+			for (const [x, y] of spots) if (free({
+				x,
+				y
+			})) return {
+				x,
+				y
+			};
+		}
+		return ee.path.getPointAtLength(L / 2);
+	}
 	async function playStory(key, opts) {
 		const quiet = Boolean(opts && opts.quiet);
 		const wide = Boolean(opts && opts.wide);
@@ -699,7 +754,7 @@ function createFlowplayer(ctx) {
 			ctx.openPanel();
 			list = ctx.document.getElementById("stepList");
 		}
-		const badgeUses = {}, badgeSeen = {}, bidirSeen = {};
+		const badgeUses = {}, bidirSeen = {};
 		s.hops.forEach((h) => {
 			badgeUses[h.e] = (badgeUses[h.e] || 0) + 1;
 		});
@@ -760,54 +815,51 @@ function createFlowplayer(ctx) {
 				ee.path.classList.remove("eglow");
 			}
 			if (token !== ctx.storyToken) return;
-			const L = ee.path.getTotalLength();
-			const k = badgeSeen[hop.e] = (badgeSeen[hop.e] || 0) + 1;
-			const mid = badgeUses[hop.e] === 1 && ee.mid ? ee.mid : ee.path.getPointAtLength(L * .5 + (k - (badgeUses[hop.e] + 1) / 2) * 26);
+			const once = badgeUses[hop.e] === 1;
+			let mid = once && ee.mid ? ee.mid : null;
 			const bg = ctx.el("g", {
 				"data-hop": i,
 				class: "fchip"
 			}, ctx.storyLayer);
 			bg.style.setProperty("--story-hue", ctx.hue(hk));
-			const label = badgeUses[hop.e] === 1 && ee.label ? ee.def.label : "";
+			const label = once && ee.label ? ee.def.label : "";
 			const pill = ctx.el("rect", {
 				class: "fchip-r",
-				y: mid.y - 10,
 				height: 20,
 				rx: 10
 			}, bg);
-			ctx.el("circle", {
-				cx: 0,
-				cy: mid.y,
+			const disc = ctx.el("circle", {
 				r: 7,
 				class: "badge-c"
 			}, bg);
-			const num = ctx.el("text", {
-				x: 0,
-				y: mid.y + 3.4,
-				class: "badge-t"
-			}, bg);
+			const num = ctx.el("text", { class: "badge-t" }, bg);
 			num.textContent = String(i + 1);
 			let w = 20;
 			let txt = null;
 			if (label) {
-				txt = ctx.el("text", {
-					y: mid.y + 3.4,
-					class: "fchip-t"
-				}, bg);
+				txt = ctx.el("text", { class: "fchip-t" }, bg);
 				txt.textContent = label;
 				w = 26 + txt.getComputedTextLength() + 9;
-				if (w > (ee.mid && badgeUses[hop.e] === 1 ? ee.mid.len - 4 : L - 28)) {
+				if (w > (mid ? mid.len - 4 : ee.path.getTotalLength() - 28)) {
 					txt.remove();
 					txt = null;
 					w = 20;
+					mid = null;
 				} else ee.label.classList.add("inchip");
 			}
+			if (!mid) mid = txt ? ee.path.getPointAtLength(ee.path.getTotalLength() / 2) : chipSpot(ee, w, bg);
 			const x0 = mid.x - w / 2;
 			pill.setAttribute("x", x0);
+			pill.setAttribute("y", mid.y - 10);
 			pill.setAttribute("width", w);
-			bg.querySelector(".badge-c").setAttribute("cx", x0 + 10);
+			disc.setAttribute("cx", x0 + 10);
+			disc.setAttribute("cy", mid.y);
 			num.setAttribute("x", x0 + 10);
-			if (txt) txt.setAttribute("x", x0 + 22);
+			num.setAttribute("y", mid.y + 3.4);
+			if (txt) {
+				txt.setAttribute("x", x0 + 22);
+				txt.setAttribute("y", mid.y + 3.4);
+			}
 			ctx.storyLayer.querySelectorAll("g.fchip.now").forEach((g) => g.classList.remove("now"));
 			bg.classList.add("now");
 			if (!landed) ctx.popBadge(bg);
@@ -1915,7 +1967,11 @@ function createNavigation(ctx) {
 		ctx.closeInside();
 		ctx.svg0.style.display = l === 0 ? "block" : "none";
 		ctx.svg.style.display = l === 1 ? "block" : "none";
-		ctx.document.querySelector(".legend").style.display = l === 0 ? "none" : "";
+		const legend = ctx.document.querySelector(".legend");
+		legend.style.display = l === 0 ? "none" : "";
+		const zoomCtl = ctx.document.getElementById("zoomCtl");
+		if (l === 0) ctx.document.querySelector(".stage-scroll").prepend(zoomCtl);
+		else legend.append(zoomCtl);
 		ctx.resetView();
 		ctx.toL0.hidden = l === 0;
 		ctx.crumbNote.textContent = ctx.t(l === 0 ? "bigPicture" : "fullMap");
@@ -2360,6 +2416,154 @@ function createFilesView(ctx) {
 		isOpen: () => !box.hidden,
 		pathsFor
 	};
+}
+// src/runtime/help.js
+/** Help: what each way into the map is for, in one place (2026-11-10).
+The "?" button beside the theme switch opens a short card, one line per
+mode the map actually has (a question a reader might ask, then where to
+go); each line also opens its mode. The same lines show as hover hints
+on the controls themselves, so the two never disagree. All text comes
+from `ui` (help*), so a map can reword it. */
+function createHelp(ctx) {
+	const doc = ctx.document;
+	const btn = doc.getElementById("helpBtn");
+	const pop = doc.getElementById("helpPop");
+	const list = doc.getElementById("helpList");
+	if (!btn || !pop || !list) return { close() {} };
+	const flowControls = doc.getElementById("flowControls");
+	const flowPicker = doc.getElementById("flowPicker");
+	const buildStart = () => doc.querySelector("#weekSeg button[data-w=\"1\"]");
+	const t = ctx.t;
+	const hasInsides = Object.keys(ctx.INSIDES || {}).length > 0;
+	const modes = [
+		{
+			ask: t("helpTourAsk"),
+			text: t("helpTour"),
+			shown: () => (ctx.definition.tour || []).length > 0,
+			go: () => ctx.tourBtn.click(),
+			at: [ctx.tourBtn]
+		},
+		{
+			ask: t("helpOverviewAsk"),
+			text: t("helpOverview"),
+			shown: () => true,
+			go: () => {
+				if (ctx.level !== 0) ctx.toL0.click();
+			}
+		},
+		{
+			ask: t("helpMapAsk"),
+			text: t("helpMap") + (hasInsides ? " " + t("helpMapInside") : ""),
+			shown: () => true,
+			go: () => {
+				if (ctx.level === 1) return;
+				const full = doc.getElementById("gofull");
+				if (full) full.click();
+				else ctx.showLevel(1);
+			}
+		},
+		{
+			ask: t("helpFlowAsk"),
+			text: t("helpFlow"),
+			shown: () => !flowControls.hidden,
+			go: () => {
+				flowPicker.open = true;
+				flowPicker.querySelector("summary").focus();
+			},
+			at: [flowPicker.querySelector("summary")]
+		},
+		{
+			ask: t("helpFilesAsk"),
+			text: t("helpFiles"),
+			shown: () => Boolean(ctx.filesView?.available),
+			go: () => doc.getElementById("filesBtn").click(),
+			at: [doc.getElementById("filesBtn")]
+		},
+		{
+			ask: t("helpBuildAsk"),
+			text: t("helpBuild"),
+			shown: () => Boolean(buildStart()),
+			go: () => buildStart().click(),
+			at: [doc.querySelector(".build-controls .clabel"), doc.querySelector("#weekSeg button[data-w=\"0\"]")]
+		}
+	].filter((m) => m.shown());
+	modes.forEach((m) => {
+		const li = doc.createElement("li");
+		const row = doc.createElement("button");
+		row.type = "button";
+		row.className = "help-row";
+		const ask = doc.createElement("span");
+		ask.className = "help-ask";
+		ask.textContent = m.ask;
+		const text = doc.createElement("span");
+		text.className = "help-text";
+		text.textContent = m.text;
+		row.append(ask, text);
+		ctx.scope.listen(row, "click", () => {
+			close();
+			m.go();
+		});
+		li.append(row);
+		list.append(li);
+	});
+	function open() {
+		hideTip();
+		pop.hidden = false;
+		btn.setAttribute("aria-expanded", "true");
+		pop.focus();
+	}
+	function close(restoreFocus = false) {
+		if (pop.hidden) return;
+		pop.hidden = true;
+		btn.setAttribute("aria-expanded", "false");
+		if (restoreFocus) btn.focus();
+	}
+	ctx.scope.listen(btn, "click", () => pop.hidden ? open() : close());
+	ctx.scope.listen(doc, "pointerdown", (e) => {
+		if (!pop.hidden && !pop.contains(e.target) && !btn.contains(e.target)) close();
+	});
+	for (const el of [btn, pop]) ctx.scope.listen(el, "keydown", (e) => {
+		if (e.key !== "Escape" || pop.hidden) return;
+		e.stopPropagation();
+		close(true);
+	});
+	const tip = doc.createElement("div");
+	tip.className = "modetip";
+	tip.hidden = true;
+	tip.setAttribute("aria-hidden", "true");
+	btn.closest(".controls").appendChild(tip);
+	let timer = 0;
+	function showTip(m, el) {
+		tip.replaceChildren();
+		const ask = doc.createElement("b");
+		ask.textContent = m.ask;
+		tip.append(ask, " " + m.text);
+		tip.hidden = false;
+		const r = el.getBoundingClientRect(), w = tip.offsetWidth;
+		tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px";
+		tip.style.top = r.bottom + 8 + "px";
+	}
+	function hideTip() {
+		ctx.clearTimeout(timer);
+		tip.hidden = true;
+	}
+	modes.forEach((m) => (m.at || []).filter(Boolean).forEach((el) => {
+		ctx.scope.listen(el, "pointerenter", (e) => {
+			if (e.pointerType !== "mouse" || flowPicker.open || !pop.hidden) return;
+			ctx.clearTimeout(timer);
+			timer = ctx.setTimeout(() => showTip(m, el), 450);
+		});
+		ctx.scope.listen(el, "focus", () => {
+			if (el.matches(":focus-visible") && !flowPicker.open) showTip(m, el);
+		});
+		for (const ev of [
+			"pointerleave",
+			"blur",
+			"pointerdown",
+			"click"
+		]) ctx.scope.listen(el, ev, hideTip);
+	}));
+	return { close };
 }
 // src/runtime/definition.js
 /** Validate and hydrate a trusted definition without mutating the author's data. */
@@ -4038,6 +4242,7 @@ async function mountEngine(root, definition) {
 		return tourplayerModule.refreshTourEntry(...args);
 	}
 	filesView = createFilesView(context);
+	createHelp(context);
 	scope.listen(tourBtn, "click", () => startTour(resumeStep() || 1, { native: true }));
 	function timeLeft(...args) {
 		return tourplayerModule.timeLeft(...args);

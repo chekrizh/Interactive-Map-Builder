@@ -12,7 +12,11 @@ page from the viewer in assets/viewer/ (its script, styles and font inlined, so 
 no network) and prints the absolute path of OUT.html.
 With --repo-dir, every code reference (path:from-to) and every files entry must exist in that
 checkout, and line ranges must fit inside their files.
+Geometry the map leaves out of `layout` is computed first (auto_layout.py).
 Warnings (fields the viewer ignores, markup that was removed) go to stderr and do not stop the build.
+So does the layout check (layout_check.py): the cards, edges and labels as the viewer will draw
+them, with problems a reader would see (overlaps, an edge through a card, a covered label) and
+notes worth a look (a label that lost its chip).
 On problems it lists what to fix and exits with status 1.
 """
 import argparse
@@ -22,8 +26,10 @@ import mimetypes
 import pathlib
 import sys
 
+import auto_layout
 import contract
 import defaults
+import layout_check
 
 SKILL = pathlib.Path(__file__).resolve().parent.parent
 ASSETS = SKILL / 'assets'
@@ -416,9 +422,23 @@ def plugin_version():
         return 'unknown'
 
 
+def with_layout(d):
+    """Geometry the map leaves out, computed by auto_layout.py. A map too broken to lay out
+    is returned as it is, so problems() can say what is wrong with it."""
+    if not (isinstance(d, dict) and isinstance(d.get('nodes'), list) and isinstance(d.get('edges'), list)):
+        return d
+    if d.get('layout') is not None and not isinstance(d.get('layout'), dict):
+        return d
+    try:
+        return auto_layout.fill(d)
+    except (KeyError, TypeError, ValueError, AttributeError, IndexError):
+        return d
+
+
 def complete(definition):
-    """The authored map plus everything render.py fills in: defaults, library assets, interface roles."""
-    d = defaults.with_defaults(definition)
+    """The authored map plus everything render.py fills in: layout, defaults, library assets, interface roles."""
+    d = with_layout(definition)
+    d = defaults.with_defaults(d)
     d = with_library(d)
     if isinstance(d, dict) and isinstance(d.get('settings'), dict) and isinstance(d.get('roles'), dict):
         d = defaults.with_appearance(d, d['roles'])
@@ -457,6 +477,11 @@ def main(argv):
     notes = warnings(definition) + (repo_warnings(definition, args.repo_dir) if args.repo_dir else [])
     if notes:
         print('warnings (the page was built anyway):\n- ' + '\n- '.join(notes), file=sys.stderr)
+    layout_problems, layout_notes = layout_check.check(definition)
+    if layout_problems:
+        print('layout problems (a reader will see these; move cards or reroute edges):\n- ' + '\n- '.join(layout_problems), file=sys.stderr)
+    if layout_notes:
+        print('layout notes (look at them in the preview):\n- ' + '\n- '.join(layout_notes), file=sys.stderr)
     definition = contract.check_text(definition)[2]
     if args.json:
         text = json.dumps(with_data_uris(definition), ensure_ascii=False)
