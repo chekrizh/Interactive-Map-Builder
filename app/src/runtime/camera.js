@@ -387,7 +387,7 @@ function pathTarget(b) {
     boxes = [];
   for (let i = ctx.beatStart(b); i < ctx.flowEnd(b); i++) boxes.push(...ctx.hopBoxes(ctx.edgeEls[s.hops[i].e]));
   const f = ctx.camFrame();
-  return ctx.camSolve(boxes, ctx.litBoxes(b), ctx.allNodeBoxes(), ctx.PATH_ZOOM_MAX, Math.max(48, f.w * 0.1), Math.max(48, f.h * 0.1), ctx.tour.fitZoom);
+  return ctx.camSolve(boxes, ctx.litBoxes(b), ctx.allNodeBoxes(), ctx.PATH_ZOOM_MAX, Math.max(48, f.w * 0.1), Math.max(48, f.h * 0.1), ctx.tourCam.fitZoom);
 }
 /* The beat's shots, greedy and in order. Each is
    { edges: [k, ...], target }, k the edge's index within the beat and
@@ -403,9 +403,9 @@ function beatShots(b) {
   const each = [];
   for (let i = ctx.beatStart(b); i < ctx.flowEnd(b); i++) each.push(ctx.hopBoxes(ctx.edgeEls[s.hops[i].e]));
   if (!each.length) return shots;
-  const zc = Math.max(ctx.tour.fitZoom, Math.min(ctx.PATH_ZOOM_MAX, ...each.map(fitZ)));
+  const zc = Math.max(ctx.tourCam.fitZoom, Math.min(ctx.PATH_ZOOM_MAX, ...each.map(fitZ)));
   // A shot may run up to SHOT_SLACK wider than ZC (never wider than the wide view) before a new one starts.
-  const zMerge = Math.max(ctx.tour.fitZoom, zc * ctx.SHOT_SLACK) - 1e-6;
+  const zMerge = Math.max(ctx.tourCam.fitZoom, zc * ctx.SHOT_SLACK) - 1e-6;
   each.forEach((boxes, k) => {
     const cur = shots[shots.length - 1];
     if (cur && fitZ(cur.boxes.concat(boxes)) >= zMerge) {
@@ -429,19 +429,19 @@ function beatShots(b) {
     }
     out.push({
       edges: sh.edges,
-      target: ctx.camSolve(sh.boxes, lit, all, ctx.PATH_ZOOM_MAX, mx, my, ctx.tour.fitZoom)
+      target: ctx.camSolve(sh.boxes, lit, all, ctx.PATH_ZOOM_MAX, mx, my, ctx.tourCam.fitZoom)
     });
   });
   return out;
 }
 
 function tweenCamera(to, ms) {
-  const token = ++ctx.tour.camToken;
+  const token = ++ctx.tourCam.token;
   const from = ctx.currentView();
   return ctx.scope.cancellable(resolve => {
     const t0 = performance.now();
     const step = now => {
-      if (token !== ctx.tour.camToken || !ctx.tour.active || !ctx.fsMode) {
+      if (token !== ctx.tourCam.token || !ctx.tour.active || !ctx.fsMode) {
         resolve();
         return;
       }
@@ -469,35 +469,35 @@ function tourCamShot(b, k, animate) {
   if (!b || !b.flow || !ctx.camFree()) return Promise.resolve();
   const shots = ctx.beatShots(b);
   const si = k == null ? -1 : shots.findIndex(sh => sh.edges.includes(k));
-  if (animate && si === ctx.tour.shot) return ctx.tour.shotMove || Promise.resolve();
+  if (animate && si === ctx.tourCam.shot) return ctx.tourCam.shotMove || Promise.resolve();
   const to = si < 0 ? ctx.pathTarget(b) : shots[si].target;
   if (animate) {
-    ctx.tour.shotMove = ctx.tweenCamera(to, 800);
-    ctx.tour.shot = si;
-    return ctx.tour.shotMove;
+    ctx.tourCam.shotMove = ctx.tweenCamera(to, 800);
+    ctx.tourCam.shot = si;
+    return ctx.tourCam.shotMove;
   }
-  ctx.tour.camToken++;
+  ctx.tourCam.token++;
   ctx.placeCamera(to);
-  ctx.tour.shot = si;
-  ctx.tour.shotMove = null;
+  ctx.tourCam.shot = si;
+  ctx.tourCam.shotMove = null;
   return Promise.resolve();
 }
 
 function tourCamManual() {
   if (!ctx.tour.active) return;
-  ctx.tour.camManual = true;
-  ctx.tour.camToken++;
+  ctx.tourCam.manual = true;
+  ctx.tourCam.token++;
 }
 // The wide framing, immediately. Cancels any camera move in flight.
 function tourFit() {
   if (!ctx.fsMode) return;
-  ctx.tour.camToken++;
+  ctx.tourCam.token++;
   ctx.clearTimeout(ctx.camTimer);
   ctx.stagecard.classList.remove("campan");
   ctx.placeCamera(ctx.fitTarget());
-  ctx.tour.fitZoom = ctx.zoom;
-  ctx.tour.shot = -2;
-  ctx.tour.shotMove = null;
+  ctx.tourCam.fitZoom = ctx.zoom;
+  ctx.tourCam.shot = -2;
+  ctx.tourCam.shotMove = null;
 }
 return { tourOcclusion, clampPan, focusPoint, focusHop, applyPan, setZoom, canvasCentre, resetView, camFrame, placeCamera, currentView, frameBoxes, camGeom, camSolve, camShows, litBoxes, fitTarget, pathTarget, beatShots, tweenCamera, tourCamShot, tourCamManual, tourFit };
 }

@@ -1,6 +1,8 @@
 import canvasPrimitives from '../rendering/ml-canvas.js';
 import controls from '../rendering/ml-controls.js';
-import { createLifecycle, scopedDocument } from './lifecycle.js';
+import { createEnv } from './env.js';
+import { createModel } from './model.js';
+import { createState } from './state.js';
 import { createPanels } from './panels.js';
 import { createFlowplayer } from './flow-player.js';
 import { createCamera } from './camera.js';
@@ -8,23 +10,22 @@ import { createTourplayer } from './tour-player.js';
 import { createNavigation } from './navigation.js';
 import { createFilesView } from './files-view.js';
 import { createHelp } from './help.js';
-import { formatText } from './definition.js';
 
 export async function mountEngine(root, definition) {
   "use strict";
 
-  const scope = createLifecycle();
-  const document = scopedDocument(root);
-  const requestAnimationFrame = scope.frame;
-  const cancelAnimationFrame = scope.cancelFrame;
-  const setTimeout = scope.timeout;
-  const clearTimeout = scope.clearTimeout;
-  const ResizeObserver = scope.ResizeObserver;
+  const env = createEnv(root, definition);
+  const model = createModel(definition);
+  const state = createState();
+  const { scope, document, requestAnimationFrame, cancelAnimationFrame, setTimeout, clearTimeout, ResizeObserver, t, reduced, phoneQuery, wideQuery, param, store } = env;
+  const { HUES, hue, ICONS, ZONES, NODES, EDGES, GROUPS, L0, STORIES, WEEKS, IMARK, INSIDES, VB, TOUR_CHAPTERS, TOUR, TOUR_TOTAL, BEAT_SECONDS, FLOW_BEAT_SECONDS, SWEEP, PATH_ZOOM_MAX, SHOT_SLACK } = model;
   const context = {
     definition,
-    format: formatText,
-    /* An interface string from definition.ui, with {name} filled in. */
-    t: (key, values = {}) => formatText(definition.ui[key] ?? key, values),
+    format: env.format,
+    t,
+    get tourCam() {
+      return state.tourCam;
+    },
     get BEAT_SECONDS() {
       return BEAT_SECONDS;
     },
@@ -119,10 +120,10 @@ export async function mountEngine(root, definition) {
       return camSolve;
     },
     get camTimer() {
-      return camTimer;
+      return state.camTimer;
     },
     set camTimer(value) {
-      camTimer = value;
+      state.camTimer = value;
     },
     get canvas() {
       return canvas;
@@ -131,16 +132,16 @@ export async function mountEngine(root, definition) {
       return cardChange;
     },
     get cardOut() {
-      return cardOut;
+      return state.cardOut;
     },
     set cardOut(value) {
-      cardOut = value;
+      state.cardOut = value;
     },
     get cardSwap() {
-      return cardSwap;
+      return state.cardSwap;
     },
     set cardSwap(value) {
-      cardSwap = value;
+      state.cardSwap = value;
     },
     get catName() {
       return catName;
@@ -149,10 +150,10 @@ export async function mountEngine(root, definition) {
       return chooseFlow;
     },
     get chosenFlow() {
-      return chosenFlow;
+      return state.chosenFlow;
     },
     set chosenFlow(value) {
-      chosenFlow = value;
+      state.chosenFlow = value;
     },
     get clampPan() {
       return clampPan;
@@ -191,10 +192,10 @@ export async function mountEngine(root, definition) {
       return document;
     },
     get dot() {
-      return dot;
+      return state.dot;
     },
     set dot(value) {
-      dot = value;
+      state.dot = value;
     },
     get drawBeatPath() {
       return drawBeatPath;
@@ -227,10 +228,10 @@ export async function mountEngine(root, definition) {
       return exitTour;
     },
     get exploreNudge() {
-      return exploreNudge;
+      return state.exploreNudge;
     },
     set exploreNudge(value) {
-      exploreNudge = value;
+      state.exploreNudge = value;
     },
     get finishBeat() {
       return finishBeat;
@@ -254,10 +255,10 @@ export async function mountEngine(root, definition) {
       return focusPoint;
     },
     get focused() {
-      return focused;
+      return state.focused;
     },
     set focused(value) {
-      focused = value;
+      state.focused = value;
     },
     get frameBoxes() {
       return frameBoxes;
@@ -266,10 +267,10 @@ export async function mountEngine(root, definition) {
       return fsBtn;
     },
     get fsMode() {
-      return fsMode;
+      return state.fsMode;
     },
     set fsMode(value) {
-      fsMode = value;
+      state.fsMode = value;
     },
     get hopBoxes() {
       return hopBoxes;
@@ -284,10 +285,10 @@ export async function mountEngine(root, definition) {
       return insideBox;
     },
     get level() {
-      return level;
+      return state.level;
     },
     set level(value) {
-      level = value;
+      state.level = value;
     },
     get litBoxes() {
       return litBoxes;
@@ -353,10 +354,10 @@ export async function mountEngine(root, definition) {
       return popBadge;
     },
     get preFsOpen() {
-      return preFsOpen;
+      return state.preFsOpen;
     },
     set preFsOpen(value) {
-      preFsOpen = value;
+      state.preFsOpen = value;
     },
     get readTour() {
       return readTour;
@@ -422,10 +423,10 @@ export async function mountEngine(root, definition) {
       return scroller;
     },
     get selected() {
-      return selected;
+      return state.selected;
     },
     set selected(value) {
-      selected = value;
+      state.selected = value;
     },
     get setFocus() {
       return setFocus;
@@ -476,10 +477,10 @@ export async function mountEngine(root, definition) {
       return storyLayer;
     },
     get storyToken() {
-      return storyToken;
+      return state.storyToken;
     },
     set storyToken(value) {
-      storyToken = value;
+      state.storyToken = value;
     },
     get selectNode() {
       return selectNode;
@@ -548,7 +549,7 @@ export async function mountEngine(root, definition) {
       return toL0;
     },
     get tour() {
-      return tour;
+      return state.tour;
     },
     get tourBack() {
       return tourBack;
@@ -587,25 +588,25 @@ export async function mountEngine(root, definition) {
       return tourStatus;
     },
     get tourStepped() {
-      return tourStepped;
+      return state.tourStepped;
     },
     set tourStepped(value) {
-      tourStepped = value;
+      state.tourStepped = value;
     },
     get tweenCamera() {
       return tweenCamera;
     },
     get tx() {
-      return tx;
+      return state.tx;
     },
     set tx(value) {
-      tx = value;
+      state.tx = value;
     },
     get ty() {
-      return ty;
+      return state.ty;
     },
     set ty(value) {
-      ty = value;
+      state.ty = value;
     },
     get unfocusBtn() {
       return unfocusBtn;
@@ -614,16 +615,16 @@ export async function mountEngine(root, definition) {
       return updateDrawerBounds;
     },
     get viewMode() {
-      return viewMode;
+      return state.viewMode;
     },
     set viewMode(value) {
-      viewMode = value;
+      state.viewMode = value;
     },
     get week() {
-      return week;
+      return state.week;
     },
     set week(value) {
-      week = value;
+      state.week = value;
     },
     get zoneEls() {
       return zoneEls;
@@ -632,10 +633,10 @@ export async function mountEngine(root, definition) {
       return zoneLayer;
     },
     get zoom() {
-      return zoom;
+      return state.zoom;
     },
     set zoom(value) {
-      zoom = value;
+      state.zoom = value;
     },
     get zoomCtl() {
       return zoomCtl;
@@ -650,53 +651,23 @@ export async function mountEngine(root, definition) {
   const svg0 = document.getElementById("map0");
   const svg = document.getElementById("map");
   const panel = document.getElementById("panel");
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const t = context.t;
   const logos = definition.logos;
-  function param(key) {
-    const fromHash = new URLSearchParams(location.hash.slice(1)).get(key);
-    return fromHash || new URLSearchParams(location.search).get(key);
-  }
 
 
-  const HUES = Object.fromEntries(Object.keys(definition.roles).map(key => [key, `--h-${key}`]));
-  const hue = k => `var(${HUES[k]})`;
-
-  /* ---------------- tool icons (simple hand-drawn glyphs, 20x20) ---------------- */
-
-  const ICONS = definition.icons;
 
   /* ---------------- data ---------------- */
 
-  const ZONES = definition.zones;
-  const NODES = definition.nodes;
 
-  /* Edge labels are PLACED PROGRAMMATICALLY (see placeLabel): centered on
-     the longest run of the final snapped path, above a horizontal run,
-     beside a vertical one. An edge carries placement fields only as an
-     exception, each with its reason:
-       lside "below"/"left" flips which side of the run the label sits on,
-       ldx/ldy nudge the computed spot, and explicit lx/ly (+ anchor) opt
-       out entirely. Add exceptions only for real collisions, never taste. */
-  const EDGES = definition.edges;
 
   /* ---------------- level 0: the big picture ---------------- */
 
-  const GROUPS = definition.groups;
-  const L0 = definition.overview;
 
   /* ---------------- flows and build order ---------------- */
 
-  const STORIES = definition.flows;
-  const WEEKS = definition.buildSteps;
 
   /* ---------------- level 2: inside views ---------------- */
 
-  /* Shared arrowhead for inside scenes; a single id is safe because only one
-     scene is mounted at a time. */
-  const IMARK = definition.insideMarkers;
-  const INSIDES = definition.insides;
 
   /* ---------------- svg helpers ---------------- */
 
@@ -1039,22 +1010,15 @@ export async function mountEngine(root, definition) {
     });
   });
   scope.listen(svg, "click", ev => {
-    if (tour.active) return;
+    if (state.tour.active) return;
     if (ev.target === svg) {
-      if (fsMode) closePanel();
+      if (state.fsMode) closePanel();
       clearSelection();
     }
   });
 
   /* ---------------- state ---------------- */
 
-  let level = 0;
-  let focused = null;
-  let viewMode = "concepts";
-  let selected = null;
-  let week = 0;
-  let storyToken = 0;
-  let dot = null;
   const toL0 = document.getElementById("toL0");
   const crumbNote = document.getElementById("crumbNote");
   const unfocusBtn = document.getElementById("unfocus");
@@ -1106,28 +1070,9 @@ export async function mountEngine(root, definition) {
   const drawerBody = document.getElementById("drawerBody");
   const fsBtn = document.getElementById("fsBtn");
   const panelBtn = document.getElementById("panelBtn");
-  let fsMode = false;
-  /* Guided tour state and elements. Declared here, ahead of the camera and
-     key handlers that read them; the tour itself is further down. */
-  const tour = {
-    active: false,
-    step: 1,
-    phase: 0,
-    atEnd: false,
-    snap: null,
-    news: null,
-    fitZoom: 1,
-    camToken: 0,
-    camManual: false,
-    shot: -2,
-    shotMove: null,
-    badgeWait: -1,
-    nativeLeftAt: -1e9
-  };
   const tourBar = document.getElementById("tourBar");
   const tourCard = document.getElementById("tourCard");
   const tourEnd = document.getElementById("tourEnd");
-  const phoneQuery = window.matchMedia("(max-width: 640px)");
 
   /* One logical panel, two containers: in normal view it is the page-level
      side card (aside.panel); in fullscreen the same element is reparented
@@ -1175,9 +1120,7 @@ export async function mountEngine(root, definition) {
   /* Fullscreen always starts with the drawer closed (the map is the point;
      playing a flow or clicking a node reopens it), and exiting restores the
      page panel to whatever it was before entering. */
-  let preFsOpen = true;
 
-  let exploreNudge = null;
   // The inspector starts below the actual header, including wrapped controls.
   // It grows with content up to the remaining canvas height rather than
   // filling the viewport with an empty surface.
@@ -1201,35 +1144,32 @@ export async function mountEngine(root, definition) {
     return navigationModule.exitFs(...args);
   }
   scope.listen(fsBtn, "click", () => {
-    fsMode ? exitFs() : enterFs();
+    state.fsMode ? exitFs() : enterFs();
   });
   scope.listen(document, "fullscreenchange", () => {
     // A tour leaving native full screen keeps running in-frame (fs-fixed).
-    if (tour.active && !document.fullscreenElement) tour.nativeLeftAt = performance.now();
-    if (tour.active) requestAnimationFrame(() => {
+    if (state.tour.active && !document.fullscreenElement) state.tour.nativeLeftAt = performance.now();
+    if (state.tour.active) requestAnimationFrame(() => {
       updateDrawerBounds();
-      if (!tour.atEnd) tourFit();
+      if (!state.tour.atEnd) tourFit();
     });
     if (document.fullscreenElement === stagecard) {
-      if (!fsMode) applyFsDom(true);
-    } else if (fsMode && !stagecard.classList.contains("fs-fixed")) applyFsDom(false);
+      if (!state.fsMode) applyFsDom(true);
+    } else if (state.fsMode && !stagecard.classList.contains("fs-fixed")) applyFsDom(false);
   });
   scope.listen(document, "keydown", ev => {
     /* While touring the tour owns the keys (arrows step, Esc exits). */
-    if (tour.active) {
+    if (state.tour.active) {
       onTourKey(ev);
       return;
     }
     if (ev.key !== "Escape") return;
-    if (!insideBox.hidden) closeInside();else if (filesView?.isOpen()) document.getElementById("filesBack").click();else if (fsMode && drawer.classList.contains("open")) closePanel();else if (fsMode && stagecard.classList.contains("fs-fixed")) applyFsDom(false);
+    if (!insideBox.hidden) closeInside();else if (filesView?.isOpen()) document.getElementById("filesBack").click();else if (state.fsMode && drawer.classList.contains("open")) closePanel();else if (state.fsMode && stagecard.classList.contains("fs-fixed")) applyFsDom(false);
   });
 
   /* ---------------- pan (hand drag) + zoom ---------------- */
 
   const scroller = document.querySelector(".stage-scroll");
-  /* viewBox sizes of the two canvases; must match the svg viewBox attrs and
-     the fit-to-height ratios in the fullscreen CSS. */
-  const VB = definition.layout.viewBoxes;
   // Reserve the inspector's actual width and inset during camera moves.
   // While touring, the step card takes the inspector's place.
   const drawerOcclusion = () => drawer.classList.contains("open") ? drawer.offsetWidth + 2 * parseFloat(getComputedStyle(stagecard).getPropertyValue("--drawer-inset")) : tourOcclusion().x;
@@ -1238,15 +1178,11 @@ export async function mountEngine(root, definition) {
   function tourOcclusion(...args) {
     return cameraModule.tourOcclusion(...args);
   }
-  let zoom = 1,
-    tx = 0,
-    ty = 0;
   /* Zoom outside full screen: the hub's wide layout only. The lesson embeds
      stay as they are, and narrow screens scroll sideways natively. */
   stagecard.classList.add("zoomable");
-  const wideQuery = window.matchMedia("(min-width: 981px)");
-  const normalZoom = () => !fsMode && wideQuery.matches;
-  const activeSvg = () => level === 0 ? svg0 : svg;
+  const normalZoom = () => !state.fsMode && wideQuery.matches;
+  const activeSvg = () => state.level === 0 ? svg0 : svg;
 
   /* Pan limits: any point of the map can be brought to the middle of the
      visible area (left of the sidebar when it is open), so a zoomed-in
@@ -1258,7 +1194,6 @@ export async function mountEngine(root, definition) {
   function clampPan(...args) {
     return cameraModule.clampPan(...args);
   }
-  let camTimer = null;
   /* Fullscreen flow camera: pan so the given viewBox point sits centered in
      the area left of the sidebar. The .campan class enables a CSS transition
      for these programmatic moves only; a manual drag removes it instantly. */
@@ -1285,23 +1220,23 @@ export async function mountEngine(root, definition) {
   }
   scope.listen(document.getElementById("zoomIn"), "click", () => {
     tourCamManual();
-    setZoom(zoom * 1.25, canvasCentre());
+    setZoom(state.zoom * 1.25, canvasCentre());
   });
   scope.listen(document.getElementById("zoomOut"), "click", () => {
     tourCamManual();
-    setZoom(zoom / 1.25, canvasCentre());
+    setZoom(state.zoom / 1.25, canvasCentre());
   });
   // In the tour, Fit means the tour's wide framing, not zoom 1.
   scope.listen(document.getElementById("zoomFit"), "click", () => {
-    if (tour.active) tourFit();else resetView();
+    if (state.tour.active) tourFit();else resetView();
   });
   scope.listen(scroller, "wheel", e => {
     if (e.target.closest("#zoomCtl")) return;
     /* Normal view: a pinch zooms, and plain scrolling stays the page's. */
-    if (!fsMode) {
+    if (!state.fsMode) {
       if (!normalZoom() || !e.ctrlKey) return;
       e.preventDefault();
-      setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), {
+      setZoom(state.zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), {
         x: e.clientX,
         y: e.clientY
       });
@@ -1309,9 +1244,9 @@ export async function mountEngine(root, definition) {
     }
     e.preventDefault();
     tourCamManual();
-    if (e.ctrlKey) setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15));else {
-      tx -= e.deltaX;
-      ty -= e.deltaY;
+    if (e.ctrlKey) setZoom(state.zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15));else {
+      state.tx -= e.deltaX;
+      state.ty -= e.deltaY;
       applyPan();
     }
   }, {
@@ -1322,7 +1257,7 @@ export async function mountEngine(root, definition) {
     panX = 0,
     panY = 0;
   scope.listen(scroller, "pointerdown", e => {
-    const canPan = fsMode || normalZoom() && zoom !== 1;
+    const canPan = state.fsMode || normalZoom() && state.zoom !== 1;
     if (!canPan || e.button !== 0 || e.target.closest("#zoomCtl")) return;
     panDown = true;
     panMoved = false;
@@ -1344,8 +1279,8 @@ export async function mountEngine(root, definition) {
       stagecard.classList.remove("campan");
     }
     e.preventDefault();
-    tx += dx;
-    ty += dy;
+    state.tx += dx;
+    state.ty += dy;
     applyPan();
     panX = e.clientX;
     panY = e.clientY;
@@ -1368,8 +1303,8 @@ export async function mountEngine(root, definition) {
   function applyLabels() {
     NODES.forEach(n => {
       const e = nodeEls[n.id];
-      e.l1.textContent = viewMode === "tools" ? n.tool : n.concept;
-      e.l2.textContent = viewMode === "tools" ? n.concept : n.tool;
+      e.l1.textContent = state.viewMode === "tools" ? n.tool : n.concept;
+      e.l2.textContent = state.viewMode === "tools" ? n.concept : n.tool;
     });
   }
   function catName(...args) {
@@ -1448,7 +1383,6 @@ export async function mountEngine(root, definition) {
   const storyOptions = document.getElementById("storyOptions");
   const failureOptions = document.getElementById("failureOptions");
   const playFlowButton = document.getElementById("playFlow");
-  let chosenFlow = null;
   function chooseFlow(...args) {
     return flowplayerModule.chooseFlow(...args);
   }
@@ -1491,9 +1425,9 @@ export async function mountEngine(root, definition) {
     if (flowPicker.open && !flowPicker.contains(event.target)) closeFlowPicker();
   });
   scope.listen(playFlowButton, "click", () => {
-    if (chosenFlow) {
+    if (state.chosenFlow) {
       closeFlowPicker();
-      playStory(chosenFlow);
+      playStory(state.chosenFlow);
     }
   });
 
@@ -1547,7 +1481,7 @@ export async function mountEngine(root, definition) {
       for (const ev of ["mouseleave", "blur", "click"]) scope.listen(b, ev, hideStepTip);
     }
     scope.listen(b, "click", () => {
-      if (level !== 1) showLevel(1);
+      if (state.level !== 1) showLevel(1);
       /* The inside overlay covers the map without changing level, so
          showLevel alone won't dismiss it when already on the full map. */
       closeInside();
@@ -1575,27 +1509,7 @@ export async function mountEngine(root, definition) {
   /* ---------------- guided tour ---------------- */
 
 
-  const TOUR_CHAPTERS = definition.tourChapters;
-  const TOUR = definition.tour;
-  const TOUR_TOTAL = TOUR.length + 1;
-  const BEAT_SECONDS = definition.beatSeconds;
-  const FLOW_BEAT_SECONDS = definition.flowBeatSeconds;
 
-  /* Storage never throws: private modes and blocked storage just forget. */
-  const store = {
-    get(key) {
-      try {
-        return localStorage.getItem(key);
-      } catch (err) {
-        return null;
-      }
-    },
-    set(key, value) {
-      try {
-        localStorage.setItem(key, value);
-      } catch (err) {}
-    }
-  };
   /* ?reset=1 forgets the tour's saved step, so it can be tested again from a
      first visit. Every load with the flag resets, so remove it to keep state. */
   if (param("reset")) {
@@ -1717,7 +1631,6 @@ export async function mountEngine(root, definition) {
      to walk through (the flows, and 9 unless motion is reduced), the
      instruction line and a soft ring on Next show until the visitor's
      first Next within a beat. */
-  let tourStepped = false;
   function renderPlayer(...args) {
     return tourplayerModule.renderPlayer(...args);
   }
@@ -1737,8 +1650,6 @@ export async function mountEngine(root, definition) {
      Next, left on Back) over 280 ms. fn reads the tour's state when it runs,
      so a fast click simply supersedes the swap in flight. On phones or with
      reduced motion, fn just runs. */
-  let cardSwap = 0,
-    cardOut = null;
   function cardChange(...args) {
     return tourplayerModule.cardChange(...args);
   }
@@ -1756,7 +1667,7 @@ export async function mountEngine(root, definition) {
      current shot only moves the dot; a Next into the first edge of another
      shot eases the camera there first, then plays the dot. "Why it matters"
      and Back to the start ease to the overview; Back onto an edge eases to
-     that edge's shot. tour.shot is the shot the camera is on (-1 the
+     that edge's shot. state.tourCam.shot is the shot the camera is on (-1 the
      overview, -2 neither). Every frame fills the visible area left of the
      card with a margin of 10% of that area (at least 48px) on each side,
      then slides or widens a little where needed (camSolve, 2026-11-02) so
@@ -1770,10 +1681,6 @@ export async function mountEngine(root, definition) {
      x zoom, where base is the svg's scale at zoom 1, so a node title renders
      at zoom times its size at zoom 1, and capping zoom at 1.6 caps titles
      at 1.6 times that size. */
-  const PATH_ZOOM_MAX = 1.6;
-  /* Close-ups zoom out a little to keep neighbouring edges in one shot
-     (2026-11-02), so the camera moves less within a step. */
-  const SHOT_SLACK = 0.85;
   function camFrame(...args) {
     return cameraModule.camFrame(...args);
   }
@@ -1846,7 +1753,7 @@ export async function mountEngine(root, definition) {
   function tweenCamera(...args) {
     return cameraModule.tweenCamera(...args);
   }
-  const camFree = () => tour.active && fsMode && !reduced && !tour.camManual;
+  const camFree = () => state.tour.active && state.fsMode && !reduced && !state.tourCam.manual;
   /* The camera onto edge k's shot (k within the beat), or the overview
      (k null). animate: ease there over 800 ms, or hold when the camera is
      already on (or moving to) that shot; resolves when it arrives.
@@ -1864,15 +1771,15 @@ export async function mountEngine(root, definition) {
   }
   let tourFitFrame = 0;
   scope.listen(window, "resize", () => {
-    if (!tour.active) return;
+    if (!state.tour.active) return;
     cancelAnimationFrame(tourFitFrame);
     tourFitFrame = requestAnimationFrame(() => {
       updateDrawerBounds();
-      if (!tour.atEnd) sizeTourCard();
+      if (!state.tour.atEnd) sizeTourCard();
       tourFit();
-      if (!tour.atEnd) {
-        const b = TOUR[tour.step - 1];
-        tourCamShot(b, b.flow && tour.phase > 0 && tour.phase <= edgeCount(b) ? tour.phase - 1 : null, false);
+      if (!state.tour.atEnd) {
+        const b = TOUR[state.tour.step - 1];
+        tourCamShot(b, b.flow && state.tour.phase > 0 && state.tour.phase <= edgeCount(b) ? state.tour.phase - 1 : null, false);
       }
     });
   });
@@ -1882,7 +1789,6 @@ export async function mountEngine(root, definition) {
      map dims) plus the stage's hue on its components; the Next after the
      last stage goes on to the ending. tour.phase is the stage shown (0 for
      the whole map). Skipped under reduced motion, as before. */
-  const SWEEP = definition.settings.recapOrder;
   const stageCount = b => b.whole && !reduced ? SWEEP.length : 0;
   function showStage(...args) {
     return tourplayerModule.showStage(...args);
@@ -1969,7 +1875,7 @@ export async function mountEngine(root, definition) {
   }
   scope.listen(tcNext, "click", tourNext);
   scope.listen(tcBack, "click", tourBack);
-  scope.listen(tourExitBtn, "click", () => exitTour(tour.atEnd));
+  scope.listen(tourExitBtn, "click", () => exitTour(state.tour.atEnd));
   scope.listen(document.getElementById("teBack"), "click", () => exitTour(true));
 
   /* ---------------- theme ---------------- */
@@ -2039,31 +1945,31 @@ export async function mountEngine(root, definition) {
     setTheme,
     getState() {
       return {
-        level,
-        focused,
-        selected,
-        buildStep: week,
-        flow: chosenFlow,
-        zoom,
+        level: state.level,
+        focused: state.focused,
+        selected: state.selected,
+        buildStep: state.week,
+        flow: state.chosenFlow,
+        zoom: state.zoom,
         pan: {
-          x: tx,
-          y: ty
+          x: state.tx,
+          y: state.ty
         },
-        fullscreen: fsMode,
+        fullscreen: state.fsMode,
         tour: {
-          active: tour.active,
-          step: tour.step,
-          phase: tour.phase,
-          complete: tour.atEnd
+          active: state.tour.active,
+          step: state.tour.step,
+          phase: state.tour.phase,
+          complete: state.tour.atEnd
         }
       };
     },
     destroy() {
-      storyToken++;
-      cardSwap++;
-      tour.camToken++;
-      tour.active = false;
-      tour.atEnd = false;
+      state.storyToken++;
+      state.cardSwap++;
+      state.tourCam.token++;
+      state.tour.active = false;
+      state.tour.atEnd = false;
       scope.destroy();
       if (document.fullscreenElement === stagecard) document.exitFullscreen().catch(() => {});
       root.replaceChildren();

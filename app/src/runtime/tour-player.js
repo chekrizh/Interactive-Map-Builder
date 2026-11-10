@@ -478,7 +478,7 @@ function showBeat(n, opts) {
     });
   }
   ctx.updateDrawerBounds();
-  ctx.tour.camManual = false;
+  ctx.tourCam.manual = false;
   ctx.tourFit();
   // Every beat opens still; a flow beat's path is already lit, without this beat's numbers.
   if (b.flow) ctx.drawBeatPath(b);
@@ -626,7 +626,7 @@ function exitTour(toFullMap) {
   if (!ctx.tour.active) return;
   const atEnd = ctx.tour.atEnd;
   ctx.clearStory();
-  ctx.tour.camToken++;
+  ctx.tourCam.token++;
   if (ctx.document.fullscreenElement) ctx.document.exitFullscreen().catch(() => {});
   ctx.tour.active = false;
   ctx.tour.atEnd = false;
