@@ -37,8 +37,10 @@ tests/browser_probe.js              opens a map full of hostile text and reports
 tests/viewer_snapshots.js           screenshots and state after every action, to compare before/after
 tools/build_library.py              rebuilds the icon and logo library from upstream packages
 tools/build_metrics.js              measures Manrope for layout_check.py
-tools/readme_shots.js               captures the README screenshots from the example maps
-docs/readme/                        images for the README
+tools/readme_shots.js, readme_gifs.js  capture the README screenshots and GIFs from the example maps
+docs/readme/                        images for the README; social-preview.png is uploaded by hand
+                                    in Settings -> General -> Social preview
+.github/workflows/                  release.yml (tag + release with skill zips), pages.yml (live demo)
 ```
 
 ## Develop the viewer
@@ -64,9 +66,9 @@ Keep every file in the plugin readable and under 256 KiB (fonts and images aside
 2. Run `python3 -m unittest discover tests` and `claude plugin validate .`.
 3. **Bump `version` in `plugins/interactive-map/.claude-plugin/plugin.json`.** Claude Code users keep their cached copy until this string changes, so a push without a bump reaches nobody.
 4. Merge to `main`. Marketplace users get the update on their next update command, or on their own if they enabled auto-update.
-5. Make new zips for Claude apps and ChatGPT users; they have to upload them again.
+5. Nothing else by hand. On a version change `.github/workflows/release.yml` tags `v<version>` and publishes a GitHub release with one zip per skill for Claude apps users (who have to upload them again), and `.github/workflows/pages.yml` re-renders the live demo (the Kutt map) whenever the format skill changes.
 
-When the viewer's look changes, update the README images: render the three real-project examples into one folder and run `node tools/readme_shots.js <that folder> docs/readme`. The two GIFs are recorded by hand.
+When the viewer's look changes, update the README images: render the three real-project examples into one folder and run `node tools/readme_shots.js <that folder> docs/readme`, then `node tools/readme_gifs.js <that folder>/kutt-url-shortener.html docs/readme` for the two GIFs (needs ffmpeg).
 
 Pages that were already generated do not change: each HTML file carries its own copy of the viewer and its map.
 

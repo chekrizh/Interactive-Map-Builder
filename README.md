@@ -15,13 +15,13 @@
 This skill is for understanding: it gives the agent a method for studying a repository and a ready-made viewer built for going deep.<br>
 Levels you drill into, animated flows, step-by-step code walkthroughs, a guided tour, and every claim linked to its source. The agent spends its effort on the explanation instead of building the page.
 
-[Features](#features) · [Examples](#example-maps) · [Install](#install) · [How it works](#how-it-works)
+[Live demo](https://chekrizh.github.io/Interactive-Map-Builder/) · [Features](#features) · [Examples](#example-maps) · [Install](#install) · [How it works](#how-it-works)
 
 <br>
 
 <img alt="An animated flow on a repository map: a request travels from the visitor through the redirect handler, cache and database, while the side panel explains each step" src="docs/readme/hero-flow.gif" width="100%">
 
-<sub>One of the flows on a map of the <a href="https://github.com/thedevs-network/kutt">Kutt</a> URL shortener, made by the skill.</sub>
+<sub>One of the flows on a map of the <a href="https://github.com/thedevs-network/kutt">Kutt</a> URL shortener, made by the skill. <a href="https://chekrizh.github.io/Interactive-Map-Builder/">Open this map</a> and try it yourself.</sub>
 
 </div>
 
@@ -144,7 +144,7 @@ The skill triggers on its own. It is also available as `/interactive-map:interac
 The skills are the folders in `plugins/interactive-map/skills/`.
 
 - **Claude Code without the marketplace:** `cp -R plugins/interactive-map/skills/* ~/.claude/skills/`, then start a new session.
-- **Claude apps (desktop, web):** `cd plugins/interactive-map/skills && zip -r interactive-map.zip interactive-map` (and the same for `interactive-map-repo`), then upload each zip under Settings → Capabilities → Skills. Code execution must be on.
+- **Claude apps (desktop, web):** download `interactive-map.zip` and `interactive-map-repo.zip` from the [latest release](https://github.com/chekrizh/Interactive-Map-Builder/releases/latest), then upload each under Settings → Capabilities → Skills. Code execution must be on.
 - **Codex:** copy the skill folders into the skills folder Codex reads (`~/.codex/skills/` at the time of writing).
 - **ChatGPT:** upload the same zips where your workspace allows custom skills. This path has not been checked here.
 

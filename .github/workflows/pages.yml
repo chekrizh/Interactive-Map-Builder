@@ -1,0 +1,40 @@
+# Publishes the Kutt example map as a live demo on GitHub Pages, rendered by the skill itself,
+# so the demo always runs the viewer on main. Needs Settings -> Pages -> Source: GitHub Actions.
+name: Demo
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - plugins/interactive-map/skills/interactive-map/**
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Render the demo map
+        run: |
+          mkdir _site
+          python3 plugins/interactive-map/skills/interactive-map/scripts/render.py \
+            plugins/interactive-map/skills/interactive-map/examples/kutt-url-shortener.json _site/index.html
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+      - id: deployment
+        uses: actions/deploy-pages@v4

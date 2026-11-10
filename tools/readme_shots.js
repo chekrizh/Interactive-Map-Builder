@@ -2,7 +2,7 @@
 //   python3 plugins/interactive-map/skills/interactive-map/scripts/render.py \
 //     plugins/interactive-map/skills/interactive-map/examples/<name>.json /tmp/<name>.html   # for each map below
 //   node tools/readme_shots.js /tmp docs/readme
-// Needs Playwright with Chromium. The two GIFs (hero-flow.gif, drill.gif) are recorded by hand.
+// Needs Playwright with Chromium. The two GIFs come from tools/readme_gifs.js.
 const path = require('path');
 
 /* Which map and which view each README image shows. */
