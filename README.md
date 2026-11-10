@@ -12,16 +12,16 @@
 
 **Deep dives into how a system works: from the big picture down to a line of code, as one interactive map.**
 
-This skill is for understanding: it gives the agent a method for studying a repository or a topic and a ready-made viewer built for going deep.<br>
+This skill is for understanding: it gives the agent a method for studying a repository and a ready-made viewer built for going deep.<br>
 Levels you drill into, animated flows, step-by-step code walkthroughs, a guided tour, and every claim linked to its source. The agent spends its effort on the explanation instead of building the page.
 
-[Features](#features) · [Modes](#three-modes) · [Install](#install) · [How it works](#how-it-works)
+[Live demo](https://chekrizh.github.io/Interactive-Map-Builder/) · [Features](#features) · [Examples](#example-maps) · [Install](#install) · [How it works](#how-it-works)
 
 <br>
 
 <img alt="An animated flow on a repository map: a request travels from the visitor through the redirect handler, cache and database, while the side panel explains each step" src="docs/readme/hero-flow.gif" width="100%">
 
-<sub>One of the flows on a map of the <a href="https://github.com/thedevs-network/kutt">Kutt</a> URL shortener, made by the skill.</sub>
+<sub>One of the flows on a map of the <a href="https://github.com/thedevs-network/kutt">Kutt</a> URL shortener, made by the skill. <a href="https://chekrizh.github.io/Interactive-Map-Builder/">Open this map</a> and try it yourself.</sub>
 
 </div>
 
@@ -48,6 +48,8 @@ The first screen. Who uses the system, what it is made of and what it depends on
   <img alt="The overview: six cards with labelled connections and a side panel" src="docs/readme/overview-light.png" width="100%">
 </picture>
 
+<sub>Overview of the <a href="https://github.com/healthchecks/healthchecks">Healthchecks</a> cron job monitor.</sub>
+
 ### Full map
 
 All the parts of the system and the connections between them, grouped into zones. Click any of them to see what it does, why it matters and which files it lives in.
@@ -55,6 +57,8 @@ All the parts of the system and the connections between them, grouped into zones
 For a repository the map follows the [C4 model](https://c4model.com): *containers* are the pieces that run separately (a server, a database, a queue), *components* are the main parts inside them. You do not need to know C4 to read the map.
 
 <img alt="The full map: components grouped into zones, with labelled connections" src="docs/readme/fullmap-light.png" width="100%">
+
+<sub>Full map of the <a href="https://github.com/PrivateBin/PrivateBin">PrivateBin</a> pastebin, laid out automatically.</sub>
 
 ### Flows
 
@@ -68,8 +72,12 @@ Some components deserve a closer look. *Look inside* opens a close-up: a code wa
 
 <table>
   <tr>
-    <td width="50%"><img alt="Step-by-step walkthrough of the redirect handler with links to code lines" src="docs/readme/inside-redirect-light.png"></td>
-    <td width="50%"><img alt="Database tables and the relations between them, in the dark theme" src="docs/readme/inside-db-dark.png"></td>
+    <td width="50%"><img alt="Step-by-step walkthrough of PrivateBin's browser encryption with links to code lines" src="docs/readme/inside-steps-light.png"></td>
+    <td width="50%"><img alt="Healthchecks database tables and the relations between them, in the dark theme" src="docs/readme/inside-schema-dark.png"></td>
+  </tr>
+  <tr>
+    <td><sub>PrivateBin: how a paste is encrypted in the browser, step by step.</sub></td>
+    <td><sub>Healthchecks: the tables behind the alerts.</sub></td>
   </tr>
 </table>
 
@@ -79,17 +87,35 @@ For someone who opens the map for the first time and does not know where to star
 
 <img alt="The guided tour: chapter progress at the top, a highlighted flow and a card with the current step" src="docs/readme/tour-light.png" width="100%">
 
+<sub>The tour of PrivateBin, at the chapter on writing a paste.</sub>
+
 ### How to build it
 
 How you would build the system from scratch. Switch from *Full system* to step 1, 2, 3: each step adds a few components and says why they come now. Good for seeing what is the core and what was added on top. It is one sensible order for understanding the system, not a history of the project.
 
-<img alt="How to build it, step 2 of 4: the components added in this step are highlighted" src="docs/readme/build-light.png" width="100%">
+<img alt="How to build it, step 2 of 6: the components added in this step are highlighted" src="docs/readme/build-light.png" width="100%">
+
+<sub>Healthchecks, step 2 of 6: the team member, the dashboard and accounts join the ping endpoint and the database.</sub>
 
 ### Project structure
 
 What the repository is made of. The folders and files that matter, each with a line on what lives there and why it exists, coloured by the part of the map it belongs to. Tags on a row jump to the component on the map, and a component's panel leads back to its folders.
 
-<img alt="Project structure: an annotated folder tree with coloured component tags and a side panel for the selected file" src="docs/readme/structure-light.png" width="100%">
+<img alt="Project structure: an annotated folder tree with coloured component tags and a side panel" src="docs/readme/structure-light.png" width="100%">
+
+<sub>The Healthchecks repository, folder by folder.</sub>
+
+## Example maps
+
+Three real open-source projects, mapped by the skill. Render any of them (see [How it works](#how-it-works)) and open the HTML file.
+
+| Map | What it shows best |
+|---|---|
+| [Kutt](https://github.com/thedevs-network/kutt), a URL shortener | A hand-tuned layout, a request path with a cache, background jobs |
+| [PrivateBin](https://github.com/PrivateBin/PrivateBin), a zero-knowledge pastebin | A fully automatic layout; the work done in the browser, not on the server |
+| [Healthchecks](https://github.com/healthchecks/healthchecks), a cron job monitor | A web app and background loops that share one database |
+
+The map files are in [`examples/`](plugins/interactive-map/skills/interactive-map/examples/), with the credits and the commit each one was written from.
 
 
 ## Install
@@ -118,7 +144,7 @@ The skill triggers on its own. It is also available as `/interactive-map:interac
 The skills are the folders in `plugins/interactive-map/skills/`.
 
 - **Claude Code without the marketplace:** `cp -R plugins/interactive-map/skills/* ~/.claude/skills/`, then start a new session.
-- **Claude apps (desktop, web):** `cd plugins/interactive-map/skills && zip -r interactive-map.zip interactive-map` (and the same for `interactive-map-repo`), then upload each zip under Settings → Capabilities → Skills. Code execution must be on.
+- **Claude apps (desktop, web):** download `interactive-map.zip` and `interactive-map-repo.zip` from the [latest release](https://github.com/chekrizh/Interactive-Map-Builder/releases/latest), then upload each under Settings → Capabilities → Skills. Code execution must be on.
 - **Codex:** copy the skill folders into the skills folder Codex reads (`~/.codex/skills/` at the time of writing).
 - **ChatGPT:** upload the same zips where your workspace allows custom skills. This path has not been checked here.
 
@@ -127,8 +153,8 @@ The skills are the folders in `plugins/interactive-map/skills/`.
 ## How it works
 
 ```
- subject ──► agent designs the map ──► map.json ──► render.py ──► map.html
- (repo, topic)   (skills decide what      (nodes, flows,   (checks it, fills    (viewer + map,
+ repository ──► agent designs the map ──► map.json ──► render.py ──► map.html
+                  (skills decide what      (nodes, flows,   (checks it, fills    (viewer + map,
                   goes on the map)         tour, layout)    icons and logos)     works offline)
 ```
 
@@ -147,8 +173,9 @@ open /tmp/map.html
 
 ## What the plugin does on your machine
 
-- **Only instructions and two scripts.** The plugin adds two skills. It has no hooks, no MCP servers and no settings changes.
-- **Python scripts, standard library only.** `render.py` reads the map JSON, the viewer in `assets/viewer/` and the asset library, strips any HTML outside a small allowlist from the map's text (`contract.py`), and writes one HTML file to the path you give it. With `--repo-dir` it also reads the repository checkout you name, to check that code references and paths exist. `find_asset.py` searches the asset library and prints names. None of them makes network requests, runs other programs or reads anything outside the skill folder, the map and the checkout you pass.
+- **Only instructions and scripts.** The plugin adds two skills. It has no hooks, no MCP servers and no settings changes.
+- **Python scripts, standard library only.** `render.py` reads the map JSON, the viewer in `assets/viewer/` and the asset library, lays the map out (`auto_layout.py`) and checks the layout (`layout_check.py`), strips any HTML outside a small allowlist from the map's text (`contract.py`), and writes one HTML file to the path you give it. With `--repo-dir` it also reads the repository checkout you name, to check that code references and paths exist. `find_asset.py` searches the asset library and prints names. None of them makes network requests, runs other programs or reads anything outside the skill folder, the map and the checkout you pass.
+- **One optional script opens a browser.** `preview.py` screenshots a rendered map so the agent can check it by eye. It uses Playwright with Chromium if they are already installed (it looks for them with `npm root -g` and starts `node` with `preview.js`), opens only the local HTML file and saves PNG files next to it. It installs nothing; without Playwright it exits and the agent relies on the layout check alone.
 - **The generated page works offline.** Its script, styles, font, icons and logos are inlined; it makes no network requests and sends nothing anywhere.
 - **Everything shipped is readable.** The viewer is committed unminified (built from `app/`), and the icon and logo library is split into JSON files with one item per line (built by `tools/build_library.py`), so every file stays under 256 KB and can be reviewed.
 

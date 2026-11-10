@@ -1,0 +1,48 @@
+# Tags and publishes a GitHub release when the plugin version changes on main.
+# The release carries one zip per skill, for clients that install skills by upload (Claude apps).
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [plugins/interactive-map/.claude-plugin/plugin.json]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read the plugin version
+        id: version
+        run: |
+          version=$(python3 -c "import json; print(json.load(open('plugins/interactive-map/.claude-plugin/plugin.json'))['version'])")
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Zip each skill
+        if: steps.version.outputs.exists != 'true'
+        run: |
+          mkdir dist
+          cd plugins/interactive-map/skills
+          for skill in */; do
+            zip -qr "../../../dist/${skill%/}.zip" "${skill%/}" -x '*/__pycache__/*'
+          done
+
+      - name: Publish the release
+        if: steps.version.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" dist/*.zip \
+            --target "$GITHUB_SHA" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --generate-notes

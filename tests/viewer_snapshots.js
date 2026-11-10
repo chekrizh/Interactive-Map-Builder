@@ -93,11 +93,13 @@ async function walk(pagePath, out) {
 
   await session('desk', desktop, async ({ page, snap, tick, click }) => {
     await snap('overview');
-    const groups = await page.$$eval('#map0 [data-g]', els => [...new Set(els.map(e => e.dataset.g))]);
-    for (const g of groups) {
-      await page.click(`#map0 [data-g="${g}"]`, { force: true });
+    /* Each overview card opens its part of the full map; go back to the overview after each. */
+    const cards = await page.$$eval('#map0 g.block', els => els.length);
+    for (let i = 0; i < cards; i++) {
+      await page.locator('#map0 g.block').nth(i).click({ force: true });
       await tick(700);
-      await snap('group-' + g);
+      await snap('group-' + (i + 1));
+      await click('#toL0', 800);
     }
     await click('#gofull', 800) || await click('#toL0', 800);
     await snap('full-map');
