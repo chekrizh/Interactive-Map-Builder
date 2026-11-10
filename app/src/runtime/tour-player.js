@@ -545,7 +545,6 @@ function startTour(n, opts) {
   if (state.tour.active) return;
   const wantNative = Boolean(opts && opts.native) && Boolean(stagecard.requestFullscreen);
   const wasNative = env.document.fullscreenElement === stagecard;
-  if (state.exploreNudge) state.exploreNudge.hide();
   act.closeFlowPicker();
   act.closeInside();
   /* From Explore's own full screen, step out of it first (native full

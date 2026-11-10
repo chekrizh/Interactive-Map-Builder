@@ -11,7 +11,6 @@ export function createState() {
     week: 0,             // the build step shown
     fsMode: false,
     preFsOpen: true,     // whether the panel was open before full screen
-    exploreNudge: null,
 
     /* camera */
     zoom: 1,

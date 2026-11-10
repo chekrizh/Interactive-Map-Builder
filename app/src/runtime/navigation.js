@@ -134,7 +134,6 @@ function applyFsDom(on) {
     panel.classList.remove("closed");
     drawer.classList.remove("open");
     stagecard.insertBefore(controlsEl, stagecard.querySelector(".crumbbar"));
-    if (state.exploreNudge) state.exploreNudge.place();
     updateDrawerBounds();
     // The two views scale differently, so a normal-view zoom does not carry over.
     if (state.zoom !== 1 || state.tx || state.ty) act.resetView();
@@ -148,7 +147,6 @@ function applyFsDom(on) {
     panel.classList.toggle("closed", !state.preFsOpen);
     drawer.classList.remove("open");
     ctrlSlot.before(controlsEl);
-    if (state.exploreNudge) state.exploreNudge.place();
     control.label(fsBtn, t("fullScreen"), "expand");
     panelBtn.hidden = state.preFsOpen;
   }
