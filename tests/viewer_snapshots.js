@@ -55,7 +55,17 @@ async function walk(pagePath, out) {
     const snap = async label => {
       const id = `${name}-${String(++n).padStart(3, '0')}-${label.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`;
       await page.waitForTimeout(60);
-      await page.screenshot({ path: path.join(out, id + '.png'), animations: 'disabled' });
+      /* Chromium sometimes re-rasters text a moment after a frame has settled (seen: 600-700
+         pixels across a few tour frames, with the same DOM), so a frame is kept only once two
+         screenshots in a row agree; after five tries the last one is kept as it is. */
+      let shot = await page.screenshot({ animations: 'disabled' });
+      for (let i = 0; i < 5; i++) {
+        await page.waitForTimeout(80);
+        const again = await page.screenshot({ animations: 'disabled' });
+        if (again.equals(shot)) break;
+        shot = again;
+      }
+      fs.writeFileSync(path.join(out, id + '.png'), shot);
       const rec = await page.evaluate(() => {
         const state = window.mapViewer ? window.mapViewer.getState() : null;
         const storage = Object.fromEntries(Object.keys(localStorage).sort().map(k => [k, localStorage.getItem(k)]));
