@@ -5,7 +5,7 @@ import { createState } from './state.js';
 import { createScene } from './scene.js';
 import { createPanels, NEEDS as PANELS_NEEDS } from './panels.js';
 import { createFlowplayer, NEEDS as FLOW_NEEDS } from './flow-player.js';
-import { createCamera } from './camera.js';
+import { createCamera, NEEDS as CAMERA_NEEDS } from './camera.js';
 import { createTourplayer } from './tour-player.js';
 import { createNavigation, NEEDS as NAVIGATION_NEEDS } from './navigation.js';
 import { createFilesView, NEEDS as FILES_NEEDS } from './files-view.js';
@@ -30,7 +30,7 @@ export async function mountEngine(root, definition) {
     return Object.freeze(act);
   }
   const { scope, document, requestAnimationFrame, cancelAnimationFrame, setTimeout, clearTimeout, ResizeObserver, t, reduced, phoneQuery, wideQuery, param, store } = env;
-  const { HUES, hue, ICONS, ZONES, NODES, EDGES, GROUPS, L0, STORIES, WEEKS, IMARK, INSIDES, VB, TOUR_CHAPTERS, TOUR, TOUR_TOTAL, BEAT_SECONDS, FLOW_BEAT_SECONDS, SWEEP, PATH_ZOOM_MAX, SHOT_SLACK } = model;
+  const { HUES, hue, ICONS, ZONES, NODES, EDGES, GROUPS, L0, STORIES, WEEKS, IMARK, INSIDES, VB, TOUR_CHAPTERS, TOUR, TOUR_TOTAL, BEAT_SECONDS, FLOW_BEAT_SECONDS, SWEEP, PATH_ZOOM_MAX, SHOT_SLACK, flowEnd, beatStart, edgeCount } = model;
   const context = {
     definition,
     format: env.format,
@@ -89,9 +89,6 @@ export async function mountEngine(root, definition) {
     get WEEKS() {
       return WEEKS;
     },
-    get activeSvg() {
-      return activeSvg;
-    },
     get allNodeBoxes() {
       return allNodeBoxes;
     },
@@ -118,9 +115,6 @@ export async function mountEngine(root, definition) {
     },
     get camFrame() {
       return camFrame;
-    },
-    get camFree() {
-      return camFree;
     },
     get camGeom() {
       return camGeom;
@@ -211,9 +205,6 @@ export async function mountEngine(root, definition) {
     },
     get drawerBody() {
       return drawerBody;
-    },
-    get drawerOcclusion() {
-      return drawerOcclusion;
     },
     get edgeCount() {
       return edgeCount;
@@ -404,9 +395,6 @@ export async function mountEngine(root, definition) {
     get scope() {
       return scope;
     },
-    get scroller() {
-      return scroller;
-    },
     get selected() {
       return state.selected;
     },
@@ -496,9 +484,6 @@ export async function mountEngine(root, definition) {
     },
     get tcHint() {
       return tcHint;
-    },
-    get tcKeys() {
-      return tcKeys;
     },
     get tcList() {
       return tcList;
@@ -617,11 +602,7 @@ export async function mountEngine(root, definition) {
     get restoreSelection() {
       return restoreSelection;
     },
-    get zoomCtl() {
-      return zoomCtl;
-    }
   };
-  const cameraModule = createCamera(context);
   const tourplayerModule = createTourplayer(context);
   const panel = document.getElementById("panel");
   const control = controls;
@@ -633,6 +614,7 @@ export async function mountEngine(root, definition) {
   const panelsModule = createPanels({ env, model, scene, state, act: actFor("panels", PANELS_NEEDS) });
   const navigationModule = createNavigation({ env, model, scene, state, act: actFor("navigation", NAVIGATION_NEEDS) });
   const flowplayerModule = createFlowplayer({ env, model, scene, state, act: actFor("flow-player", FLOW_NEEDS) });
+  const cameraModule = createCamera({ env, model, scene, state, act: actFor("camera", CAMERA_NEEDS) });
   Object.assign(wired, {
     showLevel, selectNode, closeInside, clearStory,
     panelHTML, openPanel, renderL0, renderOverview, renderNode,
@@ -780,21 +762,9 @@ export async function mountEngine(root, definition) {
 
   /* ---------------- pan (hand drag) + zoom ---------------- */
 
-  const scroller = document.querySelector(".stage-scroll");
-  // Reserve the inspector's actual width and inset during camera moves.
-  // While touring, the step card takes the inspector's place.
-  const drawerOcclusion = () => drawer.classList.contains("open") ? drawer.offsetWidth + 2 * parseFloat(getComputedStyle(stagecard).getPropertyValue("--drawer-inset")) : tourOcclusion().x;
-  /* What the tour's step card covers: a strip on the right on wider
-     screens, the bottom sheet on phones. Zero outside the tour. */
   function tourOcclusion(...args) {
     return cameraModule.tourOcclusion(...args);
   }
-  /* Zoom outside full screen: the hub's wide layout only. The lesson embeds
-     stay as they are, and narrow screens scroll sideways natively. */
-  stagecard.classList.add("zoomable");
-  const normalZoom = () => !state.fsMode && wideQuery.matches;
-  const activeSvg = () => state.level === 0 ? svg0 : svg;
-
   /* Pan limits: any point of the map can be brought to the middle of the
      visible area (left of the sidebar when it is open), so a zoomed-in
      corner card can be centred, and no further, so at least a corner of the
@@ -829,86 +799,6 @@ export async function mountEngine(root, definition) {
   function resetView(...args) {
     return cameraModule.resetView(...args);
   }
-  scope.listen(document.getElementById("zoomIn"), "click", () => {
-    tourCamManual();
-    setZoom(state.zoom * 1.25, canvasCentre());
-  });
-  scope.listen(document.getElementById("zoomOut"), "click", () => {
-    tourCamManual();
-    setZoom(state.zoom / 1.25, canvasCentre());
-  });
-  // In the tour, Fit means the tour's wide framing, not zoom 1.
-  scope.listen(document.getElementById("zoomFit"), "click", () => {
-    if (state.tour.active) tourFit();else resetView();
-  });
-  scope.listen(scroller, "wheel", e => {
-    if (e.target.closest("#zoomCtl")) return;
-    /* Normal view: a pinch zooms, and plain scrolling stays the page's. */
-    if (!state.fsMode) {
-      if (!normalZoom() || !e.ctrlKey) return;
-      e.preventDefault();
-      setZoom(state.zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), {
-        x: e.clientX,
-        y: e.clientY
-      });
-      return;
-    }
-    e.preventDefault();
-    tourCamManual();
-    if (e.ctrlKey) setZoom(state.zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15));else {
-      state.tx -= e.deltaX;
-      state.ty -= e.deltaY;
-      applyPan();
-    }
-  }, {
-    passive: false
-  });
-  let panDown = false,
-    panMoved = false,
-    panX = 0,
-    panY = 0;
-  scope.listen(scroller, "pointerdown", e => {
-    const canPan = state.fsMode || normalZoom() && state.zoom !== 1;
-    if (!canPan || e.button !== 0 || e.target.closest("#zoomCtl")) return;
-    panDown = true;
-    panMoved = false;
-    panX = e.clientX;
-    panY = e.clientY;
-  });
-  scope.listen(scroller, "pointermove", e => {
-    if (!panDown) return;
-    const dx = e.clientX - panX,
-      dy = e.clientY - panY;
-    if (!panMoved && Math.hypot(dx, dy) < 5) return;
-    if (!panMoved) {
-      panMoved = true;
-      tourCamManual();
-      try {
-        scroller.setPointerCapture(e.pointerId);
-      } catch (err) {}
-      scroller.classList.add("panning");
-      stagecard.classList.remove("campan");
-    }
-    e.preventDefault();
-    state.tx += dx;
-    state.ty += dy;
-    applyPan();
-    panX = e.clientX;
-    panY = e.clientY;
-  });
-  ["pointerup", "pointercancel"].forEach(t => scope.listen(scroller, t, () => {
-    panDown = false;
-    scroller.classList.remove("panning");
-  }));
-  scope.listen(scroller, "click", e => {
-    if (e.target.closest("#zoomCtl")) return;
-    if (panMoved) {
-      e.stopPropagation();
-      e.preventDefault();
-      panMoved = false;
-    }
-  }, true);
-
   /* ---------------- panel rendering ---------------- */
 
   function applyLabels() {
@@ -1088,9 +978,6 @@ export async function mountEngine(root, definition) {
   }
 
 
-  const flowEnd = b => b.hops ? b.hops[1] : STORIES[b.flow].hops.length;
-  const beatStart = b => b.hops ? b.hops[0] : 0;
-  const edgeCount = b => flowEnd(b) - beatStart(b);
   const hopHue = (s, hop) => hue(hop.bad || !s.ok ? s.hue : s.ok);
 
   /* The changing part of the card. A flow beat's phase (tour.phase) is 0 on
@@ -1202,8 +1089,6 @@ export async function mountEngine(root, definition) {
      nodes the closest frame half shows to `must` and tries again, so a
      close-up zooms out just enough to take a neighbour in whole instead of
      cutting it at an edge. */
-  const zoomCtl = document.getElementById("zoomCtl"),
-    tcKeys = tourCard.querySelector(".tc-keys");
   function camGeom(...args) {
     return cameraModule.camGeom(...args);
   }
@@ -1239,7 +1124,6 @@ export async function mountEngine(root, definition) {
   function tweenCamera(...args) {
     return cameraModule.tweenCamera(...args);
   }
-  const camFree = () => state.tour.active && state.fsMode && !reduced && !state.tourCam.manual;
   /* The camera onto edge k's shot (k within the beat), or the overview
      (k null). animate: ease there over 800 ms, or hold when the camera is
      already on (or moving to) that shot; resolves when it arrives.

@@ -2,6 +2,10 @@
 export function createModel(definition) {
   const HUES = Object.fromEntries(Object.keys(definition.roles).map(key => [key, `--h-${key}`]));
   const TOUR = definition.tour;
+  const STORIES = definition.flows;
+  /* A tour beat's slice of its flow: hops beatStart(b) to flowEnd(b) - 1. */
+  const flowEnd = b => b.hops ? b.hops[1] : STORIES[b.flow].hops.length;
+  const beatStart = b => b.hops ? b.hops[0] : 0;
   return {
     definition,
     HUES,
@@ -21,7 +25,7 @@ export function createModel(definition) {
     GROUPS: definition.groups,
     L0: definition.overview,
     /* Flows and build order. */
-    STORIES: definition.flows,
+    STORIES,
     WEEKS: definition.buildSteps,
     /* Level 2: inside views. A shared arrowhead for inside scenes; a single id is safe
        because only one scene is mounted at a time. */
@@ -42,6 +46,9 @@ export function createModel(definition) {
     PATH_ZOOM_MAX: 1.6,
     /* Close-ups zoom out a little to keep neighbouring edges in one shot
        (2026-11-02), so the camera moves less within a step. */
-    SHOT_SLACK: 0.85
+    SHOT_SLACK: 0.85,
+    flowEnd,
+    beatStart,
+    edgeCount: b => flowEnd(b) - beatStart(b)
   };
 }
