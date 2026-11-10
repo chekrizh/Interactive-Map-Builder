@@ -6,5 +6,6 @@
     "name": "chekrizh"
   },
   "repository": "https://github.com/chekrizh/Interactive-Map-Builder",
-  "license": "MIT"
+  "license": "MIT",
+  "icon": "./icon.svg"
 }
