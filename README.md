@@ -120,41 +120,43 @@ The map files are in [`examples/`](plugins/interactive-map/skills/interactive-ma
 
 ## Install
 
-**Claude Code, through the marketplace (receives updates):**
+```
+npx skills add chekrizh/Interactive-Map-Builder --skill '*' -g
+```
+
+This uses the [skills CLI](https://skills.sh) and works with Claude Code, Codex, Cursor, Gemini CLI and other agents that read skills (`-a claude-code` picks one). `--skill '*'` installs both skills (`interactive-map-repo` reads the repository, `interactive-map` renders the map), and `-g` makes them available in every project. Updates are manual: `npx skills check` shows whether a newer version is out, `npx skills update` installs it.
+
+Then just ask, for example:
+
+> Draw an interactive map of how this repository works.
+
+The skill triggers on its own.
+
+<details>
+<summary><b>Claude Code plugin</b> (updates through the plugin marketplace)</summary>
+
+<br>
 
 ```
 /plugin marketplace add chekrizh/Interactive-Map-Builder
 /plugin install interactive-map@interactive-map-builder
 ```
 
-Then just ask, for example:
-
-> Draw an interactive map of how this repository works.
-
-The skill triggers on its own. It is also available as `/interactive-map:interactive-map`, and the repository method as `/interactive-map:interactive-map-repo`.
+The skills are then also available as `/interactive-map:interactive-map` and `/interactive-map:interactive-map-repo`.
 
 - Update on request: `/plugin marketplace update interactive-map-builder`, or `claude plugin update interactive-map@interactive-map-builder` in a shell.
 - Update automatically: `/plugin` → Marketplaces → interactive-map-builder → Enable auto-update. It is off by default for marketplaces like this one.
 
-**Other agents (Codex, Cursor, Gemini CLI and more), with the [skills CLI](https://skills.sh):**
-
-```
-npx skills add chekrizh/Interactive-Map-Builder --skill '*'
-```
-
-Install both skills: `interactive-map-repo` reads the repository and `interactive-map` renders the map. `npx skills check` shows whether a newer version is out and `npx skills update` installs it; there is no automatic update.
+</details>
 
 <details>
-<summary><b>Other clients</b> (no automatic updates; install the new copy again)</summary>
+<summary><b>Claude apps and ChatGPT</b> (upload the skills as zips)</summary>
 
 <br>
 
-The skills are the folders in `plugins/interactive-map/skills/`.
-
-- **Claude Code without the marketplace:** `cp -R plugins/interactive-map/skills/* ~/.claude/skills/`, then start a new session.
-- **Claude apps (desktop, web):** download `interactive-map.zip` and `interactive-map-repo.zip` from the [latest release](https://github.com/chekrizh/Interactive-Map-Builder/releases/latest), then upload each under Settings → Capabilities → Skills. Code execution must be on.
-- **Codex:** copy the skill folders into the skills folder Codex reads (`~/.codex/skills/` at the time of writing).
+- **Claude apps (desktop, web):** download `interactive-map.zip` and `interactive-map-repo.zip` from the [latest release](https://github.com/chekrizh/Interactive-Map-Builder/releases/latest), then upload each under Settings → Capabilities → Skills. Code execution must be on. To update, upload the zips of a newer release.
 - **ChatGPT:** upload the same zips where your workspace allows custom skills. This path has not been checked here.
+- **By hand:** the skills are the folders in `plugins/interactive-map/skills/`; copy both into the skills folder your agent reads.
 
 </details>
 
