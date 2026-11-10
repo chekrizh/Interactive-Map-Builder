@@ -4,7 +4,7 @@ import { createModel } from './model.js';
 import { createState } from './state.js';
 import { createScene } from './scene.js';
 import { createPanels, NEEDS as PANELS_NEEDS } from './panels.js';
-import { createFlowplayer } from './flow-player.js';
+import { createFlowplayer, NEEDS as FLOW_NEEDS } from './flow-player.js';
 import { createCamera } from './camera.js';
 import { createTourplayer } from './tour-player.js';
 import { createNavigation, NEEDS as NAVIGATION_NEEDS } from './navigation.js';
@@ -158,14 +158,8 @@ export async function mountEngine(root, definition) {
     get catName() {
       return catName;
     },
-    get chooseFlow() {
-      return chooseFlow;
-    },
     get chosenFlow() {
       return state.chosenFlow;
-    },
-    set chosenFlow(value) {
-      state.chosenFlow = value;
     },
     get clampPan() {
       return clampPan;
@@ -175,6 +169,9 @@ export async function mountEngine(root, definition) {
     },
     get clearTimeout() {
       return clearTimeout;
+    },
+    get stopDot() {
+      return stopDot;
     },
     get closeFlowPicker() {
       return closeFlowPicker;
@@ -205,9 +202,6 @@ export async function mountEngine(root, definition) {
     },
     get dot() {
       return state.dot;
-    },
-    set dot(value) {
-      state.dot = value;
     },
     get drawBeatPath() {
       return drawBeatPath;
@@ -250,12 +244,6 @@ export async function mountEngine(root, definition) {
     },
     get flowEnd() {
       return flowEnd;
-    },
-    get flowPicker() {
-      return flowPicker;
-    },
-    get flowSummary() {
-      return flowSummary;
     },
     get focusHop() {
       return focusHop;
@@ -473,9 +461,6 @@ export async function mountEngine(root, definition) {
     get storyToken() {
       return state.storyToken;
     },
-    set storyToken(value) {
-      state.storyToken = value;
-    },
     get selectNode() {
       return selectNode;
     },
@@ -636,7 +621,6 @@ export async function mountEngine(root, definition) {
       return zoomCtl;
     }
   };
-  const flowplayerModule = createFlowplayer(context);
   const cameraModule = createCamera(context);
   const tourplayerModule = createTourplayer(context);
   const panel = document.getElementById("panel");
@@ -648,10 +632,12 @@ export async function mountEngine(root, definition) {
   const { svg0, svg, el, canvas, zoneLayer, edgeLayer, nodeLayer, storyLayer, zoneEls, edgeEls, nodeEls, nodeBox, allNodeBoxes, hopBoxes } = scene;
   const panelsModule = createPanels({ env, model, scene, state, act: actFor("panels", PANELS_NEEDS) });
   const navigationModule = createNavigation({ env, model, scene, state, act: actFor("navigation", NAVIGATION_NEEDS) });
+  const flowplayerModule = createFlowplayer({ env, model, scene, state, act: actFor("flow-player", FLOW_NEEDS) });
   Object.assign(wired, {
     showLevel, selectNode, closeInside, clearStory,
     panelHTML, openPanel, renderL0, renderOverview, renderNode,
     setFocus, updateDrawerBounds, resetView, panelIsOpen, closePanel, renderGroup, renderWeek,
+    setWeek, unselect, revealInPanel, focusHop,
     hasFiles: () => Boolean(filesView?.available),
     filesFor: id => filesView.pathsFor(id),
     openFiles: path => filesView.open(path)
@@ -997,6 +983,12 @@ export async function mountEngine(root, definition) {
      carries its hop index (data-hop) so the tour can mark the current edge. */
   /* A flow's number appears once its dot has landed, with a short pop
      (scale and fade), in Explore's flows and the tour alike (2026-11-01). */
+  function stopDot(...args) {
+    return flowplayerModule.stopDot(...args);
+  }
+  function closeFlowPicker(...args) {
+    return flowplayerModule.closeFlowPicker(...args);
+  }
   function popBadge(...args) {
     return flowplayerModule.popBadge(...args);
   }
@@ -1008,84 +1000,6 @@ export async function mountEngine(root, definition) {
 
   /* Choosing a flow prepares its next run. Only Play starts or restarts it;
      the original build buttons remain an independent exploration path. */
-  const flowPicker = document.getElementById("flowPicker");
-  const flowSummary = flowPicker.querySelector("summary");
-  const flowControls = document.getElementById("flowControls");
-  const storyOptions = document.getElementById("storyOptions");
-  const failureOptions = document.getElementById("failureOptions");
-  const playFlowButton = document.getElementById("playFlow");
-  function chooseFlow(...args) {
-    return flowplayerModule.chooseFlow(...args);
-  }
-  function closeFlowPicker(...args) {
-    return flowplayerModule.closeFlowPicker(...args);
-  }
-  function focusFlowOption(...args) {
-    return flowplayerModule.focusFlowOption(...args);
-  }
-  scope.listen(flowPicker, "toggle", () => {
-    if (flowPicker.open) requestAnimationFrame(() => {
-      if (flowPicker.open) focusFlowOption();
-    });
-  });
-  scope.listen(flowPicker, "keydown", event => {
-    if (event.key === "Escape" && flowPicker.open) {
-      event.preventDefault();
-      closeFlowPicker(true);
-      return;
-    }
-    const buttons = [...flowPicker.querySelectorAll("[data-flow]")];
-    if (event.target === flowSummary && ["ArrowDown", "ArrowUp"].includes(event.key)) {
-      event.preventDefault();
-      flowPicker.open = true;
-      return;
-    }
-    const index = buttons.indexOf(document.activeElement);
-    if (index < 0 || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
-    event.preventDefault();
-    const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : (index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length;
-    buttons[next].focus();
-  });
-  scope.listen(flowPicker, "focusout", event => {
-    // Safari can blur a button without focusing the clicked option. A null
-    // relatedTarget must not close the menu before that option receives click.
-    // Pointer presses outside the picker are handled separately below.
-    if (event.relatedTarget && !flowPicker.contains(event.relatedTarget)) closeFlowPicker();
-  });
-  scope.listen(document, "pointerdown", event => {
-    if (flowPicker.open && !flowPicker.contains(event.target)) closeFlowPicker();
-  });
-  scope.listen(playFlowButton, "click", () => {
-    if (state.chosenFlow) {
-      closeFlowPicker();
-      playStory(state.chosenFlow);
-    }
-  });
-
-  Object.keys(STORIES).forEach(key => {
-    const story = STORIES[key];
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "flow-option";
-    button.dataset.flow = key;
-    button.style.setProperty("--flow-hue", hue(story.hue));
-    button.setAttribute("aria-pressed", "false");
-    button.title = story.desc;
-    const marker = document.createElement("span");
-    marker.className = "flow-dot";
-    marker.setAttribute("aria-hidden", "true");
-    button.append(marker, document.createTextNode(story.title));
-    scope.listen(button, "click", () => {
-      chooseFlow(key, { preview: true });
-      closeFlowPicker(true);
-    });
-    (story.kind === "failure" ? failureOptions : storyOptions).appendChild(button);
-  });
-  [storyOptions, failureOptions].forEach(group => {
-    group.parentElement.hidden = !group.children.length;
-  });
-  const firstFlow = flowPicker.querySelector("[data-flow]");
-  if (firstFlow) chooseFlow(firstFlow.dataset.flow);else flowControls.hidden = true;
 
   /* The Labels switch is parked with its markup (see the commented block in
      the controls section). viewMode stays a real variable pinned to

@@ -380,12 +380,8 @@ function markEdge(b, k) {
 }
 // Stops a moving dot, leaving the lit path as it is.
 function stopEdgeMotion() {
-  ctx.storyToken++;
+  ctx.stopDot();
   ctx.tour.badgeWait = -1;
-  if (ctx.dot) {
-    ctx.dot.remove();
-    ctx.dot = null;
-  }
 }
 /* Edge k becomes current on the map; then its dot travels it with the
    camera alongside (animate), or the camera holds on it at once.
