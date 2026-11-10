@@ -5,8 +5,11 @@
     on the controls themselves, so the two never disagree. All text comes
     from `ui` (help*), so a map can reword it. */
 
-export function createHelp(ctx) {
-  const doc = ctx.document;
+/* The neighbours' functions help calls (through act). */
+export const NEEDS = ["showLevel", "hasFiles"];
+
+export function createHelp({ env, model, state, act }) {
+  const doc = env.document;
   const btn = doc.getElementById("helpBtn");
   const pop = doc.getElementById("helpPop");
   const list = doc.getElementById("helpList");
@@ -15,24 +18,26 @@ export function createHelp(ctx) {
   const flowControls = doc.getElementById("flowControls");
   const flowPicker = doc.getElementById("flowPicker");
   const buildStart = () => doc.querySelector('#weekSeg button[data-w="1"]');
-  const t = ctx.t;
-  const hasInsides = Object.keys(ctx.INSIDES || {}).length > 0;
+  const tourBtn = doc.getElementById("tourBtn");
+  const toL0 = doc.getElementById("toL0");
+  const t = env.t;
+  const hasInsides = Object.keys(model.INSIDES || {}).length > 0;
   const modes = [
     {
       ask: t("helpTourAsk"), text: t("helpTour"),
-      shown: () => (ctx.definition.tour || []).length > 0, go: () => ctx.tourBtn.click(), at: [ctx.tourBtn]
+      shown: () => (model.definition.tour || []).length > 0, go: () => tourBtn.click(), at: [tourBtn]
     },
     {
       ask: t("helpOverviewAsk"), text: t("helpOverview"),
-      shown: () => true, go: () => { if (ctx.level !== 0) ctx.toL0.click(); }
+      shown: () => true, go: () => { if (state.level !== 0) toL0.click(); }
     },
     {
       ask: t("helpMapAsk"), text: t("helpMap") + (hasInsides ? " " + t("helpMapInside") : ""),
       shown: () => true,
       go: () => {
-        if (ctx.level === 1) return;
+        if (state.level === 1) return;
         const full = doc.getElementById("gofull");
-        if (full) full.click(); else ctx.showLevel(1);
+        if (full) full.click(); else act.showLevel(1);
       }
     },
     {
@@ -43,7 +48,7 @@ export function createHelp(ctx) {
     },
     {
       ask: t("helpFilesAsk"), text: t("helpFiles"),
-      shown: () => Boolean(ctx.filesView?.available), go: () => doc.getElementById("filesBtn").click(),
+      shown: () => act.hasFiles(), go: () => doc.getElementById("filesBtn").click(),
       at: [doc.getElementById("filesBtn")]
     },
     {
@@ -65,7 +70,7 @@ export function createHelp(ctx) {
     text.className = "help-text";
     text.textContent = m.text;
     row.append(ask, text);
-    ctx.scope.listen(row, "click", () => {
+    env.scope.listen(row, "click", () => {
       close();
       m.go();
     });
@@ -85,12 +90,12 @@ export function createHelp(ctx) {
     btn.setAttribute("aria-expanded", "false");
     if (restoreFocus) btn.focus();
   }
-  ctx.scope.listen(btn, "click", () => (pop.hidden ? open() : close()));
-  ctx.scope.listen(doc, "pointerdown", e => {
+  env.scope.listen(btn, "click", () => (pop.hidden ? open() : close()));
+  env.scope.listen(doc, "pointerdown", e => {
     if (!pop.hidden && !pop.contains(e.target) && !btn.contains(e.target)) close();
   });
   for (const el of [btn, pop]) {
-    ctx.scope.listen(el, "keydown", e => {
+    env.scope.listen(el, "keydown", e => {
       if (e.key !== "Escape" || pop.hidden) return;
       e.stopPropagation();
       close(true);
@@ -117,19 +122,19 @@ export function createHelp(ctx) {
     tip.style.top = r.bottom + 8 + "px";
   }
   function hideTip() {
-    ctx.clearTimeout(timer);
+    env.clearTimeout(timer);
     tip.hidden = true;
   }
   modes.forEach(m => (m.at || []).filter(Boolean).forEach(el => {
-    ctx.scope.listen(el, "pointerenter", e => {
+    env.scope.listen(el, "pointerenter", e => {
       if (e.pointerType !== "mouse" || flowPicker.open || !pop.hidden) return;
-      ctx.clearTimeout(timer);
-      timer = ctx.setTimeout(() => showTip(m, el), 450);
+      env.clearTimeout(timer);
+      timer = env.setTimeout(() => showTip(m, el), 450);
     });
-    ctx.scope.listen(el, "focus", () => {
+    env.scope.listen(el, "focus", () => {
       if (el.matches(":focus-visible") && !flowPicker.open) showTip(m, el);
     });
-    for (const ev of ["pointerleave", "blur", "pointerdown", "click"]) ctx.scope.listen(el, ev, hideTip);
+    for (const ev of ["pointerleave", "blur", "pointerdown", "click"]) env.scope.listen(el, ev, hideTip);
   }));
 
   return { close };

@@ -8,8 +8,8 @@ import { createFlowplayer } from './flow-player.js';
 import { createCamera } from './camera.js';
 import { createTourplayer } from './tour-player.js';
 import { createNavigation } from './navigation.js';
-import { createFilesView } from './files-view.js';
-import { createHelp } from './help.js';
+import { createFilesView, NEEDS as FILES_NEEDS } from './files-view.js';
+import { createHelp, NEEDS as HELP_NEEDS } from './help.js';
 
 export async function mountEngine(root, definition) {
   "use strict";
@@ -17,6 +17,18 @@ export async function mountEngine(root, definition) {
   const env = createEnv(root, definition);
   const model = createModel(definition);
   const state = createState();
+  /* Neighbour functions by name. A module gets an `act` holding only the names in its NEEDS;
+     each one looks its function up when called, so modules can be created in any order and
+     wired afterwards, and a call before wiring fails with a clear error. */
+  const wired = {};
+  function actFor(who, needs) {
+    const act = {};
+    for (const name of needs) act[name] = (...args) => {
+      if (!wired[name]) throw new Error(`${who}: ${name} is not wired`);
+      return wired[name](...args);
+    };
+    return Object.freeze(act);
+  }
   const { scope, document, requestAnimationFrame, cancelAnimationFrame, setTimeout, clearTimeout, ResizeObserver, t, reduced, phoneQuery, wideQuery, param, store } = env;
   const { HUES, hue, ICONS, ZONES, NODES, EDGES, GROUPS, L0, STORIES, WEEKS, IMARK, INSIDES, VB, TOUR_CHAPTERS, TOUR, TOUR_TOTAL, BEAT_SECONDS, FLOW_BEAT_SECONDS, SWEEP, PATH_ZOOM_MAX, SHOT_SLACK } = model;
   const context = {
@@ -654,6 +666,11 @@ export async function mountEngine(root, definition) {
     selectNode: id => selectNode(id)
   });
   const { svg0, svg, el, canvas, zoneLayer, edgeLayer, nodeLayer, storyLayer, zoneEls, edgeEls, nodeEls, nodeBox, allNodeBoxes, hopBoxes } = scene;
+  Object.assign(wired, {
+    showLevel, selectNode, closeInside, clearStory,
+    panelHTML, openPanel, renderL0, renderOverview, renderNode,
+    hasFiles: () => Boolean(filesView?.available)
+  });
   control.label(document.getElementById("toL0"), t("backToBigPicture"), "back");
   control.label(document.getElementById("fsBtn"), t("fullScreen"), "expand");
   control.label(document.getElementById("insideBack"), t("backToMap"), "back");
@@ -1226,9 +1243,9 @@ export async function mountEngine(root, definition) {
     return tourplayerModule.refreshTourEntry(...args);
   }
   /* Files view: the repository tree beside the tour entry, when the map lists files. */
-  filesView = createFilesView(context);
+  filesView = createFilesView({ env, model, scene, state, act: actFor("files-view", FILES_NEEDS) });
   /* The "?" card and hover hints on the controls: what each mode is for. */
-  createHelp(context);
+  createHelp({ env, model, state, act: actFor("help", HELP_NEEDS) });
   scope.listen(tourBtn, "click", () => startTour(resumeStep() || 1, {
     native: true
   }));
