@@ -354,3 +354,68 @@ class LayoutCheckTest(unittest.TestCase):
                 for e in d['edges']:
                     if e.get('label'):
                         self.assertEqual(e['label'] in seen['chips'], f'edge {e["id"]}: label' not in notes, e['id'])
+
+
+def without_layout(d):
+    d = copy.deepcopy(d)
+    d['layout'] = {k: v for k, v in d['layout'].items() if k in ('insides', 'annotations', 'insideMarkers')}
+    return d
+
+
+class AutoLayoutTest(unittest.TestCase):
+    """auto_layout.py fills what `layout` leaves out; a hand layout stays as written."""
+
+    def setUp(self):
+        import auto_layout
+        import layout_check
+        self.fill, self.check, self.al = auto_layout.fill, layout_check.check, auto_layout
+
+    def test_hand_layouts_are_untouched(self):
+        for name, d in EXAMPLES.items():
+            with self.subTest(name):
+                self.assertEqual(render.with_layout(d)['layout'], json.loads(json.dumps(d['layout'])))
+
+    def test_examples_without_layout_render_with_no_layout_problems(self):
+        for name, d in EXAMPLES.items():
+            with self.subTest(name):
+                laid = render.complete(without_layout(d))
+                self.assertEqual(render.problems(laid), [])
+                self.assertEqual(self.check(laid)[0], [])
+                for e in laid['edges']:  # every edge routed, horizontal and vertical runs only
+                    pts = layout_check_points(laid['layout']['edges'][e['id']]['d'])
+                    self.assertTrue(all(a[0] == b[0] or a[1] == b[1] for a, b in zip(pts, pts[1:])), e['id'])
+
+    def test_people_lead_and_zones_stay_together(self):
+        laid = self.fill(without_layout(EXAMPLES['kutt-url-shortener']), keep_grid=True)
+        grid = laid['layout']['grid']
+        self.assertEqual({grid['visitor'][0], grid['user'][0]}, {0})
+        zones = laid['layout']['zones']
+        for n in laid['nodes']:
+            box, card = zones[n['zone']], laid['layout']['nodes'][n['id']]
+            self.assertTrue(box['x'] <= card['x'] and card['x'] + card['w'] <= box['x'] + box['w'], n['id'])
+
+    def test_grid_hints_steer_and_round_trip(self):
+        bare = without_layout(EXAMPLES['kutt-url-shortener'])
+        first = self.fill(bare, keep_grid=True)
+        again = copy.deepcopy(bare)
+        again['layout']['grid'] = first['layout']['grid']
+        self.assertEqual(self.fill(again)['layout']['nodes'], first['layout']['nodes'])
+        moved = copy.deepcopy(again)
+        moved['layout']['grid']['visitor'], moved['layout']['grid']['target'] = (
+            first['layout']['grid']['target'], first['layout']['grid']['visitor'])
+        nodes = self.fill(moved)['layout']['nodes']
+        self.assertLess(nodes['target']['y'], nodes['visitor']['y'])
+        self.assertNotIn('grid', self.fill(moved)['layout'])  # the page does not carry it
+
+    def test_an_authored_edge_path_is_kept(self):
+        bare = without_layout(EXAMPLE)
+        laid = self.fill(bare)
+        bare['layout']['nodes'] = laid['layout']['nodes']
+        edge = EXAMPLE['edges'][0]['id']
+        bare['layout']['edges'] = {edge: {'d': 'M1,1 L2,2', 'lside': 'below'}}
+        self.assertEqual(self.fill(bare)['layout']['edges'][edge], {'d': 'M1,1 L2,2', 'lside': 'below'})
+
+
+def layout_check_points(d):
+    import layout_check
+    return layout_check.points(d)

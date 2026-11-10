@@ -12,6 +12,7 @@ page from the viewer in assets/viewer/ (its script, styles and font inlined, so 
 no network) and prints the absolute path of OUT.html.
 With --repo-dir, every code reference (path:from-to) and every files entry must exist in that
 checkout, and line ranges must fit inside their files.
+Geometry the map leaves out of `layout` is computed first (auto_layout.py).
 Warnings (fields the viewer ignores, markup that was removed) go to stderr and do not stop the build.
 So does the layout check (layout_check.py): the cards, edges and labels as the viewer will draw
 them, with problems a reader would see (overlaps, an edge through a card, a covered label) and
@@ -25,6 +26,7 @@ import mimetypes
 import pathlib
 import sys
 
+import auto_layout
 import contract
 import defaults
 import layout_check
@@ -420,9 +422,23 @@ def plugin_version():
         return 'unknown'
 
 
+def with_layout(d):
+    """Geometry the map leaves out, computed by auto_layout.py. A map too broken to lay out
+    is returned as it is, so problems() can say what is wrong with it."""
+    if not (isinstance(d, dict) and isinstance(d.get('nodes'), list) and isinstance(d.get('edges'), list)):
+        return d
+    if d.get('layout') is not None and not isinstance(d.get('layout'), dict):
+        return d
+    try:
+        return auto_layout.fill(d)
+    except (KeyError, TypeError, ValueError, AttributeError, IndexError):
+        return d
+
+
 def complete(definition):
-    """The authored map plus everything render.py fills in: defaults, library assets, interface roles."""
-    d = defaults.with_defaults(definition)
+    """The authored map plus everything render.py fills in: layout, defaults, library assets, interface roles."""
+    d = with_layout(definition)
+    d = defaults.with_defaults(d)
     d = with_library(d)
     if isinstance(d, dict) and isinstance(d.get('settings'), dict) and isinstance(d.get('roles'), dict):
         d = defaults.with_appearance(d, d['roles'])

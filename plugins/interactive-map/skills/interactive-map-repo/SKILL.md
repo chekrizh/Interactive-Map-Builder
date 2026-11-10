@@ -37,7 +37,7 @@ Flows are C4 dynamic diagrams: one use case as ordered steps over the elements a
 
 ## 4. Map it onto the viewer
 
-- Overview cards: the level-1 picture. External systems and people around the system; the system itself split into 3 to 6 parts by purpose. Space them so the relationship labels fit on the lines (see the layout note in `interactive-map`).
+- Overview cards: the level-1 picture. External systems and people around the system; the system itself split into 3 to 6 parts by purpose. Leave their placement to the automatic layout unless the order needs fixing (see the layout note in `interactive-map`).
 - Map: containers grouped into zones; a container opened to level 3 becomes a zone holding its components.
 - Node `shape` shows the C4 kind (see the `interactive-map` skill): `person` for people, `external` for systems outside the boundary, `database` for SQL and document stores, `queue` for message brokers and streams, `worker` only for a pool of parallel workers. Everything else, including schedulers and single background jobs, stays `component` (the default); give a scheduler a clock icon instead.
 - Edges: verb plus protocol as the label.
