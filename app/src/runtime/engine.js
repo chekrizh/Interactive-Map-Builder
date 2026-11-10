@@ -3,7 +3,7 @@ import { createEnv } from './env.js';
 import { createModel } from './model.js';
 import { createState } from './state.js';
 import { createScene } from './scene.js';
-import { createPanels } from './panels.js';
+import { createPanels, NEEDS as PANELS_NEEDS } from './panels.js';
 import { createFlowplayer } from './flow-player.js';
 import { createCamera } from './camera.js';
 import { createTourplayer } from './tour-player.js';
@@ -654,7 +654,6 @@ export async function mountEngine(root, definition) {
       return zoomCtl;
     }
   };
-  const panelsModule = createPanels(context);
   const flowplayerModule = createFlowplayer(context);
   const cameraModule = createCamera(context);
   const tourplayerModule = createTourplayer(context);
@@ -666,10 +665,14 @@ export async function mountEngine(root, definition) {
     selectNode: id => selectNode(id)
   });
   const { svg0, svg, el, canvas, zoneLayer, edgeLayer, nodeLayer, storyLayer, zoneEls, edgeEls, nodeEls, nodeBox, allNodeBoxes, hopBoxes } = scene;
+  const panelsModule = createPanels({ env, model, scene, state, act: actFor("panels", PANELS_NEEDS) });
   Object.assign(wired, {
     showLevel, selectNode, closeInside, clearStory,
     panelHTML, openPanel, renderL0, renderOverview, renderNode,
-    hasFiles: () => Boolean(filesView?.available)
+    setFocus, updateDrawerBounds,
+    hasFiles: () => Boolean(filesView?.available),
+    filesFor: id => filesView.pathsFor(id),
+    openFiles: path => filesView.open(path)
   });
   control.label(document.getElementById("toL0"), t("backToBigPicture"), "back");
   control.label(document.getElementById("fsBtn"), t("fullScreen"), "expand");
