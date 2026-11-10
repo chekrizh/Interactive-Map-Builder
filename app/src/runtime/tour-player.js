@@ -1,8 +1,64 @@
-/** tour-player: extracted original behavior; dependencies supplied by the instance controller. */
-export function createTourplayer(ctx) {
+/** The guided tour: its entry button, the tour bar and step card, the beats (flow beats edge by
+ *  edge, the closing sweep, the ending), the keys while touring, and what happens when the browser
+ *  leaves full screen mid-tour. The only writer of tour, tourStepped, cardSwap and cardOut. */
+import controls from '../rendering/ml-controls.js';
+
+/* The neighbours' functions the tour calls (through act). */
+export const NEEDS = ["showLevel", "setFocus", "setWeek", "unselect", "restoreSelection", "updateDrawerBounds", "applyFsDom", "exitFs", "onEscape",
+  "closeInside", "panelIsOpen", "openPanel", "closePanel", "renderL0", "renderOverview", "renderGroup", "renderNode", "renderWeek",
+  "clearStory", "stopDot", "playStory", "animateDot", "popBadge", "closeFlowPicker", "tourCamShot", "tourCamFree", "tourCamStop", "tourFit"];
+
+export function createTourplayer({ env, model, scene, state, act }) {
+const { document } = env;
+const stagecard = document.querySelector(".stagecard");
+const tourBtn = document.getElementById("tourBtn");
+const tourBtnText = document.getElementById("tourBtnText");
+const tourStatus = document.getElementById("tourStatus");
+const tourChapters = document.getElementById("tourChapters");
+const tourExitBtn = document.getElementById("tourExit");
+const tourCard = document.getElementById("tourCard");
+const tourEnd = document.getElementById("tourEnd");
+const tcEyebrow = document.getElementById("tcEyebrow");
+const tcTitle = document.getElementById("tcTitle");
+const tcScroll = document.getElementById("tcScroll");
+const tcBody = document.getElementById("tcBody");
+const tcWhy = document.getElementById("tcWhy");
+const tcWhyText = document.getElementById("tcWhyText");
+const tcList = document.getElementById("tcList");
+const tcHint = document.getElementById("tcHint");
+const tcCount = document.getElementById("tcCount");
+const tcBack = document.getElementById("tcBack");
+const tcNext = document.getElementById("tcNext");
+const teTitle = document.getElementById("teTitle");
+const beatHue = b => `var(${b.hue || model.TOUR_CHAPTERS[b.ch].hue})`;
+const beatHasMotion = b => Boolean(b.flow) || Boolean(b.whole) && !env.reduced;
+const hopHue = (s, hop) => model.hue(hop.bad || !s.ok ? s.hue : s.ok);
+/* The closing beat (2026-11-01, click-through): each Next lights the
+   next stage, using the stage focus Explore already has (the rest of the
+   map dims) plus the stage's hue on its components; the Next after the
+   last stage goes on to the ending. tour.phase is the stage shown (0 for
+   the whole map). Skipped under reduced motion, as before. */
+const stageCount = b => b.whole && !env.reduced ? model.SWEEP.length : 0;
+
+/* ?reset=1 forgets the tour's saved step, so it can be tested again from a
+   first visit. Every load with the flag resets, so remove it to keep state. */
+if (env.param("reset")) {
+  try {
+    localStorage.removeItem(model.definition.settings.storage.tour);
+  } catch (err) {}
+}
+controls.label(tourExitBtn, env.t("tourExitShort"), "exit");
+tourExitBtn.setAttribute("aria-label", env.t("tourExit"));
+model.TOUR_CHAPTERS.forEach(c => {
+  const li = document.createElement("li");
+  li.innerHTML = '<span class="tb-bar"><span class="tb-fill"></span></span><span class="tb-name"></span>';
+  li.querySelector(".tb-name").textContent = c.name;
+  tourChapters.appendChild(li);
+});
+
 function readTour() {
   try {
-    const v = JSON.parse(ctx.store.get(ctx.definition.settings.storage.tour) || "null");
+    const v = JSON.parse(env.store.get(model.definition.settings.storage.tour) || "null");
     return v && typeof v === "object" ? v : {};
   } catch (err) {
     return {};
@@ -10,50 +66,50 @@ function readTour() {
 }
 
 function saveTour(value) {
-  ctx.store.set(ctx.definition.settings.storage.tour, JSON.stringify(value));
+  env.store.set(model.definition.settings.storage.tour, JSON.stringify(value));
 }
 
 /* A tour left mid-way is offered back at its step; a finished one starts over. */
 function resumeStep() {
-  const s = ctx.readTour().step;
-  return Number.isInteger(s) && s >= 2 && s <= ctx.TOUR.length ? s : 0;
+  const s = readTour().step;
+  return Number.isInteger(s) && s >= 2 && s <= model.TOUR.length ? s : 0;
 }
 
 function refreshTourEntry() {
-  const r = ctx.resumeStep(),
-    done = Boolean(ctx.readTour().done);
-  ctx.tourBtnText.textContent = r ? ctx.t("tourResume", { step: r }) : ctx.t("tourEntry");
-  ctx.document.getElementById("tourLabel").textContent = ctx.t(done ? "tourTitle" : "tourNew");
+  const r = resumeStep(),
+    done = Boolean(readTour().done);
+  tourBtnText.textContent = r ? env.t("tourResume", { step: r }) : env.t("tourEntry");
+  env.document.getElementById("tourLabel").textContent = env.t(done ? "tourTitle" : "tourNew");
 }
 
 function timeLeft(n) {
-  const secs = ctx.TOUR.slice(n - 1).reduce((t, b) => t + (b.flow ? ctx.FLOW_BEAT_SECONDS : ctx.BEAT_SECONDS), 0);
-  return secs < 60 ? ctx.t("tourLessThanMinute") : ctx.t("tourMinutesLeft", { minutes: Math.round(secs / 60) });
+  const secs = model.TOUR.slice(n - 1).reduce((t, b) => t + (b.flow ? model.FLOW_BEAT_SECONDS : model.BEAT_SECONDS), 0);
+  return secs < 60 ? env.t("tourLessThanMinute") : env.t("tourMinutesLeft", { minutes: Math.round(secs / 60) });
 }
 
 
 function renderTourBar(n) {
-  const b = n <= ctx.TOUR.length ? ctx.TOUR[n - 1] : null;
-  const cur = b ? b.ch : ctx.TOUR_CHAPTERS.length;
-  const pos = b ? ctx.TOUR.slice(0, n).filter(x => x.ch === cur).length : 0;
-  [...ctx.tourChapters.children].forEach((li, i) => {
+  const b = n <= model.TOUR.length ? model.TOUR[n - 1] : null;
+  const cur = b ? b.ch : model.TOUR_CHAPTERS.length;
+  const pos = b ? model.TOUR.slice(0, n).filter(x => x.ch === cur).length : 0;
+  [...tourChapters.children].forEach((li, i) => {
     const fill = li.querySelector(".tb-fill");
     const now = i === cur;
     li.classList.toggle("current", now);
     if (now) li.setAttribute("aria-current", "step");else li.removeAttribute("aria-current");
-    fill.style.width = i < cur ? "100%" : now ? pos / ctx.TOUR_CHAPTERS[i].span * 100 + "%" : "0%";
-    fill.style.background = now ? ctx.beatHue(b) : "";
+    fill.style.width = i < cur ? "100%" : now ? pos / model.TOUR_CHAPTERS[i].span * 100 + "%" : "0%";
+    fill.style.background = now ? beatHue(b) : "";
   });
-  ctx.tourStatus.textContent = b ? ctx.t("tourStatus", { step: n, total: ctx.TOUR_TOTAL, left: ctx.timeLeft(n) }) : ctx.t("tourComplete");
+  tourStatus.textContent = b ? env.t("tourStatus", { step: n, total: model.TOUR_TOTAL, left: timeLeft(n) }) : env.t("tourComplete");
 }
 
 function renderTourCard(n) {
-  const b = ctx.TOUR[n - 1];
-  ctx.tourCard.style.setProperty("--tc-hue", ctx.beatHue(b));
-  ctx.tcEyebrow.textContent = ctx.t("tourCardCount", { chapter: ctx.TOUR_CHAPTERS[b.ch].name, step: n, total: ctx.TOUR_TOTAL });
-  ctx.tcTitle.textContent = b.title;
-  ctx.renderTourText(b);
-  ctx.tcScroll.scrollTop = 0;
+  const b = model.TOUR[n - 1];
+  tourCard.style.setProperty("--tc-hue", beatHue(b));
+  tcEyebrow.textContent = env.t("tourCardCount", { chapter: model.TOUR_CHAPTERS[b.ch].name, step: n, total: model.TOUR_TOTAL });
+  tcTitle.textContent = b.title;
+  renderTourText(b);
+  tcScroll.scrollTop = 0;
 }
 
 
@@ -64,79 +120,79 @@ function renderTourCard(n) {
    edge count + 1 once "Why it matters" shows in the line's place. */
 /* Card text is rich text, rendered as HTML like the panels; titles stay plain. */
 function renderTourText(b) {
-  ctx.tcBody.replaceChildren(...b.body.map(t => {
-    const el = ctx.document.createElement("p");
+  tcBody.replaceChildren(...b.body.map(t => {
+    const el = env.document.createElement("p");
     el.innerHTML = t;
     return el;
   }));
-  const p = ctx.tour.phase;
-  ctx.tcWhy.hidden = !b.why || Boolean(b.flow) && p <= ctx.edgeCount(b);
-  ctx.tcWhyText.innerHTML = b.why || "";
+  const p = state.tour.phase;
+  tcWhy.hidden = !b.why || Boolean(b.flow) && p <= model.edgeCount(b);
+  tcWhyText.innerHTML = b.why || "";
   if (!b.flow) {
     /* The closing step's sweep (2026-11-01): each Next lights a stage and
        recaps it in one line under the stage's own name, icon and colour,
        unnumbered and untinted, so it reads as a summary, not a fifth flow. */
-    const g = b.recap && p > 0 && p <= ctx.stageCount(b) ? ctx.SWEEP[p - 1] : null;
+    const g = b.recap && p > 0 && p <= stageCount(b) ? model.SWEEP[p - 1] : null;
     if (!g) {
-      ctx.tcList.hidden = true;
-      ctx.tcList.replaceChildren();
+      tcList.hidden = true;
+      tcList.replaceChildren();
       return;
     }
-    const li = ctx.document.createElement("li");
+    const li = env.document.createElement("li");
     li.className = "recap";
-    li.style.setProperty("--recap-hue", ctx.hue(ctx.GROUPS[g].huekey));
-    const head = ctx.document.createElement("span");
+    li.style.setProperty("--recap-hue", model.hue(model.GROUPS[g].huekey));
+    const head = env.document.createElement("span");
     head.className = "recap-h";
-    head.innerHTML = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ctx.ICONS[ctx.GROUPS[g].icon]}</svg>`;
-    head.append(ctx.TOUR_CHAPTERS.find(c => c.name.toLowerCase().startsWith(g))?.name || ctx.GROUPS[g].title);
-    const text = ctx.document.createElement("span");
+    head.innerHTML = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${model.ICONS[model.GROUPS[g].icon]}</svg>`;
+    head.append(model.TOUR_CHAPTERS.find(c => c.name.toLowerCase().startsWith(g))?.name || model.GROUPS[g].title);
+    const text = env.document.createElement("span");
     text.className = "recap-t";
     text.innerHTML = b.recap[g];
     li.append(head, text);
-    ctx.tcList.replaceChildren(li);
-    ctx.tcList.hidden = false;
+    tcList.replaceChildren(li);
+    tcList.hidden = false;
     return;
   }
-  const s = ctx.STORIES[b.flow],
-    start = ctx.beatStart(b),
-    total = ctx.edgeCount(b);
+  const s = model.STORIES[b.flow],
+    start = model.beatStart(b),
+    total = model.edgeCount(b);
   const walking = p > 0 && p <= total;
-  ctx.syncBadges(b);
-  ctx.syncFocus(b);
+  syncBadges(b);
+  syncFocus(b);
   if (!walking) {
-    ctx.tcList.hidden = true;
-    ctx.tcList.replaceChildren();
+    tcList.hidden = true;
+    tcList.replaceChildren();
     return;
   }
   const hop = s.hops[start + p - 1];
-  const li = ctx.document.createElement("li");
+  const li = env.document.createElement("li");
   li.className = "cur";
-  const n = ctx.document.createElement("span");
+  const n = env.document.createElement("span");
   n.className = "n";
   n.textContent = String(start + p);
-  n.style.setProperty("--n-hue", ctx.hopHue(s, hop));
+  n.style.setProperty("--n-hue", hopHue(s, hop));
   li.append(n);
   li.insertAdjacentHTML("beforeend", hop.t);
-  ctx.tcList.replaceChildren(li);
-  ctx.tcList.hidden = false;
+  tcList.replaceChildren(li);
+  tcList.hidden = false;
 }
 
 function syncBadges(b) {
-  const start = ctx.beatStart(b),
-    shown = start + Math.min(ctx.tour.phase, ctx.edgeCount(b));
-  ctx.storyLayer.querySelectorAll("g[data-hop]").forEach(g => {
+  const start = model.beatStart(b),
+    shown = start + Math.min(state.tour.phase, model.edgeCount(b));
+  scene.storyLayer.querySelectorAll("g[data-hop]").forEach(g => {
     const i = Number(g.dataset.hop);
-    g.classList.toggle("tpend", i >= shown || i === ctx.tour.badgeWait);
+    g.classList.toggle("tpend", i >= shown || i === state.tour.badgeWait);
   });
   /* A two-way edge drawn whole shows both arrowheads; the beat keeps the
      later direction's head hidden until its move is in the card. */
-  const s = ctx.STORIES[b.flow],
+  const s = model.STORIES[b.flow],
     first = {};
   s.hops.forEach((h, i) => {
-    if (ctx.edgeEls[h.e].def.bidir && first[h.e] === undefined) first[h.e] = i;
+    if (scene.edgeEls[h.e].def.bidir && first[h.e] === undefined) first[h.e] = i;
   });
-  s.hops.slice(0, ctx.flowEnd(b)).forEach((h, i) => {
-    const ee = ctx.edgeEls[h.e];
+  s.hops.slice(0, model.flowEnd(b)).forEach((h, i) => {
+    const ee = scene.edgeEls[h.e];
     if (!ee.def.bidir || i === first[h.e] || Boolean(h.rev) === Boolean(s.hops[first[h.e]].rev)) return;
     const attr = h.rev ? "marker-start" : "marker-end";
     if (i < shown) ee.path.setAttribute(attr, "url(#arr-" + (h.bad || !s.ok ? s.hue : s.ok) + ")");else ee.path.removeAttribute(attr);
@@ -145,20 +201,20 @@ function syncBadges(b) {
 
 
 function syncFocus(b) {
-  const s = ctx.STORIES[b.flow],
-    end = ctx.flowEnd(b);
+  const s = model.STORIES[b.flow],
+    end = model.flowEnd(b);
   const onPath = new Set(),
     pathNodes = new Set();
   s.hops.slice(0, end).forEach(h => {
-    const d = ctx.edgeEls[h.e].def;
+    const d = scene.edgeEls[h.e].def;
     onPath.add(d.id);
     pathNodes.add(d.from);
     pathNodes.add(d.to);
   });
-  ctx.svg.classList.add("tfocus");
-  ctx.NODES.forEach(n => ctx.nodeEls[n.id].g.classList.toggle("dimmed", !pathNodes.has(n.id)));
-  ctx.EDGES.forEach(e => {
-    [ctx.edgeEls[e.id].path, ctx.edgeEls[e.id].label].forEach(x => {
+  scene.svg.classList.add("tfocus");
+  model.NODES.forEach(n => scene.nodeEls[n.id].g.classList.toggle("dimmed", !pathNodes.has(n.id)));
+  model.EDGES.forEach(e => {
+    [scene.edgeEls[e.id].path, scene.edgeEls[e.id].label].forEach(x => {
       if (x) x.classList.toggle("dimmed", !onPath.has(e.id));
     });
   });
@@ -166,16 +222,16 @@ function syncFocus(b) {
 
 // Keep the current line (or "Why it matters") in view when the card scrolls.
 function revealLatest() {
-  const b = ctx.TOUR[ctx.tour.step - 1];
+  const b = model.TOUR[state.tour.step - 1];
   if (!b || !b.flow) return;
-  const t = ctx.tour.phase > ctx.edgeCount(b) ? ctx.tcWhy : ctx.tour.phase > 0 ? ctx.tcList.firstElementChild : null;
+  const t = state.tour.phase > model.edgeCount(b) ? tcWhy : state.tour.phase > 0 ? tcList.firstElementChild : null;
   if (!t || t.closest("[hidden]")) return;
-  const sr = ctx.tcScroll.getBoundingClientRect(),
+  const sr = tcScroll.getBoundingClientRect(),
     r = t.getBoundingClientRect();
   const dy = r.top < sr.top ? r.top - sr.top : r.bottom > sr.bottom ? Math.min(r.bottom - sr.bottom, r.top - sr.top) : 0;
-  if (dy) ctx.tcScroll.scrollTo({
-    top: ctx.tcScroll.scrollTop + dy,
-    behavior: ctx.reduced ? "auto" : "smooth"
+  if (dy) tcScroll.scrollTo({
+    top: tcScroll.scrollTop + dy,
+    behavior: env.reduced ? "auto" : "smooth"
   });
 }
 
@@ -185,37 +241,37 @@ function revealLatest() {
    first Next within a beat. */
 
 function renderPlayer() {
-  const b = ctx.TOUR[ctx.tour.step - 1];
-  const hint = Boolean(b) && ctx.beatHasMotion(b) && !ctx.tourStepped;
-  ctx.tcHint.hidden = !hint;
-  ctx.tcNext.classList.toggle("hint", hint);
-  const backHadFocus = ctx.document.activeElement === ctx.tcBack;
-  ctx.tcBack.disabled = ctx.tour.step === 1;
+  const b = model.TOUR[state.tour.step - 1];
+  const hint = Boolean(b) && beatHasMotion(b) && !state.tourStepped;
+  tcHint.hidden = !hint;
+  tcNext.classList.toggle("hint", hint);
+  const backHadFocus = env.document.activeElement === tcBack;
+  tcBack.disabled = state.tour.step === 1;
   // Step 1 has nothing behind it: Back is hidden, and Next starts the walk (2026-11-01).
-  ctx.tcBack.hidden = ctx.tour.step === 1;
-  if (backHadFocus && ctx.tcBack.disabled) ctx.tcNext.focus({
+  tcBack.hidden = state.tour.step === 1;
+  if (backHadFocus && tcBack.disabled) tcNext.focus({
     preventScroll: true
   });
-  const last = Boolean(b) && ctx.tour.step >= ctx.TOUR.length && !(b.flow && ctx.tour.phase <= ctx.edgeCount(b)) && ctx.tour.phase >= ctx.stageCount(b);
-  ctx.tcNext.textContent = ctx.t(ctx.tour.step === 1 ? "tourBegin" : last ? "tourFinish" : "tourNext");
+  const last = Boolean(b) && state.tour.step >= model.TOUR.length && !(b.flow && state.tour.phase <= model.edgeCount(b)) && state.tour.phase >= stageCount(b);
+  tcNext.textContent = env.t(state.tour.step === 1 ? "tourBegin" : last ? "tourFinish" : "tourNext");
   // One segment per Next in this step (and one for "Why it matters"), filled as the visitor goes.
-  const total = !b ? 0 : b.flow ? ctx.edgeCount(b) + 1 : ctx.stageCount(b);
-  const done = Math.min(ctx.tour.phase, total);
-  ctx.tcCount.replaceChildren(...Array.from({
+  const total = !b ? 0 : b.flow ? model.edgeCount(b) + 1 : stageCount(b);
+  const done = Math.min(state.tour.phase, total);
+  tcCount.replaceChildren(...Array.from({
     length: total
   }, (_, i) => {
-    const seg = ctx.document.createElement("span");
+    const seg = env.document.createElement("span");
     seg.className = "tc-seg" + (i < done ? " on" : "");
     return seg;
   }));
   if (total) {
-    ctx.tcCount.setAttribute("role", "progressbar");
-    ctx.tcCount.setAttribute("aria-label", ctx.t("tourProgress"));
-    ctx.tcCount.setAttribute("aria-valuemin", "0");
-    ctx.tcCount.setAttribute("aria-valuemax", String(total));
-    ctx.tcCount.setAttribute("aria-valuenow", String(done));
+    tcCount.setAttribute("role", "progressbar");
+    tcCount.setAttribute("aria-label", env.t("tourProgress"));
+    tcCount.setAttribute("aria-valuemin", "0");
+    tcCount.setAttribute("aria-valuemax", String(total));
+    tcCount.setAttribute("aria-valuenow", String(done));
   } else {
-    ["role", "aria-label", "aria-valuemin", "aria-valuemax", "aria-valuenow"].forEach(a => ctx.tcCount.removeAttribute(a));
+    ["role", "aria-label", "aria-valuemin", "aria-valuemax", "aria-valuenow"].forEach(a => tcCount.removeAttribute(a));
   }
 }
 
@@ -225,23 +281,23 @@ function renderPlayer() {
    line, so the card fits closely. The CSS max-height caps it; past that,
    .tc-scroll scrolls. */
 function sizeTourCard() {
-  const b = ctx.TOUR[ctx.tour.step - 1];
-  if (!b || ctx.tourCard.hidden) return;
-  const keep = ctx.tour.phase,
-    phases = b.flow ? ctx.edgeCount(b) + 2 : 1 + ctx.stageCount(b);
-  ctx.tourCard.style.height = "";
+  const b = model.TOUR[state.tour.step - 1];
+  if (!b || tourCard.hidden) return;
+  const keep = state.tour.phase,
+    phases = b.flow ? model.edgeCount(b) + 2 : 1 + stageCount(b);
+  tourCard.style.height = "";
   // The card is pinned top and bottom to centre it; measure it unstretched.
-  ctx.tourCard.style.bottom = "auto";
+  tourCard.style.bottom = "auto";
   let need = 0;
   for (let p = 0; p < phases; p++) {
-    ctx.tour.phase = p;
-    ctx.renderTourText(b);
-    need = Math.max(need, ctx.tourCard.offsetHeight - ctx.tcScroll.clientHeight + ctx.tcScroll.scrollHeight);
+    state.tour.phase = p;
+    renderTourText(b);
+    need = Math.max(need, tourCard.offsetHeight - tcScroll.clientHeight + tcScroll.scrollHeight);
   }
-  ctx.tour.phase = keep;
-  ctx.renderTourText(b);
-  ctx.tourCard.style.bottom = "";
-  ctx.tourCard.style.height = Math.ceil(need) + "px";
+  state.tour.phase = keep;
+  renderTourText(b);
+  tourCard.style.bottom = "";
+  tourCard.style.height = Math.ceil(need) + "px";
 }
 
 /* Run fn (which changes the card's text) with a slide (2026-11-01): the
@@ -252,26 +308,26 @@ function sizeTourCard() {
    reduced motion, fn just runs. */
 
 function cardChange(fn, dir = 1) {
-  const token = ++ctx.cardSwap;
-  if (ctx.cardOut) {
-    ctx.cardOut.cancel();
-    ctx.cardOut = null;
+  const token = ++state.cardSwap;
+  if (state.cardOut) {
+    state.cardOut.cancel();
+    state.cardOut = null;
   }
-  if (ctx.reduced || ctx.phoneQuery.matches || ctx.tourCard.hidden) {
+  if (env.reduced || env.phoneQuery.matches || tourCard.hidden) {
     fn();
     return;
   }
-  const easing = getComputedStyle(ctx.tourCard).getPropertyValue("--tour-ease").trim() || "ease-out";
-  const shown = () => !ctx.tcList.hidden && ctx.tcList.firstElementChild || (!ctx.tcWhy.hidden ? ctx.tcWhy : null);
+  const easing = getComputedStyle(tourCard).getPropertyValue("--tour-ease").trim() || "ease-out";
+  const shown = () => !tcList.hidden && tcList.firstElementChild || (!tcWhy.hidden ? tcWhy : null);
   const enter = () => {
-    if (token !== ctx.cardSwap) return;
-    if (ctx.cardOut) {
-      ctx.cardOut.cancel();
-      ctx.cardOut = null;
+    if (token !== state.cardSwap) return;
+    if (state.cardOut) {
+      state.cardOut.cancel();
+      state.cardOut = null;
     }
     fn();
     const t = shown();
-    if (t) ctx.scope.animate(t, [{
+    if (t) env.scope.animate(t, [{
       opacity: 0,
       transform: `translateX(${dir * 24}px)`
     }, {
@@ -287,7 +343,7 @@ function cardChange(fn, dir = 1) {
     enter();
     return;
   }
-  ctx.cardOut = ctx.scope.animate(old, [{
+  state.cardOut = env.scope.animate(old, [{
     opacity: 1,
     transform: "none"
   }, {
@@ -298,7 +354,7 @@ function cardChange(fn, dir = 1) {
     easing: "ease-in",
     fill: "forwards"
   });
-  ctx.cardOut.finished.then(enter, () => {});
+  state.cardOut.finished.then(enter, () => {});
 }
 
 /* ---- tour camera (2026-10-31, camera shots 2026-11-01) ----
@@ -330,16 +386,16 @@ function cardChange(fn, dir = 1) {
    at 1.6 times that size. */
 
 function showStage(p) {
-  ctx.clearStory();
+  act.clearStory();
   if (!p) {
-    ctx.setFocus(null);
+    act.setFocus(null);
     return;
   }
-  const g = ctx.SWEEP[p - 1];
-  ctx.setFocus(g);
-  ctx.GROUPS[g].members.forEach(id => {
-    const ng = ctx.nodeEls[id].g;
-    ng.style.setProperty("--story-hue", ctx.hue(ctx.GROUPS[g].huekey));
+  const g = model.SWEEP[p - 1];
+  act.setFocus(g);
+  model.GROUPS[g].members.forEach(id => {
+    const ng = scene.nodeEls[id].g;
+    ng.style.setProperty("--story-hue", model.hue(model.GROUPS[g].huekey));
     ng.classList.add("lit");
   });
 }
@@ -360,124 +416,124 @@ function showStage(p) {
    interrupt at any point. */
 
 function drawBeatPath(b) {
-  ctx.playStory(b.flow, {
+  act.playStory(b.flow, {
     quiet: true,
     wide: true,
-    from: ctx.flowEnd(b),
-    to: ctx.flowEnd(b)
+    from: model.flowEnd(b),
+    to: model.flowEnd(b)
   });
-  ctx.syncBadges(b);
-  ctx.syncFocus(b);
+  syncBadges(b);
+  syncFocus(b);
 }
 // The current edge on the map (k within the beat, or null for none).
 function markEdge(b, k) {
-  ctx.storyLayer.querySelectorAll("g.tcur").forEach(g => g.classList.remove("tcur"));
-  ctx.EDGES.forEach(e => ctx.edgeEls[e.id].path.classList.remove("tcur", "eglow"));
+  scene.storyLayer.querySelectorAll("g.tcur").forEach(g => g.classList.remove("tcur"));
+  model.EDGES.forEach(e => scene.edgeEls[e.id].path.classList.remove("tcur", "eglow"));
   if (k == null) return;
-  const i = ctx.beatStart(b) + k;
-  ctx.edgeEls[ctx.STORIES[b.flow].hops[i].e].path.classList.add("tcur");
-  ctx.storyLayer.querySelector(`g[data-hop="${i}"]`)?.classList.add("tcur");
+  const i = model.beatStart(b) + k;
+  scene.edgeEls[model.STORIES[b.flow].hops[i].e].path.classList.add("tcur");
+  scene.storyLayer.querySelector(`g[data-hop="${i}"]`)?.classList.add("tcur");
 }
 // Stops a moving dot, leaving the lit path as it is.
 function stopEdgeMotion() {
-  ctx.stopDot();
-  ctx.tour.badgeWait = -1;
+  act.stopDot();
+  state.tour.badgeWait = -1;
 }
 /* Edge k becomes current on the map; then its dot travels it with the
    camera alongside (animate), or the camera holds on it at once.
    Resolves true when the edge landed untouched. */
 async function playEdge(b, k, animate) {
-  const s = ctx.STORIES[b.flow],
-    i = ctx.beatStart(b) + k,
+  const s = model.STORIES[b.flow],
+    i = model.beatStart(b) + k,
     hop = s.hops[i],
-    ee = ctx.edgeEls[hop.e];
-  ctx.stopEdgeMotion();
-  ctx.markEdge(b, k);
-  if (!animate || ctx.reduced) {
+    ee = scene.edgeEls[hop.e];
+  stopEdgeMotion();
+  markEdge(b, k);
+  if (!animate || env.reduced) {
     ee.path.classList.add("eglow");
-    ctx.tourCamShot(b, k, true);
+    act.tourCamShot(b, k, true);
     return true;
   }
-  const token = ctx.storyToken;
+  const token = state.storyToken;
   // The number lands with the dot, not before it (2026-11-01).
-  ctx.tour.badgeWait = i;
-  ctx.syncBadges(b);
-  await ctx.tourCamShot(b, k, true);
-  if (token !== ctx.storyToken) return false;
+  state.tour.badgeWait = i;
+  syncBadges(b);
+  await act.tourCamShot(b, k, true);
+  if (token !== state.storyToken) return false;
   ee.path.classList.add("eglow");
-  await ctx.animateDot(ee.path, !!hop.rev, hop.bad || !s.ok ? s.hue : s.ok);
-  if (token !== ctx.storyToken) return false;
-  ctx.tour.badgeWait = -1;
-  ctx.syncBadges(b);
-  ctx.popBadge(ctx.storyLayer.querySelector(`g[data-hop="${i}"]`));
+  await act.animateDot(ee.path, !!hop.rev, hop.bad || !s.ok ? s.hue : s.ok);
+  if (token !== state.storyToken) return false;
+  state.tour.badgeWait = -1;
+  syncBadges(b);
+  act.popBadge(scene.storyLayer.querySelector(`g[data-hop="${i}"]`));
   return true;
 }
 /* One Next: the next edge's line takes the card's line, its badge
    appears, and the edge plays. Then the tour waits; the last edge
    does not end the beat on its own. */
 function stepEdge(b) {
-  ctx.tour.phase++;
-  ctx.cardChange(() => {
-    ctx.renderTourText(b);
-    ctx.revealLatest();
+  state.tour.phase++;
+  cardChange(() => {
+    renderTourText(b);
+    revealLatest();
   });
-  return ctx.playEdge(b, ctx.tour.phase - 1, true);
+  return playEdge(b, state.tour.phase - 1, true);
 }
 /* The Next after the last edge: no edge current, "Why it matters" in
    the line's place, the camera back to the overview of the lit path. */
 function finishBeat(b) {
-  ctx.stopEdgeMotion();
-  ctx.markEdge(b, null);
-  ctx.tour.phase = ctx.edgeCount(b) + 1;
-  ctx.cardChange(() => {
-    ctx.renderTourText(b);
-    ctx.revealLatest();
+  stopEdgeMotion();
+  markEdge(b, null);
+  state.tour.phase = model.edgeCount(b) + 1;
+  cardChange(() => {
+    renderTourText(b);
+    revealLatest();
   });
-  ctx.tourCamShot(b, null, true);
+  act.tourCamShot(b, null, true);
 }
 
 // opts.atSummary: entered by Back from the next beat, so a flow beat opens at its end.
 function showBeat(n, opts) {
-  const b = ctx.TOUR[n - 1];
+  const b = model.TOUR[n - 1];
   const atSummary = Boolean(opts && opts.atSummary && b.flow);
-  ctx.stopEdgeMotion();
+  stopEdgeMotion();
   // A line swap still in flight belongs to the step being left.
-  ctx.cardSwap++;
-  if (ctx.cardOut) {
-    ctx.cardOut.cancel();
-    ctx.cardOut = null;
+  state.cardSwap++;
+  if (state.cardOut) {
+    state.cardOut.cancel();
+    state.cardOut = null;
   }
-  ctx.tour.step = n;
-  ctx.tour.atEnd = false;
-  ctx.tour.phase = atSummary ? ctx.edgeCount(b) + 1 : 0;
-  ctx.saveTour({
+  state.tour.step = n;
+  state.tour.atEnd = false;
+  state.tour.phase = atSummary ? model.edgeCount(b) + 1 : 0;
+  saveTour({
     step: n,
-    done: Boolean(ctx.readTour().done)
+    done: Boolean(readTour().done)
   });
-  ctx.clearStory();
-  ctx.tourEnd.hidden = true;
-  ctx.tourCard.hidden = false;
-  ctx.renderTourBar(n);
-  ctx.renderTourCard(n);
-  ctx.renderPlayer();
-  ctx.sizeTourCard();
-  ctx.unselect();
+  act.clearStory();
+  tourEnd.hidden = true;
+  tourCard.hidden = false;
+  renderTourBar(n);
+  renderTourCard(n);
+  renderPlayer();
+  sizeTourCard();
+  act.unselect();
   if (b.level === 0) {
-    if (ctx.level !== 0) ctx.showLevel(0);
+    if (state.level !== 0) act.showLevel(0);
   } else {
-    if (ctx.level !== 1) ctx.showLevel(1);
-    ctx.setFocus(null);
-    ctx.setWeek(b.week || 0, {
+    if (state.level !== 1) act.showLevel(1);
+    act.setFocus(null);
+    act.setWeek(b.week || 0, {
       silent: true,
       quiet: true
     });
   }
-  ctx.updateDrawerBounds();
-  ctx.tourCam.manual = false;
-  ctx.tourFit();
+  act.updateDrawerBounds();
+  act.tourCamFree();
+  act.tourFit();
   // Every beat opens still; a flow beat's path is already lit, without this beat's numbers.
-  if (b.flow) ctx.drawBeatPath(b);
-  ctx.tourCamShot(b, null, true);
+  if (b.flow) drawBeatPath(b);
+  act.tourCamShot(b, null, true);
 }
 
 /* opts.native (a click started it): ask for the browser's real full
@@ -486,84 +542,84 @@ function showBeat(n, opts) {
    Esc later leaves native full screen, the tour simply carries on in-frame
    on the same beat. Deep links (?tour=1) have no gesture and stay in-frame. */
 function startTour(n, opts) {
-  if (ctx.tour.active) return;
-  const wantNative = Boolean(opts && opts.native) && Boolean(ctx.stagecard.requestFullscreen);
-  const wasNative = ctx.document.fullscreenElement === ctx.stagecard;
-  if (ctx.exploreNudge) ctx.exploreNudge.hide();
-  ctx.closeFlowPicker();
-  ctx.closeInside();
+  if (state.tour.active) return;
+  const wantNative = Boolean(opts && opts.native) && Boolean(stagecard.requestFullscreen);
+  const wasNative = env.document.fullscreenElement === stagecard;
+  if (state.exploreNudge) state.exploreNudge.hide();
+  act.closeFlowPicker();
+  act.closeInside();
   /* From Explore's own full screen, step out of it first (native full
      screen would keep Esc for itself); leaving the tour mid-way puts the
      in-frame full screen back. */
-  const wasFs = ctx.fsMode;
+  const wasFs = state.fsMode;
   // Already in native full screen from Explore: keep it, swap the chrome only.
-  if (wasFs && wasNative && wantNative) ctx.applyFsDom(false);else if (wasFs) ctx.exitFs();
-  ctx.tour.snap = {
-    level: ctx.level,
-    focused: ctx.focused,
-    selected: ctx.selected,
-    week: ctx.week,
-    panelOpen: ctx.panelIsOpen(),
+  if (wasFs && wasNative && wantNative) act.applyFsDom(false);else if (wasFs) act.exitFs();
+  state.tour.snap = {
+    level: state.level,
+    focused: state.focused,
+    selected: state.selected,
+    week: state.week,
+    panelOpen: act.panelIsOpen(),
     wasFs
   };
-  ctx.tour.active = true;
-  ctx.clearStory();
-  ctx.stagecard.classList.add("touring", "fs-fixed");
-  ctx.applyFsDom(true);
-  ctx.showBeat(Math.min(Math.max(1, n), ctx.TOUR.length));
-  ctx.tcNext.focus({
+  state.tour.active = true;
+  act.clearStory();
+  stagecard.classList.add("touring", "fs-fixed");
+  act.applyFsDom(true);
+  showBeat(Math.min(Math.max(1, n), model.TOUR.length));
+  tcNext.focus({
     preventScroll: true
   });
-  if (wantNative && !wasNative) ctx.stagecard.requestFullscreen().catch(() => {});
+  if (wantNative && !wasNative) stagecard.requestFullscreen().catch(() => {});
 }
 
 
 function tourNext() {
-  if (!ctx.tour.active || ctx.tour.atEnd) return;
-  const b = ctx.TOUR[ctx.tour.step - 1];
-  if (b.flow && ctx.tour.phase <= ctx.edgeCount(b)) {
-    ctx.tourStepped = true;
-    if (ctx.tour.phase < ctx.edgeCount(b)) ctx.stepEdge(b);else ctx.finishBeat(b);
-    ctx.renderPlayer();
+  if (!state.tour.active || state.tour.atEnd) return;
+  const b = model.TOUR[state.tour.step - 1];
+  if (b.flow && state.tour.phase <= model.edgeCount(b)) {
+    state.tourStepped = true;
+    if (state.tour.phase < model.edgeCount(b)) stepEdge(b);else finishBeat(b);
+    renderPlayer();
     return;
   }
-  if (ctx.tour.phase < ctx.stageCount(b)) {
-    ctx.tourStepped = true;
-    ctx.tour.phase++;
-    ctx.showStage(ctx.tour.phase);
-    ctx.cardChange(() => ctx.renderTourText(b));
-    ctx.renderPlayer();
+  if (state.tour.phase < stageCount(b)) {
+    state.tourStepped = true;
+    state.tour.phase++;
+    showStage(state.tour.phase);
+    cardChange(() => renderTourText(b));
+    renderPlayer();
     return;
   }
-  if (ctx.tour.step >= ctx.TOUR.length) ctx.showEnding();else ctx.showBeat(ctx.tour.step + 1);
+  if (state.tour.step >= model.TOUR.length) showEnding();else showBeat(state.tour.step + 1);
 }
 
 function tourBack() {
-  if (!ctx.tour.active || ctx.tour.atEnd) return;
-  const b = ctx.TOUR[ctx.tour.step - 1];
-  if (b.flow && ctx.tour.phase > 0) {
-    ctx.stopEdgeMotion();
-    ctx.tour.phase--;
-    ctx.cardChange(() => {
-      ctx.renderTourText(b);
-      ctx.revealLatest();
+  if (!state.tour.active || state.tour.atEnd) return;
+  const b = model.TOUR[state.tour.step - 1];
+  if (b.flow && state.tour.phase > 0) {
+    stopEdgeMotion();
+    state.tour.phase--;
+    cardChange(() => {
+      renderTourText(b);
+      revealLatest();
     }, -1);
-    ctx.renderPlayer();
-    if (ctx.tour.phase === 0) {
-      ctx.markEdge(b, null);
-      ctx.tourCamShot(b, null, true);
-    } else ctx.playEdge(b, ctx.tour.phase - 1, false);
+    renderPlayer();
+    if (state.tour.phase === 0) {
+      markEdge(b, null);
+      act.tourCamShot(b, null, true);
+    } else playEdge(b, state.tour.phase - 1, false);
     return;
   }
-  if (!b.flow && ctx.tour.phase > 0) {
-    ctx.tour.phase--;
-    ctx.showStage(ctx.tour.phase);
-    ctx.cardChange(() => ctx.renderTourText(b), -1);
-    ctx.renderPlayer();
+  if (!b.flow && state.tour.phase > 0) {
+    state.tour.phase--;
+    showStage(state.tour.phase);
+    cardChange(() => renderTourText(b), -1);
+    renderPlayer();
     return;
   }
-  if (ctx.tour.step <= 1) return;
-  ctx.showBeat(ctx.tour.step - 1, {
+  if (state.tour.step <= 1) return;
+  showBeat(state.tour.step - 1, {
     atSummary: true
   });
 }
@@ -572,29 +628,29 @@ function tourBack() {
    the scrim blurs in over the map as it is, and only once the map is
    hidden behind it is it reset to the plain full map. Nothing jumps. */
 function showEnding() {
-  ctx.tour.atEnd = true;
-  ctx.saveTour({
-    step: ctx.TOUR_TOTAL,
+  state.tour.atEnd = true;
+  saveTour({
+    step: model.TOUR_TOTAL,
     done: true
   });
-  ctx.renderTourBar(ctx.TOUR_TOTAL);
+  renderTourBar(model.TOUR_TOTAL);
   const resetMap = () => {
-    if (!ctx.tour.atEnd) return;
-    ctx.clearStory();
-    if (ctx.level !== 1) ctx.showLevel(1);
-    ctx.setFocus(null);
-    ctx.setWeek(0, {
+    if (!state.tour.atEnd) return;
+    act.clearStory();
+    if (state.level !== 1) act.showLevel(1);
+    act.setFocus(null);
+    act.setWeek(0, {
       silent: true,
       quiet: true
     });
-    ctx.updateDrawerBounds();
-    ctx.tourFit();
+    act.updateDrawerBounds();
+    act.tourFit();
   };
-  if (ctx.reduced) {
-    ctx.tourCard.hidden = true;
+  if (env.reduced) {
+    tourCard.hidden = true;
     resetMap();
   } else {
-    ctx.scope.animate(ctx.tourCard, [{
+    env.scope.animate(tourCard, [{
       opacity: 1
     }, {
       opacity: 0,
@@ -603,13 +659,13 @@ function showEnding() {
       duration: 220,
       easing: "ease-in"
     }).finished.then(() => {
-      if (ctx.tour.atEnd) ctx.tourCard.hidden = true;
+      if (state.tour.atEnd) tourCard.hidden = true;
     }, () => {});
-    ctx.setTimeout(resetMap, 650);
+    env.setTimeout(resetMap, 650);
   }
-  ctx.tourEnd.hidden = false;
-  ctx.tourEnd.scrollTop = 0;
-  ctx.teTitle.focus({
+  tourEnd.hidden = false;
+  tourEnd.scrollTop = 0;
+  teTitle.focus({
     preventScroll: true
   });
 }
@@ -618,52 +674,52 @@ function showEnding() {
    step for "Resume". Leaving from the ending ("Back to the map", Esc or
    Exit) lands on the full map instead. */
 function exitTour(toFullMap) {
-  if (!ctx.tour.active) return;
-  const atEnd = ctx.tour.atEnd;
-  ctx.clearStory();
-  ctx.tourCam.token++;
-  if (ctx.document.fullscreenElement) ctx.document.exitFullscreen().catch(() => {});
-  ctx.tour.active = false;
-  ctx.tour.atEnd = false;
-  ctx.tourCard.hidden = true;
-  ctx.tourEnd.hidden = true;
-  ctx.stagecard.classList.remove("touring");
-  ctx.applyFsDom(false);
-  const snap = ctx.tour.snap || {};
-  ctx.tour.snap = null;
-  ctx.unselect();
+  if (!state.tour.active) return;
+  const atEnd = state.tour.atEnd;
+  act.clearStory();
+  act.tourCamStop();
+  if (env.document.fullscreenElement) env.document.exitFullscreen().catch(() => {});
+  state.tour.active = false;
+  state.tour.atEnd = false;
+  tourCard.hidden = true;
+  tourEnd.hidden = true;
+  stagecard.classList.remove("touring");
+  act.applyFsDom(false);
+  const snap = state.tour.snap || {};
+  state.tour.snap = null;
+  act.unselect();
   if (toFullMap || atEnd) {
-    ctx.showLevel(1);
-    ctx.setFocus(null);
-    ctx.setWeek(0, {
+    act.showLevel(1);
+    act.setFocus(null);
+    act.setWeek(0, {
       silent: true,
       quiet: true
     });
-    ctx.renderOverview();
-    ctx.openPanel();
+    act.renderOverview();
+    act.openPanel();
   } else if (snap.level !== 1) {
-    ctx.showLevel(0);
-    ctx.renderL0();
-    if (snap.panelOpen) ctx.openPanel();else ctx.closePanel();
+    act.showLevel(0);
+    act.renderL0();
+    if (snap.panelOpen) act.openPanel();else act.closePanel();
   } else {
-    ctx.showLevel(1);
-    ctx.setWeek(snap.week || 0, {
+    act.showLevel(1);
+    act.setWeek(snap.week || 0, {
       silent: true,
       quiet: true
     });
-    ctx.setFocus(snap.focused || null);
-    if (snap.selected && ctx.nodeEls[snap.selected]) {
-      ctx.restoreSelection(snap.selected);
-      ctx.renderNode(ctx.selected);
-    } else if (snap.focused) ctx.renderGroup(snap.focused);else if (snap.week > 0) ctx.renderWeek(snap.week);else ctx.renderOverview();
-    if (snap.panelOpen) ctx.openPanel();else ctx.closePanel();
+    act.setFocus(snap.focused || null);
+    if (snap.selected && scene.nodeEls[snap.selected]) {
+      act.restoreSelection(snap.selected);
+      act.renderNode(state.selected);
+    } else if (snap.focused) act.renderGroup(snap.focused);else if (snap.week > 0) act.renderWeek(snap.week);else act.renderOverview();
+    if (snap.panelOpen) act.openPanel();else act.closePanel();
   }
   if (snap.wasFs && !toFullMap && !atEnd) {
-    ctx.stagecard.classList.add("fs-fixed");
-    ctx.applyFsDom(true);
+    stagecard.classList.add("fs-fixed");
+    act.applyFsDom(true);
   }
-  ctx.refreshTourEntry();
-  ctx.tourBtn.focus({
+  refreshTourEntry();
+  tourBtn.focus({
     preventScroll: true
   });
 }
@@ -675,23 +731,71 @@ function onTourKey(ev) {
     /* The first Esc only leaves the browser's full screen and the tour
        carries on in-frame; some browsers also hand that same Esc to the
        page, just after the exit, so a very recent exit counts too. */
-    if (ctx.document.fullscreenElement) {
-      ctx.document.exitFullscreen().catch(() => {});
+    if (env.document.fullscreenElement) {
+      env.document.exitFullscreen().catch(() => {});
       return;
     }
-    if (performance.now() - ctx.tour.nativeLeftAt < 600) return;
-    ctx.exitTour(ctx.tour.atEnd);
+    if (performance.now() - state.tour.nativeLeftAt < 600) return;
+    exitTour(state.tour.atEnd);
     return;
   }
   const typing = ev.target instanceof Element && ev.target.closest("input, textarea, select, [contenteditable]");
-  if (typing || ctx.tour.atEnd) return;
+  if (typing || state.tour.atEnd) return;
   if (ev.key === "ArrowRight") {
     ev.preventDefault();
-    ctx.tourNext();
+    tourNext();
   } else if (ev.key === "ArrowLeft") {
     ev.preventDefault();
-    ctx.tourBack();
+    tourBack();
   }
 }
-return { readTour, saveTour, resumeStep, refreshTourEntry, timeLeft, renderTourBar, renderTourCard, renderTourText, syncBadges, syncFocus, revealLatest, renderPlayer, sizeTourCard, cardChange, showStage, drawBeatPath, markEdge, stopEdgeMotion, playEdge, stepEdge, finishBeat, showBeat, startTour, tourNext, tourBack, showEnding, exitTour, onTourKey };
+/* Stops everything in flight for good (the viewer is being taken down). */
+function halt() {
+  state.cardSwap++;
+  state.tour.active = false;
+  state.tour.atEnd = false;
+}
+
+env.scope.listen(tourBtn, "click", () => startTour(resumeStep() || 1, {
+  native: true
+}));
+let tourFitFrame = 0;
+env.scope.listen(window, "resize", () => {
+  if (!state.tour.active) return;
+  env.cancelAnimationFrame(tourFitFrame);
+  tourFitFrame = env.requestAnimationFrame(() => {
+    act.updateDrawerBounds();
+    if (!state.tour.atEnd) sizeTourCard();
+    act.tourFit();
+    if (!state.tour.atEnd) {
+      const b = model.TOUR[state.tour.step - 1];
+      act.tourCamShot(b, b.flow && state.tour.phase > 0 && state.tour.phase <= model.edgeCount(b) ? state.tour.phase - 1 : null, false);
+    }
+  });
+});
+env.scope.listen(tcNext, "click", tourNext);
+env.scope.listen(tcBack, "click", tourBack);
+env.scope.listen(tourExitBtn, "click", () => exitTour(state.tour.atEnd));
+env.scope.listen(document.getElementById("teBack"), "click", () => exitTour(true));
+env.scope.listen(document, "fullscreenchange", () => {
+  // A tour leaving native full screen keeps running in-frame (fs-fixed).
+  if (state.tour.active && !document.fullscreenElement) state.tour.nativeLeftAt = performance.now();
+  if (state.tour.active) env.requestAnimationFrame(() => {
+    act.updateDrawerBounds();
+    if (!state.tour.atEnd) act.tourFit();
+  });
+  if (document.fullscreenElement === stagecard) {
+    if (!state.fsMode) act.applyFsDom(true);
+  } else if (state.fsMode && !stagecard.classList.contains("fs-fixed")) act.applyFsDom(false);
+});
+env.scope.listen(document, "keydown", ev => {
+  /* While touring the tour owns the keys (arrows step, Esc exits); otherwise Esc is Explore's. */
+  if (state.tour.active) {
+    onTourKey(ev);
+    return;
+  }
+  if (ev.key === "Escape") act.onEscape();
+});
+
+return { halt, readTour, saveTour, resumeStep, refreshTourEntry, timeLeft, renderTourBar, renderTourCard, renderTourText, syncBadges, syncFocus, revealLatest, renderPlayer, sizeTourCard, cardChange, showStage, drawBeatPath, markEdge, stopEdgeMotion, playEdge, stepEdge, finishBeat, showBeat, startTour, tourNext, tourBack, showEnding, exitTour, onTourKey };
 }

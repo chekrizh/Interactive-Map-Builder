@@ -5,7 +5,7 @@
 import controls from '../rendering/ml-controls.js';
 
 /* The neighbours' functions navigation calls (through act). */
-export const NEEDS = ["closeInside", "clearStory", "resetView", "panelIsOpen", "closePanel", "renderL0", "renderOverview", "renderGroup", "renderNode", "renderWeek"];
+export const NEEDS = ["closeInside", "clearStory", "resetView", "panelIsOpen", "closePanel", "renderL0", "renderOverview", "renderGroup", "renderNode", "renderWeek", "filesIsOpen"];
 
 export function createNavigation({ env, model, scene, state, act }) {
 const { document, scope, t } = env;
@@ -323,5 +323,10 @@ if (themeToggle) {
 const forcedTheme = env.param("theme");
 if (forcedTheme === "dark" || forcedTheme === "light") setTheme(forcedTheme);
 
-return { refreshWeekSeg, showLevel, setFocus, focusGroup, updateDrawerBounds, applyFsDom, enterFs, exitFs, clearSelection, selectNode, setWeek, setTheme, unselect, restoreSelection };
+/* Esc outside the tour steps back one layer: the close-up, the files view, the full-screen
+   drawer, then full screen itself. */
+function onEscape() {
+  if (!document.getElementById("inside").hidden) act.closeInside();else if (act.filesIsOpen()) document.getElementById("filesBack").click();else if (state.fsMode && drawer.classList.contains("open")) act.closePanel();else if (state.fsMode && stagecard.classList.contains("fs-fixed")) applyFsDom(false);
+}
+return { onEscape, refreshWeekSeg, showLevel, setFocus, focusGroup, updateDrawerBounds, applyFsDom, enterFs, exitFs, clearSelection, selectNode, setWeek, setTheme, unselect, restoreSelection };
 }

@@ -6,7 +6,7 @@ import { createScene } from './scene.js';
 import { createPanels, NEEDS as PANELS_NEEDS } from './panels.js';
 import { createFlowplayer, NEEDS as FLOW_NEEDS } from './flow-player.js';
 import { createCamera, NEEDS as CAMERA_NEEDS } from './camera.js';
-import { createTourplayer } from './tour-player.js';
+import { createTourplayer, NEEDS as TOUR_NEEDS } from './tour-player.js';
 import { createNavigation, NEEDS as NAVIGATION_NEEDS } from './navigation.js';
 import { createFilesView, NEEDS as FILES_NEEDS } from './files-view.js';
 import { createHelp, NEEDS as HELP_NEEDS } from './help.js';
@@ -603,7 +603,6 @@ export async function mountEngine(root, definition) {
       return restoreSelection;
     },
   };
-  const tourplayerModule = createTourplayer(context);
   const panel = document.getElementById("panel");
   const control = controls;
   const scene = await createScene(env, model, {
@@ -622,7 +621,13 @@ export async function mountEngine(root, definition) {
     setWeek, unselect, revealInPanel, focusHop,
     hasFiles: () => Boolean(filesView?.available),
     filesFor: id => filesView.pathsFor(id),
-    openFiles: path => filesView.open(path)
+    openFiles: path => filesView.open(path),
+    filesIsOpen: () => Boolean(filesView?.isOpen()),
+    onEscape: (...a) => navigationModule.onEscape(...a),
+    applyFsDom, exitFs, restoreSelection, stopDot, playStory, animateDot, popBadge, closeFlowPicker,
+    tourCamShot, tourFit,
+    tourCamFree: () => cameraModule.tourCamFree(),
+    tourCamStop: () => cameraModule.tourCamStop()
   });
   control.label(document.getElementById("toL0"), t("backToBigPicture"), "back");
   control.label(document.getElementById("fsBtn"), t("fullScreen"), "expand");
@@ -739,27 +744,6 @@ export async function mountEngine(root, definition) {
   function exitFs(...args) {
     return navigationModule.exitFs(...args);
   }
-  scope.listen(document, "fullscreenchange", () => {
-    // A tour leaving native full screen keeps running in-frame (fs-fixed).
-    if (state.tour.active && !document.fullscreenElement) state.tour.nativeLeftAt = performance.now();
-    if (state.tour.active) requestAnimationFrame(() => {
-      updateDrawerBounds();
-      if (!state.tour.atEnd) tourFit();
-    });
-    if (document.fullscreenElement === stagecard) {
-      if (!state.fsMode) applyFsDom(true);
-    } else if (state.fsMode && !stagecard.classList.contains("fs-fixed")) applyFsDom(false);
-  });
-  scope.listen(document, "keydown", ev => {
-    /* While touring the tour owns the keys (arrows step, Esc exits). */
-    if (state.tour.active) {
-      onTourKey(ev);
-      return;
-    }
-    if (ev.key !== "Escape") return;
-    if (!insideBox.hidden) closeInside();else if (filesView?.isOpen()) document.getElementById("filesBack").click();else if (state.fsMode && drawer.classList.contains("open")) closePanel();else if (state.fsMode && stagecard.classList.contains("fs-fixed")) applyFsDom(false);
-  });
-
   /* ---------------- pan (hand drag) + zoom ---------------- */
 
   function tourOcclusion(...args) {
@@ -911,44 +895,12 @@ export async function mountEngine(root, definition) {
 
   /* ?reset=1 forgets the tour's saved step, so it can be tested again from a
      first visit. Every load with the flag resets, so remove it to keep state. */
-  if (param("reset")) {
-    try {
-      localStorage.removeItem(definition.settings.storage.tour);
-    } catch (err) {}
-  }
   function readTour(...args) {
     return tourplayerModule.readTour(...args);
   }
   function saveTour(...args) {
     return tourplayerModule.saveTour(...args);
   }
-  const tourControls = document.getElementById("tourControls");
-  const tourBtn = document.getElementById("tourBtn");
-  const tourBtnText = document.getElementById("tourBtnText");
-  const tourStatus = document.getElementById("tourStatus");
-  const tourChapters = document.getElementById("tourChapters");
-  const tourExitBtn = document.getElementById("tourExit");
-  const tcEyebrow = document.getElementById("tcEyebrow");
-  const tcTitle = document.getElementById("tcTitle");
-  const tcScroll = document.getElementById("tcScroll");
-  const tcBody = document.getElementById("tcBody");
-  const tcWhy = document.getElementById("tcWhy");
-  const tcWhyText = document.getElementById("tcWhyText");
-  const tcList = document.getElementById("tcList");
-  const tcHint = document.getElementById("tcHint");
-  const tcCount = document.getElementById("tcCount");
-  const tcBack = document.getElementById("tcBack");
-  const tcNext = document.getElementById("tcNext");
-  const teTitle = document.getElementById("teTitle");
-  control.label(tourExitBtn, t("tourExitShort"), "exit");
-  tourExitBtn.setAttribute("aria-label", t("tourExit"));
-  TOUR_CHAPTERS.forEach(c => {
-    const li = document.createElement("li");
-    li.innerHTML = '<span class="tb-bar"><span class="tb-fill"></span></span><span class="tb-name"></span>';
-    li.querySelector(".tb-name").textContent = c.name;
-    tourChapters.appendChild(li);
-  });
-
   /* A tour left mid-way is offered back at its step; a finished one starts over. */
   function resumeStep(...args) {
     return tourplayerModule.resumeStep(...args);
@@ -960,14 +912,10 @@ export async function mountEngine(root, definition) {
   filesView = createFilesView({ env, model, scene, state, act: actFor("files-view", FILES_NEEDS) });
   /* The "?" card and hover hints on the controls: what each mode is for. */
   createHelp({ env, model, state, act: actFor("help", HELP_NEEDS) });
-  scope.listen(tourBtn, "click", () => startTour(resumeStep() || 1, {
-    native: true
-  }));
+  const tourplayerModule = createTourplayer({ env, model, scene, state, act: actFor("tour-player", TOUR_NEEDS) });
   function timeLeft(...args) {
     return tourplayerModule.timeLeft(...args);
   }
-  const beatHue = b => `var(${b.hue || TOUR_CHAPTERS[b.ch].hue})`;
-  const beatHasMotion = b => Boolean(b.flow) || Boolean(b.whole) && !reduced;
 
 
   function renderTourBar(...args) {
@@ -978,7 +926,6 @@ export async function mountEngine(root, definition) {
   }
 
 
-  const hopHue = (s, hop) => hue(hop.bad || !s.ok ? s.hue : s.ok);
 
   /* The changing part of the card. A flow beat's phase (tour.phase) is 0 on
      arrival (summary only), k (1 to the edge count) once Next has played
@@ -1139,27 +1086,11 @@ export async function mountEngine(root, definition) {
   function tourFit(...args) {
     return cameraModule.tourFit(...args);
   }
-  let tourFitFrame = 0;
-  scope.listen(window, "resize", () => {
-    if (!state.tour.active) return;
-    cancelAnimationFrame(tourFitFrame);
-    tourFitFrame = requestAnimationFrame(() => {
-      updateDrawerBounds();
-      if (!state.tour.atEnd) sizeTourCard();
-      tourFit();
-      if (!state.tour.atEnd) {
-        const b = TOUR[state.tour.step - 1];
-        tourCamShot(b, b.flow && state.tour.phase > 0 && state.tour.phase <= edgeCount(b) ? state.tour.phase - 1 : null, false);
-      }
-    });
-  });
-
   /* The closing beat (2026-11-01, click-through): each Next lights the
      next stage, using the stage focus Explore already has (the rest of the
      map dims) plus the stage's hue on its components; the Next after the
      last stage goes on to the ending. tour.phase is the stage shown (0 for
      the whole map). Skipped under reduced motion, as before. */
-  const stageCount = b => b.whole && !reduced ? SWEEP.length : 0;
   function showStage(...args) {
     return tourplayerModule.showStage(...args);
   }
@@ -1243,11 +1174,6 @@ export async function mountEngine(root, definition) {
   function onTourKey(...args) {
     return tourplayerModule.onTourKey(...args);
   }
-  scope.listen(tcNext, "click", tourNext);
-  scope.listen(tcBack, "click", tourBack);
-  scope.listen(tourExitBtn, "click", () => exitTour(state.tour.atEnd));
-  scope.listen(document.getElementById("teBack"), "click", () => exitTour(true));
-
   /* ---------------- theme ---------------- */
 
   /* A host page can pass the theme in ?theme=light or ?theme=dark; without it
@@ -1333,11 +1259,9 @@ export async function mountEngine(root, definition) {
       };
     },
     destroy() {
-      state.storyToken++;
-      state.cardSwap++;
-      state.tourCam.token++;
-      state.tour.active = false;
-      state.tour.atEnd = false;
+      flowplayerModule.stopDot();
+      tourplayerModule.halt();
+      cameraModule.tourCamStop();
       scope.destroy();
       if (document.fullscreenElement === stagecard) document.exitFullscreen().catch(() => {});
       root.replaceChildren();
