@@ -328,5 +328,18 @@ if (forcedTheme === "dark" || forcedTheme === "light") setTheme(forcedTheme);
 function onEscape() {
   if (!document.getElementById("inside").hidden) act.closeInside();else if (act.filesIsOpen()) document.getElementById("filesBack").click();else if (state.fsMode && drawer.classList.contains("open")) act.closePanel();else if (state.fsMode && stagecard.classList.contains("fs-fixed")) applyFsDom(false);
 }
-return { onEscape, refreshWeekSeg, showLevel, setFocus, focusGroup, updateDrawerBounds, applyFsDom, enterFs, exitFs, clearSelection, selectNode, setWeek, setTheme, unselect, restoreSelection };
+/* Node titles: the concept on top and the tool under it, or the other way round (viewMode). The
+   Labels switch that changed viewMode is parked with its markup (see the commented block in the
+   controls section); viewMode stays pinned to "concepts", so bringing the switch back is markup
+   plus a listener that sets viewMode, calls applyLabels and re-renders the selected node. */
+function applyLabels() {
+  NODES.forEach(n => {
+    const e = nodeEls[n.id];
+    e.l1.textContent = state.viewMode === "tools" ? n.tool : n.concept;
+    e.l2.textContent = state.viewMode === "tools" ? n.concept : n.tool;
+  });
+}
+control.label(toL0, t("backToBigPicture"), "back");
+control.label(fsBtn, t("fullScreen"), "expand");
+return { applyLabels, onEscape, refreshWeekSeg, showLevel, setFocus, focusGroup, updateDrawerBounds, applyFsDom, enterFs, exitFs, clearSelection, selectNode, setWeek, setTheme, unselect, restoreSelection };
 }

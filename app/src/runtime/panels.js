@@ -1,10 +1,11 @@
 /** The side panel (in full screen, the drawer) and what it shows: the intro, a group, a component,
  *  a build step; and the inside close-up over the map. */
+import controls from '../rendering/ml-controls.js';
 import { renderInsideScene, wireInsideScene } from "../rendering/inside-scenes.js";
 // Labels are plain text; inside an attribute they still need their quotes escaped.
 const attr = value => String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 /* The neighbours' functions the panels call (through act). */
-export const NEEDS = ["showLevel", "setFocus", "updateDrawerBounds", "hasFiles", "filesFor", "openFiles"];
+export const NEEDS = ["showLevel", "setFocus", "updateDrawerBounds", "hasFiles", "filesFor", "openFiles", "closeInside"];
 
 export function createPanels({ env, model, scene, state, act }) {
 const document = env.document;
@@ -196,6 +197,21 @@ function renderWeek(w) {
     `, model.definition.settings.buildRole);
   openPanel();
 }
+
+/* The panel's own buttons. "Back to the map" goes through act.closeInside, which also closes the
+   files view. Closing lives on the panel's own ✕ (the drawer's in full screen); reopening lives on
+   the crumbbar's "Show panel", which only exists while the panel is closed. */
+controls.label(document.getElementById("insideBack"), env.t("backToMap"), "back");
+env.scope.listen(document.getElementById("insideBack"), "click", act.closeInside);
+env.scope.listen(document.getElementById("drawerClose"), "click", closePanel);
+env.scope.listen(document.getElementById("panelClose"), "click", closePanel);
+/* The close strip turns opaque only once its card has scrolled. */
+[panel, drawer].forEach(box => {
+  if (box.querySelector(":scope > .panelhead")) env.scope.listen(box, "scroll", () => syncPanelHead(box), {
+    passive: true
+  });
+});
+env.scope.listen(panelBtn, "click", openPanel);
 
 return { openInside, closeInside, openPanel, closePanel, panelIsOpen, revealInPanel, syncPanelHead, catName, panelHTML, renderL0, renderOverview, renderGroup, renderNode, renderWeek };
 }
