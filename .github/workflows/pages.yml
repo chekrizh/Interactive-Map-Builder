@@ -31,8 +31,33 @@ jobs:
       - name: Render the demo map
         run: |
           mkdir _site
-          python3 plugins/interactive-map/skills/interactive-map/scripts/render.py \
-            plugins/interactive-map/skills/interactive-map/examples/kutt-url-shortener.json _site/index.html
+          # The demo's first panel says what made the map and links back here.
+          python3 - <<'PY'
+          import json, pathlib
+          src = pathlib.Path('plugins/interactive-map/skills/interactive-map/examples/kutt-url-shortener.json')
+          d = json.loads(src.read_text(encoding='utf-8'))
+          credit = ('<p>Made with <a href="https://github.com/chekrizh/Interactive-Map-Builder">Interactive Map Builder</a>, '
+                    'a Claude Code plugin that maps a repository like this one.</p>')
+          intro = d['panels']['introHtml']
+          assert intro.count('<div class="panel-actions">') == 1
+          d['panels']['introHtml'] = intro.replace('<div class="panel-actions">', credit + '<div class="panel-actions">')
+          pathlib.Path('demo.json').write_text(json.dumps(d, ensure_ascii=False), encoding='utf-8')
+          PY
+          python3 plugins/interactive-map/skills/interactive-map/scripts/render.py demo.json _site/index.html
+          # Link previews and search results show the project, not only the mapped repository.
+          python3 - <<'PY'
+          import pathlib
+          page = pathlib.Path('_site/index.html')
+          meta = ('<meta property="og:title" content="Interactive Map Builder: a map of the Kutt URL shortener">'
+                  '<meta property="og:description" content="An interactive C4 map made by a Claude Code plugin: drill-down, animated flows, code walkthroughs and a guided tour.">'
+                  '<meta property="og:image" content="https://raw.githubusercontent.com/chekrizh/Interactive-Map-Builder/main/docs/readme/social-preview.png">'
+                  '<meta property="og:url" content="https://chekrizh.github.io/Interactive-Map-Builder/">'
+                  '<meta name="twitter:card" content="summary_large_image">'
+                  '<link rel="canonical" href="https://chekrizh.github.io/Interactive-Map-Builder/">')
+          html = page.read_text(encoding='utf-8')
+          assert html.count('</title>') == 1
+          page.write_text(html.replace('</title>', '</title>' + meta, 1), encoding='utf-8')
+          PY
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

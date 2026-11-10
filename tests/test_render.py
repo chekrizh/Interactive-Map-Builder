@@ -279,6 +279,15 @@ class RenderTest(unittest.TestCase):
         page = render.render(render.viewer_page(), EXAMPLE)
         self.assertIn(f'<meta name="generator" content="interactive-map {version}">', page)
 
+    def test_page_title_and_description_are_in_the_head(self):
+        d = json.loads(json.dumps(EXAMPLE))
+        d['page']['title'] = 'Cats & <dogs>'
+        d['page'].setdefault('slots', {})['overviewDescription'] = 'Who <b>feeds</b> whom &amp; when'
+        page = render.render(render.viewer_page(), d)
+        self.assertIn('<title>Cats &amp; &lt;dogs&gt;</title>', page)
+        self.assertIn('<meta name="description" content="Who feeds whom &amp; when">', page)
+        self.assertNotIn('<title>System Map</title>', page)
+
     def test_viewer_page_is_self_contained_with_one_empty_placeholder(self):
         page = render.viewer_page()
         self.assertEqual(page.count(render.PLACEHOLDER), 1)
