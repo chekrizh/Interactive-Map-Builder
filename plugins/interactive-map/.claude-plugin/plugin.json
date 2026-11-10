@@ -5,5 +5,6 @@
   "author": {
     "name": "chekrizh"
   },
-  "repository": "https://github.com/chekrizh/Interactive-Map-Builder"
+  "repository": "https://github.com/chekrizh/Interactive-Map-Builder",
+  "license": "MIT"
 }

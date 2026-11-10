@@ -7,6 +7,7 @@
 [![Agent Skills](https://img.shields.io/badge/Agent_Skills-compatible-6E56CF)](#install)
 [![Output](https://img.shields.io/badge/output-one_offline_HTML-0F766E)](#how-it-works)
 [![Renderer](https://img.shields.io/badge/renderer-Python_3_stdlib-3776AB?logo=python&logoColor=white)](#how-it-works)
+[![License: MIT](https://img.shields.io/badge/license-MIT-64748B)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/chekrizh/Interactive-Map-Builder?style=flat&logo=github&color=E3B341)](https://github.com/chekrizh/Interactive-Map-Builder/stargazers)
 
 **Deep dives into how a system works: from the big picture down to a line of code, as one interactive map.**
@@ -169,3 +170,6 @@ python3 plugins/interactive-map/skills/interactive-map/scripts/render.py \
 open /tmp/map.html
 ```
 
+## License
+
+[MIT](LICENSE). Bundled assets keep their own licenses: [Lucide](https://lucide.dev) icons (ISC), [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos) (CC0; brand marks remain trademarks of their owners), the Manrope font (SIL Open Font License).
