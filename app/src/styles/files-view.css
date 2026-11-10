@@ -2,40 +2,33 @@
    Calm by design: one mono column of names, one muted column of notes, and
    the only colour is the role hue of the map component a path belongs to. */
 
-/* Entry beside the tour: outlined, so the tour stays the one filled action. */
+/* Entry beside the tour: the same filled ink button as Play flow and the tour. */
 .controls .files-entry {
-  height: 30px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px 0 10px;
-  border: 1px solid var(--line); border-radius: var(--ml-control-radius); background: var(--surface); color: var(--ink);
+  height: 30px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px;
+  border: 1px solid var(--ink); border-radius: var(--ml-control-radius); background: var(--ink); color: var(--bg);
   font: inherit; font-size: 12.5px; font-weight: 600; white-space: nowrap; cursor: pointer;
-  transition: border-color .15s var(--ml-ease), background-color .15s var(--ml-ease);
+  transition: background-color .15s var(--ml-ease), border-color .15s var(--ml-ease);
 }
 .controls .files-entry[hidden] { display: none; }
-.controls .files-entry svg { width: 14px; height: 14px; flex: none; color: var(--muted); }
-.controls .files-entry:hover { border-color: var(--muted); }
-.controls .files-entry[aria-pressed="true"] { background: color-mix(in srgb, var(--ink) 6%, var(--surface)); border-color: color-mix(in srgb, var(--ink) 28%, var(--line)); }
+.controls .files-entry svg { width: 14px; height: 14px; flex: none; }
+.controls .files-entry:hover { background: color-mix(in srgb,var(--ink) 86%,var(--bg)); border-color: color-mix(in srgb,var(--ink) 86%,var(--bg)); }
 .controls .files-entry:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .tour-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 
 .files {
   position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column;
-  background: var(--ml-canvas); font-family: var(--ml-font); color: var(--ink);
+  background: var(--surface); font-family: var(--ml-font); color: var(--ink);
 }
 .files[hidden] { display: none; }
-.files-head {
-  flex: none; display: flex; align-items: center; gap: 12px; padding: 12px 12px; min-height: 48px; box-sizing: border-box;
-  border-bottom: 1px solid var(--line); background: var(--surface);
+.files-head { flex: none; background: var(--surface); }
+/* The tree sits on the same dotted canvas as the map. */
+.files-body {
+  flex: 1; overflow: auto; padding: 16px 20px 28px;
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 22px 22px;
 }
-.files-body { flex: 1; overflow: auto; padding: 24px 28px 32px; }
-.files h2 { font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 4px; }
-.files-sub { font-size: 14px; line-height: 20px; color: var(--muted); margin: 0 0 20px; max-width: 78ch; }
 .files .mono, .panel .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .92em; }
 
-/* The tree sits on one white sheet, like a card on the map canvas. */
-.ft {
-  --ft-indent: 20px; --ft-name: minmax(220px, 32%);
-  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 6px;
-  box-shadow: 0 1px 1px #1018280a, 0 6px 16px -8px #1018281f; max-width: 1180px;
-}
+.ft { --ft-indent: 22px; --ft-name: minmax(240px, 34%); max-width: 1180px; }
 .ft-kids { position: relative; }
 /* Indent guide: a hairline under each open folder's chevron. */
 .ft-kids::before {
@@ -47,9 +40,9 @@
   min-height: 36px; padding: 4px 10px 4px 12px; border-radius: 9px; cursor: pointer; position: relative;
   transition: background-color .12s var(--ml-ease);
 }
-.ft-row:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
 .ft-row:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
-.ft-row.is-sel { background: color-mix(in srgb, var(--row-hue) 9%, var(--surface)); }
+.ft-row:hover { background: color-mix(in srgb, var(--ink) 4%, var(--surface)); }
+.ft-row.is-sel { background: color-mix(in srgb, var(--row-hue) 10%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--row-hue) 40%, transparent); }
 .ft-row.is-sel::before {
   content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--row-hue);
 }
@@ -59,8 +52,8 @@
 }
 .ft-chev { width: 15px; height: 15px; flex: none; color: var(--muted); transition: transform .15s var(--ml-ease); }
 .ft-row[aria-expanded="true"] > .ft-name > .ft-chev { transform: rotate(90deg); }
-.ft-ico { width: 16px; height: 16px; flex: none; color: color-mix(in srgb, var(--row-hue) 70%, var(--muted)); }
-.ft-row[aria-expanded] .ft-ico { fill: color-mix(in srgb, var(--row-hue) 14%, transparent); }
+.ft-ico { width: 17px; height: 17px; flex: none; color: var(--row-hue); }
+.ft-row[aria-expanded] .ft-ico { fill: color-mix(in srgb, var(--row-hue) 18%, transparent); }
 .ft-label {
   font: 500 13px/20px ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -68,8 +61,11 @@
 .ft-note { font-size: 13px; line-height: 20px; color: var(--muted); min-width: 0; }
 .ft-note code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .92em; }
 .ft-row.is-bare .ft-label { color: var(--muted); font-weight: 400; }
+.ft-row.is-root .ft-label { font-weight: 600; }
+.ft-row.is-root .ft-note { color: var(--muted); }
 .ft-more { cursor: default; }
 .ft-more:hover { background: none; }
+.ft-more .ft-label { padding-left: 22px; }
 .ft-more .ft-label, .ft-more .ft-note { color: var(--muted); }
 .ft-meta { display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
 .ft-tag {
@@ -106,6 +102,7 @@
 .panel .ft-link:hover { text-decoration-color: var(--ink); }
 .panel ul.ft-toplist li { line-height: 22px; margin-bottom: 6px; }
 .panel p.p-sub.mono { font-size: 12.5px; }
+.panel .ft-chips { margin: 0 0 4px; }
 .panel h2.ft-h { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 20px; letter-spacing: -.02em; }
 .panel .xrepo { flex-direction: column; align-items: flex-start; }
 

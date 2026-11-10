@@ -3,7 +3,14 @@
     A path ending in "/" is a folder; parents that are not listed are added without a note. */
 
 const FOLDER = '<path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4.1l1.8 2h9.1A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/>';
-const FILE = '<path d="M14 3H7a1.5 1.5 0 0 0-1.5 1.5v15A1.5 1.5 0 0 0 7 21h10a1.5 1.5 0 0 0 1.5-1.5V7.5z"/><path d="M14 3v4.5h4.5"/>';
+const SHEET = '<path d="M14 3H7a1.5 1.5 0 0 0-1.5 1.5v15A1.5 1.5 0 0 0 7 21h10a1.5 1.5 0 0 0 1.5-1.5V7.5z"/><path d="M14 3v4.5h4.5"/>';
+/* File glyphs by kind, all on the same sheet so the column stays quiet. */
+const KINDS = [
+  [/\.(js|mjs|cjs|ts|tsx|jsx|py|go|rs|rb|java|kt|swift|c|cc|cpp|h|cs|php|scala|sh|sql|ipynb)$/i, '<path d="m10 12.5-2 2 2 2m4-4 2 2-2 2"/>'],
+  [/(\.(ya?ml|json|toml|ini|cfg|conf|lock)|\.env.*|^\.?[A-Za-z]*rc|Dockerfile|Makefile|Procfile|\.gitignore|\.dockerignore)$/i, '<path d="M8.5 12h7m-7 3h7m-7 3h4"/>'],
+  [/\.(md|mdx|rst|txt|html|hbs|ejs|jinja2?|pdf)$|^(LICENSE|README)/i, '<path d="M8.5 12.5h7m-7 3h7"/>'],
+];
+const fileGlyph = name => SHEET + (KINDS.find(([re]) => re.test(name))?.[1] || "");
 const CHEVRON = '<path d="m9 6 6 6-6 6"/>';
 const ARROW = '<path d="M4 12h16m-6-6 6 6-6 6"/>';
 const OUT = '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>';
@@ -55,15 +62,25 @@ export function createFilesView(ctx) {
 
   btn.hidden = false;
   ctx.document.getElementById("filesBtnText").textContent = ui.filesEntry || "Browse the code";
-  box.querySelector("#filesTitle").textContent = files.title || (source ? source.repo.replace(/^https:\/\/github\.com\//, "") : "Project files");
-  const listed = files.entries.length;
-  box.querySelector("#filesSub").innerHTML = files.intro ||
-    `${listed} paths that matter${source?.ref ? ` · at <span class="mono">${esc(source.ref.slice(0, 7))}</span>` : ""}. Coloured tags show where each one sits on the map.`;
+  const repoName = files.title || (source ? source.repo.replace(/^https:\/\/github\.com\//, "").replace(/\/$/, "") : "project");
+  root.name = repoName.split("/").pop();
+  box.querySelector("#filesTitle").innerHTML = `${esc(ui.filesTitle || "Project files")} · ${esc(repoName)}` +
+    (source?.ref ? ` at <span class="mono">${esc(source.ref.slice(0, 7))}</span>` : "");
 
   const nodeOf = id => ctx.nodeEls[id]?.def;
+  /* A path takes the role of its first component. A folder without its own
+     components takes its contents' role when they all share one; mixed or
+     unlinked paths stay grey. */
+  const roleOf = n => {
+    const own = n.entry?.nodes?.map(nodeOf).find(Boolean);
+    if (own) return own.cat;
+    if (!n.dir) return null;
+    const roles = new Set(n.kids.map(roleOf).filter(Boolean));
+    return roles.size === 1 ? [...roles][0] : null;
+  };
   const hueOf = n => {
-    const first = n.entry?.nodes?.map(nodeOf).find(Boolean);
-    return first ? `var(--h-${first.cat})` : "var(--muted)";
+    const role = roleOf(n);
+    return role ? `var(--h-${role})` : "var(--muted)";
   };
   const href = n => {
     if (!source?.repo?.startsWith("https://github.com/")) return null;
@@ -86,7 +103,7 @@ export function createFilesView(ctx) {
     let h = `<div class="ft-row${n === selected ? " is-sel" : ""}${e ? "" : " is-bare"}" role="treeitem" tabindex="${n === selected ? 0 : -1}"` +
       ` aria-level="${depth + 1}"${kids ? ` aria-expanded="${open}"` : ""}${n === selected ? ' aria-selected="true"' : ""}` +
       ` data-path="${esc(n.path)}" style="--depth:${depth};--row-hue:${hueOf(n)}">` +
-      `<span class="ft-name">${kids ? svg(CHEVRON, "ft-chev") : '<span class="ft-chev"></span>'}${svg(n.dir ? FOLDER : FILE, "ft-ico")}<span class="ft-label">${esc(name)}</span></span>` +
+      `<span class="ft-name">${kids ? svg(CHEVRON, "ft-chev") : '<span class="ft-chev"></span>'}${svg(n.dir ? FOLDER : fileGlyph(n.name), "ft-ico")}<span class="ft-label">${esc(name)}</span></span>` +
       `<span class="ft-note">${e?.t || ""}</span><span class="ft-meta">${tag}${chips}</span></div>`;
     if (open) {
       h += `<div role="group" class="ft-kids" style="--depth:${depth}">` + n.kids.map(k => rowHTML(k, depth + 1)).join("");
@@ -97,18 +114,24 @@ export function createFilesView(ctx) {
   }
 
   function render() {
-    tree.innerHTML = root.kids.map(k => rowHTML(k, 0)).join("");
+    // The repository itself is the first row, like the top of a file explorer.
+    tree.innerHTML = `<div class="ft-row is-root${selected ? "" : " is-sel"}" role="treeitem" aria-level="1" aria-expanded="true" tabindex="${selected ? -1 : 0}" data-path="" style="--depth:0;--row-hue:var(--muted)">` +
+      `<span class="ft-name">${svg(CHEVRON, "ft-chev")}${svg(FOLDER, "ft-ico")}<span class="ft-label">${esc(root.name)}/</span></span><span class="ft-note">${files.intro || ""}</span><span class="ft-meta"></span></div>` +
+      `<div role="group" class="ft-kids" style="--depth:0">` + root.kids.map(k => rowHTML(k, 1)).join("") + "</div>";
     if (!tree.querySelector('[tabindex="0"]')) tree.querySelector(".ft-row[data-path]")?.setAttribute("tabindex", "0");
   }
 
   function renderIntro() {
-    const top = root.kids.filter(k => k.entry).map(k =>
-      `<li><span class="mono">${esc(k.name + (k.dir ? "/" : ""))}</span> ${k.entry.t}</li>`).join("");
     ctx.panelHTML(`
-      <div class="p-eyebrow">${esc(ui.filesTitle || "Project files")}</div>
-      <h2>${esc(box.querySelector("#filesTitle").textContent)}</h2>
-      <p style="margin-top:8px">${files.panel || "Where each part of the system lives in the repository. Open a folder for what it holds; a tag jumps to its component on the map."}</p>
-      ${top ? `<h3>At the top</h3><ul class="newlist ft-toplist">${top}</ul>` : ""}
+      <div class="p-eyebrow">Start here</div>
+      <h2>${esc(files.heading || "Where each part lives")}</h2>
+      <p style="margin-top:8px">${files.panel || `The paths of <span class="mono">${esc(repoName)}</span> that matter for the map, ${files.entries.length} of them, each with a line on what it holds.`}</p>
+      <h3>How to read it</h3>
+      <ul class="newlist ft-toplist">
+        <li><b>Coloured tags</b> are components on the map; click one to jump there.</li>
+        <li><b>The folder colour</b> follows the role of its component. Grey means plumbing (config, docs, tooling) or a mix of roles.</li>
+        <li>Click a row for why it exists. <kbd>↑</kbd> <kbd>↓</kbd> walk the tree, <kbd>←</kbd> <kbd>→</kbd> fold it.</li>
+      </ul>
     `, null);
     ctx.openPanel();
   }
@@ -125,11 +148,12 @@ export function createFilesView(ctx) {
     const link = href(n);
     const hue = nodes[0]?.[1].cat || null;
     ctx.panelHTML(`
-      <div class="p-eyebrow">${n.dir ? "Folder" : "File"}${e.tag ? " · " + esc(e.tag) : ""}</div>
+      <div class="p-eyebrow">${n.dir ? "Folder" : "File"}</div>
       <h2 class="ft-h">${esc(n.name + (n.dir ? "/" : ""))}</h2>
       <p class="p-sub mono">${esc(n.path + (n.dir ? "/" : ""))}</p>
-      ${e.t ? `<p>${e.t}</p>` : ""}
-      ${e.d ? `<p style="margin-top:8px">${e.d}</p>` : ""}
+      ${e.tag ? `<div class="p-chips ft-chips"><span class="pchip">${esc(e.tag)}</span></div>` : ""}
+      ${e.t ? `<h3>What lives here</h3><p>${e.t}</p>` : ""}
+      ${e.why ? `<h3>Why it exists</h3><p>${e.why}</p>` : ""}
       ${onMap ? `<h3>On the map</h3><div class="panel-actions">${onMap}</div>` : ""}
       ${kids ? `<h3>Inside</h3><ul class="newlist ft-toplist">${kids}</ul>` : ""}
       ${link ? `<div class="panel-actions"><a class="panel-action" href="${esc(link)}" target="_blank" rel="noopener">Open on GitHub${svg(OUT)}</a></div>` : ""}
@@ -199,6 +223,7 @@ export function createFilesView(ctx) {
     const row = ev.target.closest(".ft-row[data-path]");
     if (!row) return;
     const n = byPath.get(row.dataset.path);
+    if (n === root) { selected = null; render(); renderIntro(); tree.querySelector(".is-root")?.focus(); return; }
     // The chevron only folds; the rest of the row selects (and opens a closed folder).
     if (ev.target.closest(".ft-chev")) { toggle(n); render(); row.focus?.(); return; }
     if (n.dir && (n !== selected || !expanded.has(n.path))) toggle(n, true);
@@ -209,6 +234,10 @@ export function createFilesView(ctx) {
     if (!row) return;
     const rows = [...tree.querySelectorAll(".ft-row[data-path]")];
     const i = rows.indexOf(row), n = byPath.get(row.dataset.path);
+    if (n === root && !["ArrowDown", "ArrowUp"].includes(ev.key)) {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); selected = null; render(); renderIntro(); tree.querySelector(".is-root")?.focus(); }
+      return;
+    }
     const move = j => { if (rows[j]) { rows.forEach(r => r.tabIndex = -1); rows[j].tabIndex = 0; rows[j].focus(); } };
     if (ev.key === "ArrowDown") move(i + 1);
     else if (ev.key === "ArrowUp") move(i - 1);
