@@ -7,7 +7,7 @@ import { createPanels, NEEDS as PANELS_NEEDS } from './panels.js';
 import { createFlowplayer } from './flow-player.js';
 import { createCamera } from './camera.js';
 import { createTourplayer } from './tour-player.js';
-import { createNavigation } from './navigation.js';
+import { createNavigation, NEEDS as NAVIGATION_NEEDS } from './navigation.js';
 import { createFilesView, NEEDS as FILES_NEEDS } from './files-view.js';
 import { createHelp, NEEDS as HELP_NEEDS } from './help.js';
 
@@ -242,9 +242,6 @@ export async function mountEngine(root, definition) {
     get exploreNudge() {
       return state.exploreNudge;
     },
-    set exploreNudge(value) {
-      state.exploreNudge = value;
-    },
     get finishBeat() {
       return finishBeat;
     },
@@ -269,9 +266,6 @@ export async function mountEngine(root, definition) {
     get focused() {
       return state.focused;
     },
-    set focused(value) {
-      state.focused = value;
-    },
     get frameBoxes() {
       return frameBoxes;
     },
@@ -280,9 +274,6 @@ export async function mountEngine(root, definition) {
     },
     get fsMode() {
       return state.fsMode;
-    },
-    set fsMode(value) {
-      state.fsMode = value;
     },
     get hopBoxes() {
       return hopBoxes;
@@ -298,9 +289,6 @@ export async function mountEngine(root, definition) {
     },
     get level() {
       return state.level;
-    },
-    set level(value) {
-      state.level = value;
     },
     get litBoxes() {
       return litBoxes;
@@ -368,9 +356,6 @@ export async function mountEngine(root, definition) {
     get preFsOpen() {
       return state.preFsOpen;
     },
-    set preFsOpen(value) {
-      state.preFsOpen = value;
-    },
     get readTour() {
       return readTour;
     },
@@ -436,9 +421,6 @@ export async function mountEngine(root, definition) {
     },
     get selected() {
       return state.selected;
-    },
-    set selected(value) {
-      state.selected = value;
     },
     get setFocus() {
       return setFocus;
@@ -629,14 +611,8 @@ export async function mountEngine(root, definition) {
     get viewMode() {
       return state.viewMode;
     },
-    set viewMode(value) {
-      state.viewMode = value;
-    },
     get week() {
       return state.week;
-    },
-    set week(value) {
-      state.week = value;
     },
     get zoneEls() {
       return zoneEls;
@@ -650,6 +626,12 @@ export async function mountEngine(root, definition) {
     set zoom(value) {
       state.zoom = value;
     },
+    get unselect() {
+      return unselect;
+    },
+    get restoreSelection() {
+      return restoreSelection;
+    },
     get zoomCtl() {
       return zoomCtl;
     }
@@ -657,7 +639,6 @@ export async function mountEngine(root, definition) {
   const flowplayerModule = createFlowplayer(context);
   const cameraModule = createCamera(context);
   const tourplayerModule = createTourplayer(context);
-  const navigationModule = createNavigation(context);
   const panel = document.getElementById("panel");
   const control = controls;
   const scene = await createScene(env, model, {
@@ -666,10 +647,11 @@ export async function mountEngine(root, definition) {
   });
   const { svg0, svg, el, canvas, zoneLayer, edgeLayer, nodeLayer, storyLayer, zoneEls, edgeEls, nodeEls, nodeBox, allNodeBoxes, hopBoxes } = scene;
   const panelsModule = createPanels({ env, model, scene, state, act: actFor("panels", PANELS_NEEDS) });
+  const navigationModule = createNavigation({ env, model, scene, state, act: actFor("navigation", NAVIGATION_NEEDS) });
   Object.assign(wired, {
     showLevel, selectNode, closeInside, clearStory,
     panelHTML, openPanel, renderL0, renderOverview, renderNode,
-    setFocus, updateDrawerBounds,
+    setFocus, updateDrawerBounds, resetView, panelIsOpen, closePanel, renderGroup, renderWeek,
     hasFiles: () => Boolean(filesView?.available),
     filesFor: id => filesView.pathsFor(id),
     openFiles: path => filesView.open(path)
@@ -677,13 +659,6 @@ export async function mountEngine(root, definition) {
   control.label(document.getElementById("toL0"), t("backToBigPicture"), "back");
   control.label(document.getElementById("fsBtn"), t("fullScreen"), "expand");
   control.label(document.getElementById("insideBack"), t("backToMap"), "back");
-  scope.listen(svg, "click", ev => {
-    if (state.tour.active) return;
-    if (ev.target === svg) {
-      if (state.fsMode) closePanel();
-      clearSelection();
-    }
-  });
 
   /* ---------------- state ---------------- */
 
@@ -709,14 +684,6 @@ export async function mountEngine(root, definition) {
   function focusGroup(...args) {
     return navigationModule.focusGroup(...args);
   }
-  scope.listen(toL0, "click", () => {
-    showLevel(0);
-    renderL0();
-  });
-  scope.listen(unfocusBtn, "click", () => {
-    setFocus(null);
-    renderOverview();
-  });
 
   /* ---------------- inside overlay ---------------- */
   function openInside(...args) {
@@ -795,13 +762,6 @@ export async function mountEngine(root, definition) {
   function updateDrawerBounds(...args) {
     return navigationModule.updateDrawerBounds(...args);
   }
-  if (window.ResizeObserver) {
-    const drawerBoundsObserver = new ResizeObserver(updateDrawerBounds);
-    drawerBoundsObserver.observe(stagecard.querySelector(".crumbbar"));
-    drawerBoundsObserver.observe(controlsEl);
-    drawerBoundsObserver.observe(tourBar);
-  }
-  scope.listen(window, "resize", updateDrawerBounds);
   function applyFsDom(...args) {
     return navigationModule.applyFsDom(...args);
   }
@@ -811,9 +771,6 @@ export async function mountEngine(root, definition) {
   function exitFs(...args) {
     return navigationModule.exitFs(...args);
   }
-  scope.listen(fsBtn, "click", () => {
-    state.fsMode ? exitFs() : enterFs();
-  });
   scope.listen(document, "fullscreenchange", () => {
     // A tour leaving native full screen keeps running in-frame (fs-fixed).
     if (state.tour.active && !document.fullscreenElement) state.tour.nativeLeftAt = performance.now();
@@ -1014,6 +971,12 @@ export async function mountEngine(root, definition) {
   function setWeek(...args) {
     return navigationModule.setWeek(...args);
   }
+  function unselect(...args) {
+    return navigationModule.unselect(...args);
+  }
+  function restoreSelection(...args) {
+    return navigationModule.restoreSelection(...args);
+  }
   function animateDot(...args) {
     return flowplayerModule.animateDot(...args);
   }
@@ -1123,42 +1086,6 @@ export async function mountEngine(root, definition) {
   });
   const firstFlow = flowPicker.querySelector("[data-flow]");
   if (firstFlow) chooseFlow(firstFlow.dataset.flow);else flowControls.hidden = true;
-  const weekSeg = document.getElementById("weekSeg");
-  /* Hover hint naming each build step; .seg clips overflow, so the hint is
-     one fixed element placed under the hovered button. */
-  const stepTip = document.createElement("div");
-  stepTip.className = "steptip";
-  stepTip.hidden = true;
-  weekSeg.closest(".controls").appendChild(stepTip);
-  function showStepTip(b) {
-    stepTip.textContent = b.dataset.tip;
-    stepTip.hidden = false;
-    const r = b.getBoundingClientRect(), w = stepTip.offsetWidth;
-    stepTip.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px";
-    stepTip.style.top = r.bottom + 8 + "px";
-  }
-  function hideStepTip() { stepTip.hidden = true; }
-  WEEKS.map((_, i) => [String(i), i === 0 ? t("fullSystem") : String(i)]).forEach(([v, label]) => {
-    const b = document.createElement("button");
-    b.dataset.w = v;
-    b.textContent = label;
-    if (v !== "0" && WEEKS[v]?.title) {
-      b.dataset.tip = v + " · " + WEEKS[v].title;
-      b.setAttribute("aria-label", t("buildStepAria", { step: b.dataset.tip }));
-      for (const ev of ["mouseenter", "focus"]) scope.listen(b, ev, () => showStepTip(b));
-      for (const ev of ["mouseleave", "blur", "click"]) scope.listen(b, ev, hideStepTip);
-    }
-    scope.listen(b, "click", () => {
-      if (state.level !== 1) showLevel(1);
-      /* The inside overlay covers the map without changing level, so
-         showLevel alone won't dismiss it when already on the full map. */
-      closeInside();
-      clearStory();
-      setFocus(null);
-      setWeek(Number(v));
-    });
-    weekSeg.appendChild(b);
-  });
 
   /* The Labels switch is parked with its markup (see the commented block in
      the controls section). viewMode stays a real variable pinned to
@@ -1193,26 +1120,6 @@ export async function mountEngine(root, definition) {
   }
   const tourControls = document.getElementById("tourControls");
   const tourBtn = document.getElementById("tourBtn");
-  /* Light / dark switch (2026-11-09). With no choice the page follows the
-     system; a click pins the opposite of what is showing and is remembered
-     per browser when storage allows it. */
-  const themeToggle = document.getElementById("themeToggle");
-  if (themeToggle) {
-    const rootEl = document.documentElement;
-    const isDark = () => rootEl.dataset.theme ? rootEl.dataset.theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const syncThemeLabel = () => themeToggle.setAttribute("aria-label", isDark() ? t("themeToLight") : t("themeToDark"));
-    try {
-      const saved = localStorage.getItem("imap-theme");
-      if (saved === "dark" || saved === "light") rootEl.dataset.theme = saved;
-    } catch (_) {}
-    syncThemeLabel();
-    scope.listen(themeToggle, "click", () => {
-      const next = isDark() ? "light" : "dark";
-      rootEl.dataset.theme = next;
-      try { localStorage.setItem("imap-theme", next); } catch (_) {}
-      syncThemeLabel();
-    });
-  }
   const tourBtnText = document.getElementById("tourBtnText");
   const tourStatus = document.getElementById("tourStatus");
   const tourChapters = document.getElementById("tourChapters");
@@ -1550,8 +1457,6 @@ export async function mountEngine(root, definition) {
   function setTheme(...args) {
     return navigationModule.setTheme(...args);
   }
-  const forcedTheme = param("theme");
-  if (forcedTheme === "dark" || forcedTheme === "light") setTheme(forcedTheme);
 
   /* ---------------- init ---------------- */
   applyLabels();

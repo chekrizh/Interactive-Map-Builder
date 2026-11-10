@@ -465,8 +465,7 @@ function showBeat(n, opts) {
   ctx.renderTourCard(n);
   ctx.renderPlayer();
   ctx.sizeTourCard();
-  ctx.selected = null;
-  ctx.NODES.forEach(x => ctx.nodeEls[x.id].g.classList.remove("sel"));
+  ctx.unselect();
   if (b.level === 0) {
     if (ctx.level !== 0) ctx.showLevel(0);
   } else {
@@ -636,8 +635,7 @@ function exitTour(toFullMap) {
   ctx.applyFsDom(false);
   const snap = ctx.tour.snap || {};
   ctx.tour.snap = null;
-  ctx.selected = null;
-  ctx.NODES.forEach(x => ctx.nodeEls[x.id].g.classList.remove("sel"));
+  ctx.unselect();
   if (toFullMap || atEnd) {
     ctx.showLevel(1);
     ctx.setFocus(null);
@@ -659,8 +657,7 @@ function exitTour(toFullMap) {
     });
     ctx.setFocus(snap.focused || null);
     if (snap.selected && ctx.nodeEls[snap.selected]) {
-      ctx.selected = snap.selected;
-      ctx.nodeEls[ctx.selected].g.classList.add("sel");
+      ctx.restoreSelection(snap.selected);
       ctx.renderNode(ctx.selected);
     } else if (snap.focused) ctx.renderGroup(snap.focused);else if (snap.week > 0) ctx.renderWeek(snap.week);else ctx.renderOverview();
     if (snap.panelOpen) ctx.openPanel();else ctx.closePanel();

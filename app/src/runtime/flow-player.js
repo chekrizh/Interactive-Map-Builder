@@ -163,8 +163,7 @@ async function playStory(key, opts) {
   if (ctx.week !== 0) ctx.setWeek(0, {
     silent: true
   });
-  ctx.selected = null;
-  ctx.NODES.forEach(n => ctx.nodeEls[n.id].g.classList.remove("sel"));
+  ctx.unselect();
   const s = ctx.STORIES[key];
   ctx.svg.style.setProperty("--story-hue", ctx.hue(s.hue));
   let list = null;
