@@ -388,7 +388,7 @@ definition = {
     "panels": {
         "introHtml": "<div class=\"p-eyebrow\">Start here</div><h2>PrivateBin, the zero-knowledge pastebin</h2>"
                      "<p style=\"margin-top:8px\">A map of <a href=\"https://github.com/PrivateBin/PrivateBin\">PrivateBin/PrivateBin</a> 2.1.1 in C4 terms: context on the overview, the client, server and storage on the full map.</p>"
-                     "<h3>Try it</h3><ul class=\"newlist\"><li>Open a card to see its part of the system.</li><li>Play <b>Create a paste</b> to see where the encryption happens.</li><li>Click a component for what it does and where it lives in the code.</li></ul>"
+                     "<p><small>PrivateBin was originally written by Sébastien Sauvage (© 2012) and is developed by the PrivateBin contributors under the <a href=\"https://github.com/PrivateBin/PrivateBin/blob/8a6312e7e666e6b5129de260dbe195b2be21b58e/LICENSE.md\">zlib/libpng licence</a>. This map describes it in its own words and is not affiliated with its authors.</small></p><h3>Try it</h3><ul class=\"newlist\"><li>Open a card to see its part of the system.</li><li>Play <b>Create a paste</b> to see where the encryption happens.</li><li>Click a component for what it does and where it lives in the code.</li></ul>"
                      "<div class=\"panel-actions\"><button type=\"button\" class=\"panel-action\" id=\"gofull\">Open full map</button></div>",
         "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>The browser does the work</h2>"
                         "<p style=\"margin-top:8px\">PrivateBin runs as PHP on any web server; the client is one JavaScript file. Both are opened up into their components.</p>"

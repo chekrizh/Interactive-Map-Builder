@@ -1,0 +1,1392 @@
+{
+  "id": "healthchecks-cron-monitor",
+  "page": {
+    "title": "Healthchecks: a cron job monitor, mapped",
+    "slots": {
+      "overviewDescription": "Healthchecks in context: the jobs that ping it, the people it alerts and what it is made of.",
+      "mapDescription": "The Django web app, the background loops and the database, with the paths a ping, a missed ping and an alert take.",
+      "completionLessons": "<li>Why a silent job is noticed by a loop, not by a request</li><li>How one row update turns into an alert</li><li>Why the alert loop can run twice without sending twice</li>",
+      "completionIntro": "You followed a ping into the database, watched a job go quiet and traced the alert out to a person."
+    }
+  },
+  "panels": {
+    "introHtml": "<div class=\"p-eyebrow\">Start here</div><h2>Healthchecks, the cron job monitor</h2><p style=\"margin-top:8px\">A map of <a href=\"https://github.com/healthchecks/healthchecks\">healthchecks/healthchecks</a> in C4 terms: context on the overview, the web app, the background loops and the database on the full map.</p><p><small>Healthchecks is made by Pēteris Caune and other contributors (© 2015) and released under the <a href=\"https://github.com/healthchecks/healthchecks/blob/255075ce65ee0997fd9d3b8dd04e4829a87fad5d/LICENSE\">BSD 3-clause licence</a>. This map describes it in its own words and is not affiliated with its authors.</small></p><h3>Try it</h3><ul class=\"newlist\"><li>Open a card to see its part of the system.</li><li>Play <b>A job goes quiet</b>: the alert nobody asked for is the whole point.</li><li>Click a component for what it does and where it lives in the code.</li></ul><div class=\"panel-actions\"><button type=\"button\" class=\"panel-action\" id=\"gofull\">Open full map</button></div>",
+    "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>Pings in, alerts out</h2><p style=\"margin-top:8px\">One Django project runs as four processes from the same code: the web server and three management commands. They share nothing but the database.</p><h3>How to read it</h3><p>Jobs and people on the left, the web app and the background loops in the middle, the database and outside services on the right. A ping only writes a row; deciding that a job is late is the alert loop's job.</p>"
+  },
+  "groups": {
+    "people": {
+      "title": "Jobs and people",
+      "huekey": "person",
+      "icon": "users",
+      "line1": "Jobs ping when they run.",
+      "line2": "People get the alert.",
+      "chips": "cron · curl · email",
+      "text": "Two kinds of user: the scheduled jobs that report in, and the team that sets up checks and wants to hear when one goes quiet.",
+      "members": [
+        "job",
+        "user"
+      ]
+    },
+    "intake": {
+      "title": "Take a ping",
+      "huekey": "component",
+      "icon": "radio-receiver",
+      "line1": "An HTTP request or an email",
+      "line2": "becomes one ping.",
+      "chips": "/ping/uuid · smtpd",
+      "text": "Two doors for the same event: an HTTP request to the check's URL, or an email to its address. Both end in the same call.",
+      "members": [
+        "ping",
+        "smtpd"
+      ]
+    },
+    "web": {
+      "title": "Web app",
+      "huekey": "component",
+      "icon": "layout-dashboard",
+      "line1": "Dashboard, API, accounts",
+      "line2": "and channel setup.",
+      "chips": "Django · gunicorn",
+      "text": "The part people see: the live dashboard, the REST API, logins and teams, and the pages that connect Slack, email or a webhook.",
+      "members": [
+        "dashboard",
+        "api",
+        "accounts",
+        "channels"
+      ]
+    },
+    "watch": {
+      "title": "Decide who is late",
+      "huekey": "background",
+      "icon": "timer",
+      "line1": "Check rules say when.",
+      "line2": "A loop notices silence.",
+      "chips": "Check · sendalerts",
+      "text": "The check's rules turn its last ping and schedule into a deadline; a loop that never sleeps longer than two seconds finds the checks past theirs.",
+      "members": [
+        "check",
+        "sendalerts"
+      ]
+    },
+    "notify": {
+      "title": "Tell someone",
+      "huekey": "component",
+      "icon": "bell-ring",
+      "line1": "25+ ways to send an alert,",
+      "line2": "plus monthly reports.",
+      "chips": "transports · sendreports",
+      "text": "One transport per integration sends the alert; a second loop mails monthly reports and reminders while something stays down.",
+      "members": [
+        "notifier",
+        "sendreports",
+        "services",
+        "mailer"
+      ]
+    },
+    "storage": {
+      "title": "Storage",
+      "huekey": "store",
+      "icon": "database",
+      "line1": "One SQL database,",
+      "line2": "an optional bucket.",
+      "chips": "PostgreSQL · MySQL · S3",
+      "text": "Every process reads and writes the same database; large ping bodies can go to S3-compatible storage instead.",
+      "members": [
+        "db",
+        "s3"
+      ]
+    }
+  },
+  "overview": [
+    {
+      "g": "people"
+    },
+    {
+      "g": "intake"
+    },
+    {
+      "g": "watch"
+    },
+    {
+      "g": "web"
+    },
+    {
+      "g": "notify"
+    },
+    {
+      "g": "storage"
+    }
+  ],
+  "overviewEdges": [
+    {
+      "id": "o1",
+      "from": "people",
+      "to": "intake",
+      "label": "ping"
+    },
+    {
+      "id": "o2",
+      "from": "people",
+      "to": "web",
+      "label": "set up, watch"
+    },
+    {
+      "id": "o3",
+      "from": "intake",
+      "to": "watch",
+      "label": "check.ping()"
+    },
+    {
+      "id": "o4",
+      "from": "watch",
+      "to": "notify",
+      "label": "flip"
+    },
+    {
+      "id": "o5",
+      "from": "watch",
+      "to": "storage",
+      "label": "rows"
+    },
+    {
+      "id": "o6",
+      "from": "notify",
+      "to": "people",
+      "label": "alert"
+    }
+  ],
+  "zones": [
+    {
+      "id": "outside",
+      "label": "Outside · jobs, people and services",
+      "hue": "external"
+    },
+    {
+      "id": "web",
+      "label": "Web process · Django on gunicorn",
+      "hue": "component"
+    },
+    {
+      "id": "loops",
+      "label": "Background processes · manage.py commands",
+      "hue": "background"
+    },
+    {
+      "id": "data",
+      "label": "Storage",
+      "hue": "store"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "job",
+      "group": "people",
+      "cat": "person",
+      "step": 1,
+      "icon": "clock",
+      "shape": "worker",
+      "zone": "outside",
+      "tool": "Cron job, script, CI task",
+      "concept": "Scheduled job",
+      "what": "Anything that runs on a schedule and can make one HTTP request or send one email when it finishes: <code>curl -fsS https://hc-ping.com/&lt;uuid&gt;</code> at the end of a crontab line.",
+      "why": "Healthchecks never calls the job. It only listens, so it works behind any firewall, and silence is the signal.",
+      "tools": "curl · wget · an email client · <code>/start</code>, <code>/fail</code>, <code>/&lt;exit code&gt;</code>"
+    },
+    {
+      "id": "user",
+      "group": "people",
+      "cat": "person",
+      "step": 2,
+      "icon": "user",
+      "shape": "person",
+      "zone": "outside",
+      "tool": "Person",
+      "concept": "Team member",
+      "what": "Creates checks with a period and a grace time (or a cron expression), connects channels, and gets the alert when a job goes quiet.",
+      "why": "The whole point of the service is to reach this person when nobody else would notice a job that stopped running.",
+      "tools": "Browser · phone · the REST API with a project API key"
+    },
+    {
+      "id": "ping",
+      "group": "intake",
+      "cat": "component",
+      "step": 1,
+      "icon": "radio-receiver",
+      "zone": "web",
+      "tool": "Component · hc/api/views.py",
+      "concept": "Ping endpoint",
+      "what": "<code>/ping/&lt;uuid&gt;</code> and its variants. Works out what the request means (success, start, fail, log or ignore) from the path, the exit code, the method and keywords in the body, then hands it to the check.",
+      "why": "It must answer fast and never fail a job: no login, no CSRF, any method, CORS open. All the logic lives one call further.",
+      "tools": "<code>hc/api/views.py</code> · <code>hc/api/urls.py</code>"
+    },
+    {
+      "id": "smtpd",
+      "group": "intake",
+      "cat": "component",
+      "step": 5,
+      "icon": "mail",
+      "shape": "worker",
+      "zone": "loops",
+      "tool": "Process · manage.py smtpd",
+      "concept": "Email listener",
+      "what": "A small SMTP server. An email to <code>&lt;uuid&gt;@your-host</code> is a ping; subject or body keywords can turn it into a start or a failure.",
+      "why": "Some jobs (backup appliances, NAS boxes) can only send email. They get the same check as a curl call.",
+      "tools": "<code>hc/api/management/commands/smtpd.py</code> · aiosmtpd"
+    },
+    {
+      "id": "check",
+      "group": "watch",
+      "cat": "component",
+      "step": 1,
+      "icon": "list-checks",
+      "zone": "web",
+      "inside": "check",
+      "tool": "Model · Check",
+      "concept": "Check rules",
+      "what": "One row per monitored job: its period, grace and schedule, its last ping and its status. <code>Check.ping()</code> records a ping; <code>get_status()</code> and <code>going_down_after()</code> turn the last ping into a deadline.",
+      "why": "Every process imports the same model, so the web app and the alert loop agree on what late means.",
+      "tools": "<code>hc/api/models.py</code> · cronsim · oncalendar"
+    },
+    {
+      "id": "dashboard",
+      "group": "web",
+      "cat": "component",
+      "step": 2,
+      "icon": "layout-dashboard",
+      "zone": "web",
+      "tool": "Component · hc/front",
+      "concept": "Dashboard",
+      "what": "My Checks, check details and the event log. The page asks for every check's status every 3 seconds while the tab is visible and redraws only what changed.",
+      "why": "Status is computed on read from the last ping, so the dashboard can show a check as late a moment before the alert loop has noticed.",
+      "tools": "<code>hc/front/views.py</code> · <code>static/js/checks.js</code> · Django templates"
+    },
+    {
+      "id": "api",
+      "group": "web",
+      "cat": "component",
+      "step": 5,
+      "icon": "braces",
+      "zone": "web",
+      "tool": "Component · hc/api",
+      "concept": "REST API",
+      "what": "Create, update, pause and list checks, read pings and flips. A request carries a project API key in <code>X-Api-Key</code>; read-only keys see but cannot change.",
+      "why": "Teams create checks from their deploy scripts, so a new cron job gets monitored without anyone opening the dashboard.",
+      "tools": "<code>hc/api/views.py</code> · <code>hc/api/decorators.py</code> · pydantic"
+    },
+    {
+      "id": "accounts",
+      "group": "web",
+      "cat": "component",
+      "step": 2,
+      "icon": "users",
+      "zone": "web",
+      "tool": "Component · hc/accounts",
+      "concept": "Accounts and projects",
+      "what": "Sign-up by email link, passwords, WebAuthn and TOTP, projects with members and read-only access, API keys, report settings.",
+      "why": "A check belongs to a project, not a person, so a team keeps its checks when someone leaves.",
+      "tools": "<code>hc/accounts/models.py</code> · <code>hc/accounts/views.py</code>"
+    },
+    {
+      "id": "channels",
+      "group": "web",
+      "cat": "component",
+      "step": 4,
+      "icon": "plug",
+      "zone": "web",
+      "tool": "Component · hc/integrations/*",
+      "concept": "Channel setup",
+      "what": "One folder per integration with its own pages: connect Slack by OAuth, verify an email address, type a webhook URL. Each saves a <code>Channel</code> row with its settings in JSON.",
+      "why": "Adding an integration means adding a folder, not touching the alert loop.",
+      "tools": "<code>hc/integrations/</code> · <code>Channel</code> in <code>hc/api/models.py</code>"
+    },
+    {
+      "id": "sendalerts",
+      "group": "watch",
+      "cat": "background",
+      "step": 3,
+      "icon": "alarm-clock",
+      "shape": "worker",
+      "zone": "loops",
+      "inside": "sendalerts",
+      "tool": "Process · manage.py sendalerts",
+      "concept": "Alert loop",
+      "what": "A loop that never stops: find checks whose deadline has passed and mark them down (a flip), then claim each unprocessed flip and hand it to a pool of worker threads.",
+      "why": "A job that stops running sends nothing, so no request ever arrives to react to. Something has to look at the clock.",
+      "tools": "<code>hc/api/management/commands/sendalerts.py</code> · ThreadPoolExecutor"
+    },
+    {
+      "id": "notifier",
+      "group": "notify",
+      "cat": "component",
+      "step": 4,
+      "icon": "send",
+      "zone": "loops",
+      "tool": "Component · transports",
+      "concept": "Notifier",
+      "what": "<code>Channel.notify()</code> records a <code>Notification</code>, calls the channel's transport (Slack, email, Telegram, webhook and 20 more) and saves the error, if any, on the channel.",
+      "why": "Each transport only knows how to format and post one message; retries, timing and bookkeeping are shared.",
+      "tools": "<code>hc/api/transports.py</code> · <code>hc/integrations/*/transport.py</code> · pycurl"
+    },
+    {
+      "id": "sendreports",
+      "group": "notify",
+      "cat": "background",
+      "step": 6,
+      "icon": "calendar-clock",
+      "shape": "worker",
+      "zone": "loops",
+      "tool": "Process · manage.py sendreports",
+      "concept": "Reports and nags",
+      "what": "Monthly or weekly summaries by email, and hourly or daily reminders while any check stays down.",
+      "why": "An alert can be missed. A reminder that keeps coming until the job is fixed is the safety net.",
+      "tools": "<code>hc/api/management/commands/sendreports.py</code> · <code>Profile.send_report()</code>"
+    },
+    {
+      "id": "services",
+      "group": "notify",
+      "cat": "external",
+      "step": 4,
+      "icon": "messages-square",
+      "logo": "slack",
+      "shape": "external",
+      "zone": "outside",
+      "tool": "External systems",
+      "concept": "Notification services",
+      "what": "Slack, Telegram, Discord, PagerDuty, Opsgenie, ntfy, Signal, SMS and phone calls, plain webhooks and more.",
+      "why": "Teams already watch one of these; the alert has to land where they look.",
+      "tools": "HTTPS APIs and incoming webhooks"
+    },
+    {
+      "id": "mailer",
+      "group": "notify",
+      "cat": "external",
+      "step": 6,
+      "icon": "mail",
+      "shape": "external",
+      "zone": "outside",
+      "tool": "External system",
+      "concept": "Outgoing mail server",
+      "what": "The SMTP relay that delivers email alerts, sign-in links, reports and nags.",
+      "why": "Email is the one channel every account has, so it carries the reports and the sign-in links too.",
+      "tools": "Any SMTP service · <code>EMAIL_HOST</code>"
+    },
+    {
+      "id": "db",
+      "group": "storage",
+      "cat": "store",
+      "step": 1,
+      "icon": "database",
+      "logo": "postgresql",
+      "shape": "database",
+      "zone": "data",
+      "inside": "db",
+      "tool": "PostgreSQL · MySQL · MariaDB",
+      "concept": "Database",
+      "what": "Checks, pings, flips, channels, notifications, users and projects. The only thing the four processes share.",
+      "why": "Row locks and conditional updates in this database are what keep two processes from recording the same ping or sending the same alert twice.",
+      "tools": "Django ORM · migrations in each app"
+    },
+    {
+      "id": "s3",
+      "group": "storage",
+      "cat": "store",
+      "step": 5,
+      "icon": "archive",
+      "logo": "aws-s3",
+      "shape": "database",
+      "zone": "data",
+      "tool": "S3-compatible bucket",
+      "concept": "Ping body storage",
+      "what": "Optional. With <code>S3_BUCKET</code> set, a ping body over 100 bytes is stored here under <code>&lt;check uuid&gt;/&lt;ping number&gt;</code> and the database keeps only its size.",
+      "why": "Logs pasted into pings would otherwise swell the database and slow down its backups.",
+      "tools": "<code>hc/lib/s3.py</code> · minio client"
+    }
+  ],
+  "edges": [
+    {
+      "id": "jo_pi",
+      "from": "job",
+      "to": "ping",
+      "label": "GET /ping/uuid"
+    },
+    {
+      "id": "jo_sm",
+      "from": "job",
+      "to": "smtpd",
+      "label": "email uuid@host"
+    },
+    {
+      "id": "pi_ch",
+      "from": "ping",
+      "to": "check",
+      "label": "check.ping()"
+    },
+    {
+      "id": "sm_ch",
+      "from": "smtpd",
+      "to": "check",
+      "label": "check.ping()"
+    },
+    {
+      "id": "ch_db",
+      "from": "check",
+      "to": "db",
+      "label": "lock row, save"
+    },
+    {
+      "id": "ch_s3",
+      "from": "check",
+      "to": "s3",
+      "label": "big bodies"
+    },
+    {
+      "id": "us_da",
+      "from": "user",
+      "to": "dashboard",
+      "label": "watch, edit"
+    },
+    {
+      "id": "us_ac",
+      "from": "user",
+      "to": "accounts",
+      "label": "sign in, invite"
+    },
+    {
+      "id": "us_cn",
+      "from": "user",
+      "to": "channels",
+      "label": "connect Slack"
+    },
+    {
+      "id": "us_ap",
+      "from": "user",
+      "to": "api",
+      "label": "X-Api-Key"
+    },
+    {
+      "id": "da_ch",
+      "from": "dashboard",
+      "to": "check",
+      "label": "get_status()"
+    },
+    {
+      "id": "ap_ch",
+      "from": "api",
+      "to": "check",
+      "label": "create, pause"
+    },
+    {
+      "id": "ac_db",
+      "from": "accounts",
+      "to": "db",
+      "label": "users, projects"
+    },
+    {
+      "id": "cn_db",
+      "from": "channels",
+      "to": "db",
+      "label": "save Channel"
+    },
+    {
+      "id": "sa_db",
+      "from": "sendalerts",
+      "to": "db",
+      "label": "overdue? flips?"
+    },
+    {
+      "id": "sa_ch",
+      "from": "sendalerts",
+      "to": "check",
+      "label": "get_status()"
+    },
+    {
+      "id": "sa_no",
+      "from": "sendalerts",
+      "to": "notifier",
+      "label": "notify(flip)"
+    },
+    {
+      "id": "no_db",
+      "from": "notifier",
+      "to": "db",
+      "label": "Notification"
+    },
+    {
+      "id": "no_se",
+      "from": "notifier",
+      "to": "services",
+      "label": "HTTPS"
+    },
+    {
+      "id": "no_ma",
+      "from": "notifier",
+      "to": "mailer",
+      "label": "email alert"
+    },
+    {
+      "id": "sr_db",
+      "from": "sendreports",
+      "to": "db",
+      "label": "who is due?"
+    },
+    {
+      "id": "sr_ma",
+      "from": "sendreports",
+      "to": "mailer",
+      "label": "report, nag"
+    },
+    {
+      "id": "se_us",
+      "from": "services",
+      "to": "user",
+      "label": "alert"
+    }
+  ],
+  "flows": {
+    "checkin": {
+      "title": "A job checks in",
+      "hue": "component",
+      "desc": "A cron job finishes and makes one request. The check's row moves its deadline forward and a ping row is added.",
+      "hops": [
+        {
+          "e": "jo_pi",
+          "t": "The last command in the crontab line is <code>curl -fsS https://hc-ping.com/&lt;uuid&gt;</code>. The UUID is the only secret: whoever knows it can ping the check."
+        },
+        {
+          "e": "pi_ch",
+          "t": "The view finds the check by UUID, reads the client address, method and body, and decides the action: success here. An exit code above 0, <code>/fail</code> or a failure keyword would make it a failure."
+        },
+        {
+          "e": "ch_db",
+          "t": "Inside one transaction the check's row is locked, <code>last_ping</code> is set, the new deadline <code>alert_after</code> is computed from the period or the cron schedule plus grace, and a <code>Ping</code> row is written. The view answers <code>OK</code>."
+        }
+      ]
+    },
+    "fail": {
+      "title": "A job reports a failure",
+      "hue": "alert",
+      "ok": "component",
+      "desc": "The job runs but fails and says so. The ping itself flips the check to down; the alert loop picks the flip up within seconds.",
+      "hops": [
+        {
+          "e": "jo_pi",
+          "t": "The job ends with <code>curl https://hc-ping.com/&lt;uuid&gt;/$?</code>: the shell's exit code is part of the URL. Here it is 1.",
+          "bad": true
+        },
+        {
+          "e": "pi_ch",
+          "t": "A non-zero exit code makes the action <code>fail</code>. Keyword rules on the body could have done the same.",
+          "bad": true
+        },
+        {
+          "e": "ch_db",
+          "t": "The status was up and is now down, so <code>create_flip()</code> writes a <code>Flip</code> row (up to down, reason: fail) in the same transaction as the ping. Nothing is sent yet.",
+          "bad": true
+        },
+        {
+          "e": "sa_db",
+          "t": "Within two seconds the alert loop asks for a flip with no <code>processed</code> time, and claims it with a conditional update so a second sendalerts process cannot take it too.",
+          "bad": true
+        },
+        {
+          "e": "sa_no",
+          "t": "The flip goes to one of the worker threads. The channels to notify are this check's channels that are enabled, fastest first.",
+          "bad": true
+        },
+        {
+          "e": "no_db",
+          "t": "Before anything is sent, a <code>Notification</code> row records the attempt; its error field is filled in afterwards.",
+          "bad": true
+        },
+        {
+          "e": "no_se",
+          "t": "The Slack transport posts a message with the check's name, its last ping and the other checks that are down.",
+          "bad": true
+        },
+        {
+          "e": "se_us",
+          "t": "Someone on the team reads it in the channel they already watch.",
+          "bad": true
+        }
+      ]
+    },
+    "quiet": {
+      "title": "A job goes quiet",
+      "hue": "alert",
+      "ok": "background",
+      "desc": "A job stops running and sends nothing. Nothing reaches the web app; the alert loop notices the deadline has passed.",
+      "hops": [
+        {
+          "e": "sa_db",
+          "t": "Every pass of the loop asks for the check with the earliest <code>alert_after</code> in the past that is not down yet. A partial index on <code>alert_after</code> keeps that query cheap."
+        },
+        {
+          "e": "sa_ch",
+          "t": "The deadline is only a hint: <code>get_status()</code> recomputes the status from the last ping, the schedule and the grace time. If the check is only in grace, the loop moves <code>alert_after</code> to the real deadline and goes on.",
+          "bad": true
+        },
+        {
+          "e": "sa_db",
+          "t": "It is down. One conditional update sets <code>status = down</code> only if the status is still what was read; if another process got there first, zero rows change and this one stops. Otherwise it writes the flip (reason: timeout).",
+          "bad": true
+        },
+        {
+          "e": "sa_no",
+          "t": "On the next pass the loop claims that flip and gives it to a worker thread, at most ten at a time by default.",
+          "bad": true
+        },
+        {
+          "e": "no_ma",
+          "t": "This check has an email channel: the email transport sends the alert through the outgoing mail server.",
+          "bad": true
+        },
+        {
+          "e": "no_se",
+          "t": "And a Slack channel: the same flip goes out there too. A channel that answers with a permanent error is switched off.",
+          "bad": true
+        },
+        {
+          "e": "se_us",
+          "t": "The team hears about a job that failed silently, about one grace period after it should have run.",
+          "bad": true
+        }
+      ]
+    },
+    "report": {
+      "title": "The monthly report",
+      "hue": "background",
+      "desc": "A separate loop mails each account a summary of its checks, and reminders while something stays down.",
+      "hops": [
+        {
+          "e": "sr_db",
+          "t": "The loop looks for a profile whose <code>next_report_date</code> has passed, and moves that date forward with a conditional update: the process that wins the update sends the report."
+        },
+        {
+          "e": "sr_ma",
+          "t": "The report lists every check in every project of the account with its downtime this month. It is skipped when no check has been pinged for six months."
+        }
+      ]
+    }
+  },
+  "buildSteps": [
+    null,
+    {
+      "title": "A ping counter",
+      "text": "A table of checks, a URL per check, and a view that records the time of each request.",
+      "decision": "The job calls the service, never the other way round: no agent, no open port on the job's side.",
+      "runnable": "./manage.py runserver",
+      "nodes": [
+        "job",
+        "ping",
+        "check",
+        "db"
+      ]
+    },
+    {
+      "title": "Someone to look at it",
+      "text": "Accounts, projects and a dashboard that computes each check's status from its last ping.",
+      "decision": "Status is derived on read, so the dashboard is right even when no background process runs.",
+      "runnable": "./manage.py createsuperuser",
+      "nodes": [
+        "user",
+        "dashboard",
+        "accounts"
+      ]
+    },
+    {
+      "title": "Notice silence",
+      "text": "A loop that finds checks past their deadline and records the change as a flip.",
+      "decision": "A separate process with a while loop and the database as its queue: no Celery, no Redis.",
+      "runnable": "./manage.py sendalerts",
+      "nodes": [
+        "sendalerts"
+      ]
+    },
+    {
+      "title": "Tell someone",
+      "text": "Channels, a transport per integration and a pool of threads that send the alerts.",
+      "decision": "One transport class per integration, so a slow webhook only holds up one worker thread.",
+      "nodes": [
+        "notifier",
+        "channels",
+        "services"
+      ]
+    },
+    {
+      "title": "More ways in",
+      "text": "Pings by email, a REST API for scripts and an optional bucket for large ping bodies.",
+      "decision": "Every door ends in the same <code>Check.ping()</code>, so the rules are written once.",
+      "runnable": "./manage.py smtpd --port 2525",
+      "nodes": [
+        "smtpd",
+        "api",
+        "s3"
+      ]
+    },
+    {
+      "title": "Keep reminding",
+      "text": "Monthly reports and repeating nags by email.",
+      "decision": "Reports reuse the alert loop's trick: a conditional update decides which process sends.",
+      "runnable": "./manage.py sendreports --loop",
+      "nodes": [
+        "sendreports",
+        "mailer"
+      ]
+    }
+  ],
+  "tourChapters": [
+    {
+      "name": "Context",
+      "hue": "--ink"
+    },
+    {
+      "name": "A ping",
+      "hue": "--h-component"
+    },
+    {
+      "name": "Silence",
+      "hue": "--h-alert"
+    },
+    {
+      "name": "Reminders",
+      "hue": "--h-background"
+    },
+    {
+      "name": "Recap",
+      "hue": "--ink"
+    }
+  ],
+  "tour": [
+    {
+      "ch": 0,
+      "level": 0,
+      "title": "A monitor that waits for silence",
+      "body": [
+        "Healthchecks watches scheduled jobs from the outside. Each job pings a URL when it runs; when a ping does not arrive on time, the team gets an alert.",
+        "Jobs and people on one side, notification services on the other, and in between a Django app, three background loops and one database."
+      ],
+      "why": "Most monitoring asks a service whether it is up. Here the job reports in, so a check works behind any firewall and the alert means: this did not happen."
+    },
+    {
+      "ch": 1,
+      "flow": "checkin",
+      "title": "A ping writes two rows",
+      "body": [
+        "Follow one successful run of a cron job into the database."
+      ],
+      "why": "The ping endpoint does almost nothing on purpose. It must answer in milliseconds and never make a job fail."
+    },
+    {
+      "ch": 1,
+      "flow": "fail",
+      "hops": [
+        0,
+        3
+      ],
+      "title": "A failure flips the check at once",
+      "body": [
+        "The job says it failed, so the check goes down in the same transaction as the ping."
+      ],
+      "why": "A failure that is reported is the easy case: the request that carries the news also records the flip."
+    },
+    {
+      "ch": 2,
+      "flow": "quiet",
+      "hops": [
+        0,
+        3
+      ],
+      "title": "Nobody calls: the loop looks at the clock",
+      "body": [
+        "A job that stops running sends no request. The alert loop finds checks whose deadline has passed."
+      ],
+      "why": "This is why Healthchecks has a background process at all. The conditional update makes two copies of the loop safe."
+    },
+    {
+      "ch": 2,
+      "flow": "quiet",
+      "hops": [
+        3,
+        7
+      ],
+      "title": "One flip, every channel",
+      "body": [
+        "The flip is claimed once and sent to each of the check's channels from a worker thread."
+      ],
+      "why": "Alerts go out in parallel, fastest channels first, so one slow webhook does not delay the Slack message."
+    },
+    {
+      "ch": 3,
+      "flow": "report",
+      "title": "Reports and nags",
+      "body": [
+        "A second loop mails monthly summaries and keeps reminding while something is down."
+      ],
+      "why": "An alert at 3 a.m. is easy to miss. A reminder every hour is not."
+    },
+    {
+      "ch": 4,
+      "whole": true,
+      "title": "The whole monitor, on one map",
+      "recap": {
+        "people": "Jobs ping when they run; people get the alert.",
+        "intake": "An HTTP request or an email becomes one ping.",
+        "web": "Dashboard, API, accounts and channel setup.",
+        "watch": "The check's rules set a deadline; a loop notices when it passes.",
+        "notify": "Transports for 25+ services, plus reports and nags.",
+        "storage": "One database shared by every process."
+      },
+      "body": [
+        "One Django codebase run as a web server and three loops, sharing a database.",
+        "The design choice that shapes everything: silence is detected by a loop, never by a request."
+      ]
+    }
+  ],
+  "insides": {
+    "check": {
+      "kind": "steps",
+      "title": "Inside the check: recording a ping",
+      "sub": "What <code>Check.ping()</code> does with one ping, in order. The HTTP view and the email listener both end here.",
+      "cap": "The check's row and the ping row are written in one transaction with the row locked, so the alert loop never sees a new <code>last_ping</code> without its ping, and two pings at once cannot deadlock.",
+      "steps": [
+        {
+          "t": "Lock the check's row",
+          "d": "A transaction and <code>select_for_update()</code>; concurrent pings to one check wait in line.",
+          "code": "hc/api/models.py:508-512"
+        },
+        {
+          "t": "Paused and waiting for a manual resume?",
+          "code": "hc/api/models.py:514-515",
+          "exit": {
+            "when": "manual resume",
+            "t": "Recorded as ignored"
+          }
+        },
+        {
+          "t": "A start signal",
+          "d": "Remember when the run started and its run ID, to measure its duration later.",
+          "code": "hc/api/models.py:517-519"
+        },
+        {
+          "t": "A success or a failure",
+          "d": "Set <code>last_ping</code>, compute the duration if the run ID matches the start.",
+          "code": "hc/api/models.py:521-533"
+        },
+        {
+          "t": "Status changed?",
+          "d": "Up to down or down to up writes a <code>Flip</code>; the alert loop sends it.",
+          "code": "hc/api/models.py:535-539"
+        },
+        {
+          "t": "Move the deadline",
+          "d": "<code>alert_after</code> is the grace start plus grace: what the alert loop will look for.",
+          "code": "hc/api/models.py:541-545"
+        },
+        {
+          "t": "Write the ping",
+          "d": "Address, method, user agent, exit code; the body inline, or only its size when it goes to S3.",
+          "code": "hc/api/models.py:547-564"
+        },
+        {
+          "t": "Upload a large body",
+          "d": "Outside the transaction, so a slow bucket does not hold the lock.",
+          "code": "hc/api/models.py:568-569"
+        },
+        {
+          "t": "Every 100th ping, prune",
+          "d": "Old pings and notifications beyond the plan's limit are deleted.",
+          "code": "hc/api/models.py:572-573"
+        }
+      ]
+    },
+    "sendalerts": {
+      "kind": "steps",
+      "title": "Inside the alert loop",
+      "sub": "One pass of <code>sendalerts</code>: first mark late checks down, then send the flips. It sleeps two seconds only when there is nothing to do.",
+      "cap": "Both halves claim their work with a conditional UPDATE and check that exactly one row changed. That is the only coordination between several sendalerts processes, and it is enough.",
+      "steps": [
+        {
+          "t": "Find the most overdue check",
+          "d": "<code>alert_after</code> in the past, status not down, earliest first.",
+          "code": "hc/api/management/commands/sendalerts.py:135-139",
+          "exit": {
+            "when": "none",
+            "t": "Go on to the flips"
+          }
+        },
+        {
+          "t": "Recompute its status",
+          "d": "A crash here pushes <code>alert_after</code> an hour ahead, so one bad check cannot stop the loop.",
+          "code": "hc/api/management/commands/sendalerts.py:144-151"
+        },
+        {
+          "t": "Not down yet?",
+          "code": "hc/api/management/commands/sendalerts.py:153-156",
+          "exit": {
+            "when": "in grace",
+            "t": "Move alert_after to the real deadline"
+          }
+        },
+        {
+          "t": "Mark it down, once",
+          "d": "UPDATE … WHERE status is still the old one.",
+          "code": "hc/api/management/commands/sendalerts.py:164-168",
+          "exit": {
+            "when": "0 rows",
+            "t": "Another process won"
+          }
+        },
+        {
+          "t": "Write the flip",
+          "d": "Dated when the check actually went down, not when the loop noticed.",
+          "code": "hc/api/management/commands/sendalerts.py:170-175"
+        },
+        {
+          "t": "Claim an unprocessed flip",
+          "d": "Only if a worker seat is free; set <code>processed</code> where it is still empty.",
+          "code": "hc/api/management/commands/sendalerts.py:102-116"
+        },
+        {
+          "t": "Send it from a thread",
+          "d": "Pick the channels and call each one's <code>notify()</code>.",
+          "code": "hc/api/management/commands/sendalerts.py:24-56"
+        }
+      ]
+    },
+    "db": {
+      "kind": "schema",
+      "title": "Inside the database: the alerting tables",
+      "sub": "Five of the tables in <code>hc/api/models.py</code>. Hover a reference to see the table it points to.",
+      "cap": "<code>alert_after</code> and <code>processed</code> each have a partial index (on rows that are not down, and on flips not yet processed), so the alert loop's two questions stay fast however many checks and flips there are.",
+      "tables": [
+        {
+          "name": "api_check",
+          "note": "One monitored job.",
+          "code": "hc/api/models.py:192-238",
+          "fields": [
+            {
+              "n": "code",
+              "type": "uuid",
+              "note": "the secret in the ping URL"
+            },
+            {
+              "n": "project_id",
+              "type": "fk",
+              "ref": "project"
+            },
+            {
+              "n": "kind",
+              "type": "varchar",
+              "note": "simple, cron or oncalendar"
+            },
+            {
+              "n": "timeout · grace",
+              "type": "interval",
+              "note": "period and grace time"
+            },
+            {
+              "n": "schedule · tz",
+              "type": "varchar",
+              "note": "cron expression and its time zone"
+            },
+            {
+              "n": "last_ping · last_start",
+              "type": "timestamp"
+            },
+            {
+              "n": "alert_after",
+              "type": "timestamp",
+              "note": "when the alert loop should look"
+            },
+            {
+              "n": "status",
+              "type": "varchar",
+              "note": "new, up, down or paused"
+            }
+          ]
+        },
+        {
+          "name": "api_ping",
+          "note": "One received ping.",
+          "code": "hc/api/models.py:688-701",
+          "fields": [
+            {
+              "n": "owner_id",
+              "type": "fk",
+              "ref": "api_check"
+            },
+            {
+              "n": "n",
+              "type": "int",
+              "note": "number within the check"
+            },
+            {
+              "n": "kind",
+              "type": "varchar",
+              "note": "empty for success; start, fail, ign, log"
+            },
+            {
+              "n": "body_raw",
+              "type": "bytea",
+              "note": "or object_size when the body is in S3"
+            },
+            {
+              "n": "exitstatus · rid",
+              "type": "smallint · uuid"
+            }
+          ]
+        },
+        {
+          "name": "api_flip",
+          "note": "A status change waiting to be sent.",
+          "code": "hc/api/models.py:1361-1383",
+          "fields": [
+            {
+              "n": "owner_id",
+              "type": "fk",
+              "ref": "api_check"
+            },
+            {
+              "n": "created",
+              "type": "timestamp"
+            },
+            {
+              "n": "processed",
+              "type": "timestamp",
+              "note": "empty until sendalerts claims it"
+            },
+            {
+              "n": "old_status · new_status",
+              "type": "varchar"
+            },
+            {
+              "n": "reason",
+              "type": "varchar",
+              "note": "timeout, fail or empty"
+            }
+          ]
+        },
+        {
+          "name": "api_channel",
+          "note": "Where to send alerts.",
+          "code": "hc/api/models.py:1018-1030",
+          "fields": [
+            {
+              "n": "project_id",
+              "type": "fk",
+              "ref": "project"
+            },
+            {
+              "n": "kind",
+              "type": "varchar",
+              "note": "email, slack, webhook, …"
+            },
+            {
+              "n": "value",
+              "type": "text",
+              "note": "the integration's settings, often JSON"
+            },
+            {
+              "n": "disabled · last_error",
+              "type": "bool · varchar"
+            }
+          ]
+        },
+        {
+          "name": "api_notification",
+          "note": "One alert sent on one channel.",
+          "code": "hc/api/models.py:1339-1346",
+          "fields": [
+            {
+              "n": "owner_id",
+              "type": "fk",
+              "ref": "api_check"
+            },
+            {
+              "n": "channel_id",
+              "type": "fk",
+              "ref": "api_channel"
+            },
+            {
+              "n": "check_status",
+              "type": "varchar"
+            },
+            {
+              "n": "error",
+              "type": "varchar",
+              "note": "empty when it was delivered"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "files": {
+    "entries": [
+      {
+        "path": "manage.py",
+        "t": "Django's command line: runs the web server in development and the three background loops.",
+        "tag": "entry point"
+      },
+      {
+        "path": "hc/settings.py",
+        "t": "Every setting comes from an environment variable: database, email, S3, each integration's keys.",
+        "tag": "config",
+        "why": "One image serves every deployment; nothing is edited in the code."
+      },
+      {
+        "path": "hc/urls.py",
+        "t": "Mounts each app's URLs, one line per integration.",
+        "nodes": [
+          "ping",
+          "dashboard",
+          "api",
+          "channels"
+        ]
+      },
+      {
+        "path": "hc/api/",
+        "t": "The core: the check, ping, flip and channel models, the ping endpoint and the REST API.",
+        "open": true,
+        "nodes": [
+          "check"
+        ]
+      },
+      {
+        "path": "hc/api/models.py",
+        "t": "Check, Ping, Flip, Channel and Notification, with the status and deadline logic.",
+        "why": "Every process imports this file; reading <code>Check.get_status()</code> explains when anything alerts.",
+        "nodes": [
+          "check",
+          "notifier",
+          "db"
+        ]
+      },
+      {
+        "path": "hc/api/views.py",
+        "t": "The ping views and the REST API views.",
+        "nodes": [
+          "ping",
+          "api"
+        ]
+      },
+      {
+        "path": "hc/api/urls.py",
+        "t": "<code>/ping/…</code> and <code>/api/v1…v3/</code>.",
+        "nodes": [
+          "ping",
+          "api"
+        ]
+      },
+      {
+        "path": "hc/api/decorators.py",
+        "t": "Checks the <code>X-Api-Key</code> header and picks the API version.",
+        "nodes": [
+          "api"
+        ]
+      },
+      {
+        "path": "hc/api/transports.py",
+        "t": "The base classes every integration's transport builds on: HTTP with retries, templates, errors.",
+        "nodes": [
+          "notifier"
+        ]
+      },
+      {
+        "path": "hc/api/management/commands/",
+        "t": "The background processes, each a Django management command.",
+        "open": true,
+        "more": "pruning commands for old pings and objects"
+      },
+      {
+        "path": "hc/api/management/commands/sendalerts.py",
+        "t": "The alert loop.",
+        "tag": "process",
+        "nodes": [
+          "sendalerts"
+        ],
+        "why": "Without it nothing ever goes down by timeout; the dashboard would show it, but nobody would be told."
+      },
+      {
+        "path": "hc/api/management/commands/sendreports.py",
+        "t": "Monthly reports and nags.",
+        "tag": "process",
+        "nodes": [
+          "sendreports"
+        ]
+      },
+      {
+        "path": "hc/api/management/commands/smtpd.py",
+        "t": "Pings by email.",
+        "tag": "process",
+        "nodes": [
+          "smtpd"
+        ]
+      },
+      {
+        "path": "hc/front/",
+        "t": "The dashboard: My Checks, details, the event log, badges, docs.",
+        "nodes": [
+          "dashboard"
+        ]
+      },
+      {
+        "path": "hc/front/views.py",
+        "t": "The dashboard views, including the JSON that the page polls for status.",
+        "nodes": [
+          "dashboard"
+        ]
+      },
+      {
+        "path": "hc/accounts/",
+        "t": "Sign-in, two-factor, profiles, projects and team members.",
+        "nodes": [
+          "accounts"
+        ]
+      },
+      {
+        "path": "hc/accounts/models.py",
+        "t": "Profile (report settings, <code>send_report()</code>), Project (API and ping keys), Member.",
+        "nodes": [
+          "accounts",
+          "sendreports"
+        ]
+      },
+      {
+        "path": "hc/integrations/",
+        "t": "One folder per integration: its setup views, templates and transport.",
+        "nodes": [
+          "channels",
+          "notifier"
+        ],
+        "more": "about 30 integrations"
+      },
+      {
+        "path": "hc/integrations/slack/",
+        "t": "A typical one: OAuth setup in <code>views.py</code>, the message in <code>transport.py</code>.",
+        "nodes": [
+          "channels",
+          "notifier"
+        ]
+      },
+      {
+        "path": "hc/lib/",
+        "t": "Shared helpers: emails, S3, badges, cURL wrapper, signing.",
+        "more": "time zones, statsd, WebAuthn"
+      },
+      {
+        "path": "hc/lib/s3.py",
+        "t": "Puts and gets ping bodies in the bucket, with retries.",
+        "nodes": [
+          "s3"
+        ]
+      },
+      {
+        "path": "static/js/checks.js",
+        "t": "The dashboard's script: polls status every 3 seconds and updates rows in place.",
+        "nodes": [
+          "dashboard"
+        ]
+      },
+      {
+        "path": "templates/",
+        "t": "Django templates for pages, emails and the text of many integrations' messages.",
+        "more": "emails/, integrations/, front/"
+      },
+      {
+        "path": "docker/",
+        "t": "Dockerfile, compose file and the start script.",
+        "tag": "deploy",
+        "open": true
+      },
+      {
+        "path": "docker/run.sh",
+        "t": "Migrates, then starts sendalerts, sendreports, smtpd (optional) and gunicorn in one container.",
+        "tag": "deploy",
+        "why": "Shows the four processes side by side: the clearest picture of how the system runs.",
+        "nodes": [
+          "sendalerts",
+          "sendreports",
+          "smtpd"
+        ]
+      },
+      {
+        "path": "requirements.txt",
+        "t": "Django, cronsim, oncalendar, pycurl, aiosmtpd, minio, pydantic and the database drivers.",
+        "tag": "config"
+      }
+    ]
+  },
+  "source": {
+    "repo": "https://github.com/healthchecks/healthchecks",
+    "ref": "255075ce65ee0997fd9d3b8dd04e4829a87fad5d"
+  },
+  "layout": {
+    "grid": {
+      "job": [
+        0,
+        0
+      ],
+      "user": [
+        0,
+        2
+      ],
+      "services": [
+        0,
+        5
+      ],
+      "mailer": [
+        0,
+        6
+      ],
+      "smtpd": [
+        1,
+        1
+      ],
+      "sendalerts": [
+        1,
+        4
+      ],
+      "notifier": [
+        1,
+        5
+      ],
+      "sendreports": [
+        1,
+        6
+      ],
+      "ping": [
+        2,
+        0
+      ],
+      "check": [
+        3,
+        1
+      ],
+      "dashboard": [
+        2,
+        2
+      ],
+      "api": [
+        3,
+        2
+      ],
+      "accounts": [
+        2,
+        3
+      ],
+      "channels": [
+        3,
+        3
+      ],
+      "s3": [
+        4,
+        1
+      ],
+      "db": [
+        4,
+        4
+      ]
+    }
+  }
+}
