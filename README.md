@@ -5,8 +5,8 @@
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757?logo=claude&logoColor=white)](#install)
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fchekrizh%2FInteractive-Map-Builder%2Fmain%2Fplugins%2Finteractive-map%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version&color=4F46E5)](plugins/interactive-map/.claude-plugin/plugin.json)
 [![Agent Skills](https://img.shields.io/badge/Agent_Skills-compatible-6E56CF)](#install)
+
 [![Output](https://img.shields.io/badge/output-one_offline_HTML-0F766E)](#how-it-works)
-[![Renderer](https://img.shields.io/badge/renderer-Python_3_stdlib-3776AB?logo=python&logoColor=white)](#how-it-works)
 [![License: MIT](https://img.shields.io/badge/license-MIT-64748B)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/chekrizh/Interactive-Map-Builder?style=flat&logo=github&color=E3B341)](https://github.com/chekrizh/Interactive-Map-Builder/stargazers)
 
@@ -84,38 +84,6 @@ How you would build the system from scratch. Switch from *Full system* to step 1
 
 <img alt="Build order, step 2 of 4: the components added in this step are highlighted" src="docs/readme/build-light.png" width="100%">
 
-## Three modes
-
-The skill takes three kinds of input. Each one ends in the same kind of map.
-
-<details open>
-<summary><b>1 · Deep dive into a repository</b> &nbsp;·&nbsp; available</summary>
-
-<br>
-
-Point the agent at a codebase. It finds the evidence (deployment files, entry points, routes, queues, dependencies), models the system in [C4](https://c4model.com) terms and picks the flows worth animating: the big picture on the overview, containers and components on the full map, code walkthroughs and schemas inside. Every panel names the files it is based on.
-
-> Draw an interactive map of how this repository works.
-
-</details>
-
-<details>
-<summary><b>2 · A pile of sources</b> &nbsp;·&nbsp; planned</summary>
-
-<br>
-
-Links, notes, PDFs, articles, JSON: the agent reads what you give it and maps the topic, with citations in the panels. For book chapters, lectures and anything that is not code.
-
-</details>
-
-<details>
-<summary><b>3 · A research question</b> &nbsp;·&nbsp; planned</summary>
-
-<br>
-
-Ask about a topic you do not have sources for. The agent researches it first, then maps what it found as in mode 2.
-
-</details>
 
 ## Install
 
