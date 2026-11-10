@@ -4,7 +4,9 @@
 usage: python3 render.py MAP.json OUT.html
        python3 render.py - OUT.html  < map.json
 Checks that the map holds together (the same rules the page applies before drawing),
-turns /assets/... paths into data: URIs, and prints the absolute path of OUT.html.
+turns /assets/... paths into data: URIs, builds one self-contained page from the viewer
+in assets/viewer/ (its script, styles and font inlined, so the page needs no network) and
+prints the absolute path of OUT.html.
 On problems it lists what to fix and exits with status 1.
 """
 import base64
@@ -15,7 +17,7 @@ import sys
 
 SKILL = pathlib.Path(__file__).resolve().parent.parent
 ASSETS = SKILL / 'assets'
-TEMPLATE = ASSETS / 'template.html'
+VIEWER = ASSETS / 'viewer'
 PLACEHOLDER = '<script type="application/json" id="map-definition"></script>'
 NUMBER = (int, float)
 SHAPES = ('component', 'person', 'worker', 'database', 'queue', 'external')
@@ -50,8 +52,14 @@ LIBRARY = ASSETS / 'library'
 
 
 def library(name):
-    path = LIBRARY / f'{name}.json'
-    return json.loads(path.read_text(encoding='utf-8'))['items'] if path.is_file() else {}
+    """One library section, e.g. 'logos'. Large sections are split into numbered parts
+    (library/logos/001.json, ...) so that every file stays small enough to review."""
+    items = {}
+    parts = sorted((LIBRARY / name).glob('*.json')) or [LIBRARY / f'{name}.json']
+    for path in parts:
+        if path.is_file():
+            items.update(json.loads(path.read_text(encoding='utf-8'))['items'])
+    return items
 
 
 def svg_uri(svg):
@@ -87,14 +95,14 @@ def with_library(d):
     groups = [g for g in (d.get('groups') or {}).values() if isinstance(g, dict)]
     icons, wanted = dict(d.get('icons') or {}), {x.get('icon') for x in nodes + groups} - {None}
     lib = library('icons') if wanted - set(icons) else {}
-    for name in wanted - set(icons):
+    for name in sorted(wanted - set(icons)):
         if name in lib:
             icons[name] = f'<g transform="scale(.8333)">{lib[name]}</g>'
     d['icons'] = icons
     logos, wanted = dict(d.get('logos') or {}), {n.get('logo') for n in nodes} - {None}
     if wanted - set(logos):
         simple, color = library('logos'), library('logos-color')
-        for slug in wanted - set(logos):
+        for slug in sorted(wanted - set(logos)):
             entry = library_logo(slug, simple, color)
             if entry:
                 logos[slug] = entry
@@ -274,6 +282,22 @@ def with_data_uris(value):
     return value
 
 
+def viewer_page():
+    """The empty viewer as one HTML file: viewer.js, viewer.css and the font inlined."""
+    page = (VIEWER / 'index.html').read_text(encoding='utf-8')
+    script = (VIEWER / 'viewer.js').read_text(encoding='utf-8').replace('</script', '<\\/script')
+    styles = (VIEWER / 'viewer.css').read_text(encoding='utf-8')
+    for font in VIEWER.glob('*.ttf'):
+        uri = 'data:font/ttf;base64,' + base64.b64encode(font.read_bytes()).decode()
+        styles = styles.replace(f'url("./{font.name}")', f'url("{uri}")')
+    for tag, inline in (('<script type="module" crossorigin src="./viewer.js"></script>', f'<script type="module">{script}</script>'),
+                        ('<link rel="stylesheet" crossorigin href="./viewer.css">', f'<style>{styles}</style>')):
+        if page.count(tag) != 1:
+            raise ValueError(f'assets/viewer/index.html must contain {tag} once')
+        page = page.replace(tag, inline)
+    return page
+
+
 def render(template, definition):
     if template.count(PLACEHOLDER) != 1:
         raise ValueError('template must contain exactly one empty map-definition placeholder')
@@ -295,7 +319,7 @@ def main(argv):
     if found:
         sys.exit('the map needs fixing:\n- ' + '\n- '.join(found))
     out = pathlib.Path(argv[2])
-    out.write_text(render(TEMPLATE.read_text(encoding='utf-8'), definition), encoding='utf-8')
+    out.write_text(render(viewer_page(), definition), encoding='utf-8')
     print(out.resolve())
 
 

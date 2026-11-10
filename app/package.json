@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build:template": "vite build --mode template && cp dist-template/index.html ../plugins/interactive-map/skills/interactive-map/assets/template.html"
+    "build:template": "vite build --mode template && rm -rf ../plugins/interactive-map/skills/interactive-map/assets/viewer && cp -r dist-template ../plugins/interactive-map/skills/interactive-map/assets/viewer"
   },
   "devDependencies": {
     "vite": "8.3.6"

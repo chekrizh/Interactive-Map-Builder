@@ -5,7 +5,7 @@ description: Builds an interactive system map (components, connections, animated
 
 # Interactive Map
 
-You build a map by writing one JSON map definition and filling a prebuilt viewer with it. Do not write HTML, CSS or JavaScript for the page. `scripts/render.py` (Python 3, standard library only) checks the map and puts it into `assets/template.html`. Paths are relative to the folder that contains this file.
+You build a map by writing one JSON map definition and filling a prebuilt viewer with it. Do not write HTML, CSS or JavaScript for the page. `scripts/render.py` (Python 3, standard library only) checks the map and builds one HTML page from the viewer in `assets/viewer/`. Paths are relative to the folder that contains this file.
 
 ## 1. Write the map definition
 
@@ -58,4 +58,4 @@ The file needs no server. Show it with the first option your environment has:
 2. A way to share or attach files in the chat: share the HTML file itself.
 3. Neither: give the path and tell the user to open it in any browser.
 
-Never retype, shorten or edit the HTML into a chat artifact or code block. The file is about 350 KB because the viewer, styles and font are inlined, and it must stay byte-identical. Tell the user the file name and that it works offline in any browser.
+Never retype, shorten or edit the HTML into a chat artifact or code block. The file is about 450 KB because the viewer, styles and font are inlined, and it must stay byte-identical. Tell the user the file name and that it works offline in any browser.
