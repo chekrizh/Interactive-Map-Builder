@@ -1,0 +1,122 @@
+/* Files view (runtime/files-view.js): the repository as an annotated tree.
+   Calm by design: one mono column of names, one muted column of notes, and
+   the only colour is the role hue of the map component a path belongs to. */
+
+/* Entry beside the tour: outlined, so the tour stays the one filled action. */
+.controls .files-entry {
+  height: 30px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px 0 10px;
+  border: 1px solid var(--line); border-radius: var(--ml-control-radius); background: var(--surface); color: var(--ink);
+  font: inherit; font-size: 12.5px; font-weight: 600; white-space: nowrap; cursor: pointer;
+  transition: border-color .15s var(--ml-ease), background-color .15s var(--ml-ease);
+}
+.controls .files-entry[hidden] { display: none; }
+.controls .files-entry svg { width: 14px; height: 14px; flex: none; color: var(--muted); }
+.controls .files-entry:hover { border-color: var(--muted); }
+.controls .files-entry[aria-pressed="true"] { background: color-mix(in srgb, var(--ink) 6%, var(--surface)); border-color: color-mix(in srgb, var(--ink) 28%, var(--line)); }
+.controls .files-entry:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.tour-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+.files {
+  position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column;
+  background: var(--ml-canvas); font-family: var(--ml-font); color: var(--ink);
+}
+.files[hidden] { display: none; }
+.files-head {
+  flex: none; display: flex; align-items: center; gap: 12px; padding: 12px 12px; min-height: 48px; box-sizing: border-box;
+  border-bottom: 1px solid var(--line); background: var(--surface);
+}
+.files-body { flex: 1; overflow: auto; padding: 24px 28px 32px; }
+.files h2 { font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 4px; }
+.files-sub { font-size: 14px; line-height: 20px; color: var(--muted); margin: 0 0 20px; max-width: 78ch; }
+.files .mono, .panel .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .92em; }
+
+/* The tree sits on one white sheet, like a card on the map canvas. */
+.ft {
+  --ft-indent: 20px; --ft-name: minmax(220px, 32%);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 6px;
+  box-shadow: 0 1px 1px #1018280a, 0 6px 16px -8px #1018281f; max-width: 1180px;
+}
+.ft-kids { position: relative; }
+/* Indent guide: a hairline under each open folder's chevron. */
+.ft-kids::before {
+  content: ""; position: absolute; top: 0; bottom: 8px;
+  left: calc(12px + var(--depth) * var(--ft-indent) + 7px); border-left: 1px solid var(--line);
+}
+.ft-row {
+  display: grid; grid-template-columns: var(--ft-name) 1fr auto; align-items: center; gap: 16px;
+  min-height: 36px; padding: 4px 10px 4px 12px; border-radius: 9px; cursor: pointer; position: relative;
+  transition: background-color .12s var(--ml-ease);
+}
+.ft-row:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.ft-row:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.ft-row.is-sel { background: color-mix(in srgb, var(--row-hue) 9%, var(--surface)); }
+.ft-row.is-sel::before {
+  content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--row-hue);
+}
+.ft-name {
+  display: flex; align-items: center; gap: 6px; min-width: 0;
+  padding-left: calc(var(--depth) * var(--ft-indent));
+}
+.ft-chev { width: 15px; height: 15px; flex: none; color: var(--muted); transition: transform .15s var(--ml-ease); }
+.ft-row[aria-expanded="true"] > .ft-name > .ft-chev { transform: rotate(90deg); }
+.ft-ico { width: 16px; height: 16px; flex: none; color: color-mix(in srgb, var(--row-hue) 70%, var(--muted)); }
+.ft-row[aria-expanded] .ft-ico { fill: color-mix(in srgb, var(--row-hue) 14%, transparent); }
+.ft-label {
+  font: 500 13px/20px ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ft-note { font-size: 13px; line-height: 20px; color: var(--muted); min-width: 0; }
+.ft-note code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .92em; }
+.ft-row.is-bare .ft-label { color: var(--muted); font-weight: 400; }
+.ft-more { cursor: default; }
+.ft-more:hover { background: none; }
+.ft-more .ft-label, .ft-more .ft-note { color: var(--muted); }
+.ft-meta { display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.ft-tag {
+  font-size: 11.5px; line-height: 16px; font-weight: 500; color: var(--muted); white-space: nowrap;
+  padding: 2px 8px; border-radius: 6px; border: 1px solid var(--line);
+}
+/* A component tag: the map card's own icon tile, shrunk, with its name. */
+.ft-chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px 0 3px; border-radius: 12px;
+  font: 600 12px/1 var(--ml-font); color: var(--ink); white-space: nowrap; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--chip-hue) 26%, var(--line));
+  background: color-mix(in srgb, var(--chip-hue) 7%, var(--surface));
+  transition: border-color .12s var(--ml-ease);
+}
+.ft-chip:hover { border-color: var(--chip-hue); }
+.ft-chip svg {
+  width: 18px; height: 18px; padding: 3px; box-sizing: border-box; border-radius: 9px; flex: none;
+  background: var(--chip-hue); color: var(--surface);
+}
+
+/* Panel bits */
+.panel .ft-goto { padding-left: 6px; }
+.panel .ft-goto > svg { width: 16px; height: 16px; }
+.panel .ft-goto-ico {
+  width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; flex: none;
+  background: var(--chip-hue); color: var(--surface);
+}
+.panel .ft-goto-ico svg { width: 16px; height: 16px; }
+.panel .panel-action > svg { width: 16px; height: 16px; flex: none; }
+.panel .ft-link {
+  font: 500 13px ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink); background: none; border: none; padding: 0;
+  cursor: pointer; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px;
+}
+.panel .ft-link:hover { text-decoration-color: var(--ink); }
+.panel ul.ft-toplist li { line-height: 22px; margin-bottom: 6px; }
+.panel p.p-sub.mono { font-size: 12.5px; }
+.panel h2.ft-h { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 20px; letter-spacing: -.02em; }
+.panel .xrepo { flex-direction: column; align-items: flex-start; }
+
+@media (max-width: 760px) {
+  .files-body { padding: 16px 12px 24px; }
+  .ft { --ft-indent: 14px; }
+  .ft-row { grid-template-columns: 1fr auto; gap: 2px 10px; }
+  .ft-note { grid-column: 1 / -1; grid-row: 2; padding-left: calc(var(--depth) * var(--ft-indent) + 42px); font-size: 12.5px; }
+  .ft-note:empty { display: none; }
+  .ft-chip { font-size: 0; gap: 0; padding: 0 3px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ft-chev, .ft-row, .ft-chip { transition: none; }
+}

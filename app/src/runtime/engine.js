@@ -6,6 +6,7 @@ import { createFlowplayer } from './flow-player.js';
 import { createCamera } from './camera.js';
 import { createTourplayer } from './tour-player.js';
 import { createNavigation } from './navigation.js';
+import { createFilesView } from './files-view.js';
 
 export async function mountEngine(root, definition) {
   "use strict";
@@ -487,6 +488,12 @@ export async function mountEngine(root, definition) {
     },
     set storyToken(value) {
       storyToken = value;
+    },
+    get selectNode() {
+      return selectNode;
+    },
+    get filesView() {
+      return filesView;
     },
     get structureHref() {
       return structureHref;
@@ -1079,6 +1086,7 @@ export async function mountEngine(root, definition) {
   const crumbNote = document.getElementById("crumbNote");
   const unfocusBtn = document.getElementById("unfocus");
   const insideBox = document.getElementById("inside");
+  let filesView = null;
 
   /* Highlight only while the full map is showing: on the big picture the
      build-order state is inert, so "Full system" must not read as active.
@@ -1110,6 +1118,7 @@ export async function mountEngine(root, definition) {
     return panelsModule.openInside(...args);
   }
   function closeInside(...args) {
+    filesView?.close();
     return panelsModule.closeInside(...args);
   }
   scope.listen(document.getElementById("insideBack"), "click", closeInside);
@@ -1239,7 +1248,7 @@ export async function mountEngine(root, definition) {
       return;
     }
     if (ev.key !== "Escape") return;
-    if (!insideBox.hidden) closeInside();else if (fsMode && drawer.classList.contains("open")) closePanel();else if (fsMode && stagecard.classList.contains("fs-fixed")) applyFsDom(false);
+    if (!insideBox.hidden) closeInside();else if (filesView?.isOpen()) document.getElementById("filesBack").click();else if (fsMode && drawer.classList.contains("open")) closePanel();else if (fsMode && stagecard.classList.contains("fs-fixed")) applyFsDom(false);
   });
 
   /* ---------------- pan (hand drag) + zoom ---------------- */
@@ -1702,6 +1711,8 @@ export async function mountEngine(root, definition) {
   function refreshTourEntry(...args) {
     return tourplayerModule.refreshTourEntry(...args);
   }
+  /* Files view: the repository tree beside the tour entry, when the map lists files. */
+  filesView = createFilesView(context);
   scope.listen(tourBtn, "click", () => startTour(resumeStep() || 1, {
     native: true
   }));
