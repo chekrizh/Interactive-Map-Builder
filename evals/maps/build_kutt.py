@@ -296,7 +296,7 @@ FILES = {"entries": [
     {"path": "static/", "t": "Browser assets served as they are: CSS, and htmx, Chart.js and a QR code library in <code>static/libs</code>."},
     {"path": "custom/", "t": "Empty hook for self-hosters: their own CSS, images and views override the defaults.", "why": "Lets a company brand its instance without forking the code."},
     {"path": "docs/api/", "t": "Generates the OpenAPI spec and a Redoc page for the REST API."},
-    {"path": "docker-compose.yml", "t": "One container: the server, with SQLite on a volume. The sqlite-redis, postgres and mariadb compose files add Redis and a database server.", "why": "The fastest way to see the deployment: pick the compose file for the database you want.", "tag": "deploy", "nodes": ["db", "redis"]},
+    {"path": "docker-compose.yml", "t": "One container: the server, with SQLite on a volume. The sqlite-redis compose file adds Redis and keeps SQLite; the postgres and mariadb files add Redis and that database server.", "why": "The fastest way to see the deployment: pick the compose file for the database you want.", "tag": "deploy", "nodes": ["db", "redis"]},
     {"path": "knexfile.js", "t": "Database connection for migrations: Postgres, MariaDB/MySQL or SQLite.", "tag": "config", "nodes": ["db"]},
     {"path": ".example.env", "t": "The main settings with example values; copy to <code>.env</code> to run.", "tag": "config"},
     {"path": "package.json", "t": "Scripts and dependencies: Express, Knex, Bull, Passport, Handlebars.", "tag": "deploy"},
