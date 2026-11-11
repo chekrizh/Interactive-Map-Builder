@@ -11,13 +11,11 @@ The reader is someone who must understand a codebase fast: a lead reviewing a te
 
 ## 0. Ask about the extra check before you start
 
-Before you read the repository, ask the user whether to run the **extra check**, and wait for the answer. Ask in their language and in your own words; do not describe how the check works inside, only what it gives and costs. It should say:
+Before you read the repository, ask the user whether to run the **extra check**, and wait for the answer. Ask in their language, as one short question that says:
 
-- After the map is drafted, every component, connection and step is checked once more against the source code, and what does not hold up is fixed.
+- When the draft of the map is ready, you will run an extra check built on two known methods: software reflexion models (Murphy, Notkin and Sullivan, 1995) and Reflexion (Shinn et al., 2023).
 - It takes about twice as long.
-- It makes factual mistakes on the map much less likely, but it is not a guarantee.
-- It is built on two known ideas; name them: software reflexion models (Murphy, Notkin and Sullivan, 1995), comparing the map with the code both ways, what is wrong and what is missing; and Reflexion (Shinn et al., 2023), where an independent reviewer's findings are written up as lessons and the map is fixed and rechecked, up to three times.
-- For a quick overview or a simple project, we recommend going without it. When the map should be as reliable as possible (onboarding, a review, teaching), we recommend turning it on.
+- For a quick overview it is not needed. For a map meant for onboarding, a review or teaching, we recommend it.
 
 Do not ask when the request already answers it ("just a quick sketch", "it must be accurate"); do what it says. When no one can answer (you run unattended, as a scheduled task or a subagent), go without it and say so when you deliver.
 

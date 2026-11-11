@@ -121,7 +121,7 @@ Eight real open-source projects, mapped by the skill. Open any of them in the br
 | [nanoGPT](https://github.com/karpathy/nanoGPT), a small GPT trainer | Machine-learning scripts: data preparation, the training loop, the model | [Open](https://chekrizh.github.io/Interactive-Map-Builder/nanogpt-gpt-trainer.html) |
 | [Lobsters](https://github.com/lobsters/lobsters), a link aggregator | A Rails monolith behind a bot filter, a full-page cache on disk, jobs and cron scripts | [Open](https://chekrizh.github.io/Interactive-Map-Builder/lobsters-link-aggregator.html) |
 
-The last five were made in the [extra check experiment](docs/extra-check-experiment.md) and then checked against the code like the first three. The map files are in [`examples/`](plugins/interactive-map/skills/interactive-map/examples/), with the credits and the commit each one was written from.
+All eight were checked against the code with the extra check. The map files are in [`examples/`](plugins/interactive-map/skills/interactive-map/examples/), with the credits and the commit each one was written from.
 
 
 ## Install
@@ -176,7 +176,7 @@ The skills are then also available as `/interactive-map:interactive-map` and `/i
 
 - **Two skills.** `interactive-map-repo` is the method for repositories: find the evidence (deployment files, entry points, contracts), model it in [C4](https://c4model.com) terms (context on the overview, containers and components on the full map) and pick the flows worth animating. `interactive-map` is the format: how to write the map JSON and render it.
 - **The agent never writes HTML.** It writes one JSON definition. `render.py` (Python 3, standard library only) validates it with the same checks the page runs, lists every problem at once, sanitises its text, and puts it into the prebuilt viewer.
-- **An optional extra check.** Before it starts, the agent asks whether to run it. Once the map is drafted, an independent reviewer (the agent itself where it cannot start one) checks every component, connection and step against the source code, and the agent writes up its mistakes, fixes them and has the fixes checked again, up to three rounds. It builds on software reflexion models (Murphy, Notkin and Sullivan, 1995) and Reflexion (Shinn et al., 2023). On five fresh repositories it cut wrong statements from 2.7% to 0.2% and roughly doubled the time ([the experiment](docs/extra-check-experiment.md)).
+- **An optional extra check.** Before it starts, the agent asks whether to run it. Once the map is drafted, an independent reviewer (the agent itself where it cannot start one) checks every component, connection and step against the source code, and the agent writes up its mistakes, fixes them and has the fixes checked again, up to three rounds. It builds on software reflexion models (Murphy, Notkin and Sullivan, 1995) and Reflexion (Shinn et al., 2023). On five repositories the skill had not seen before, it cut wrong statements from 2.7% to 0.2% and roughly doubled the time ([the experiment](docs/extra-check-experiment.md)).
 - **An asset library is built in.** About 2,300 [Lucide](https://lucide.dev) icons, about 3,500 brand logos from [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos), and role presets with tested light and dark colours. A map only names them.
 - **The output is self-contained.** Each HTML file carries its own copy of the viewer, the map and the font, so it keeps working when the skill changes.
 

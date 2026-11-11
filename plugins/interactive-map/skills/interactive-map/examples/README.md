@@ -13,10 +13,12 @@ Eight of the maps describe real open-source projects. Each describes its project
 | `nanogpt-gpt-trainer.json` | [nanoGPT](https://github.com/karpathy/nanoGPT), a small GPT trainer | Andrej Karpathy and contributors (© 2022) | [MIT](https://github.com/karpathy/nanoGPT/blob/3adf61e154c3fe3fca428ad6bc3818b27a3b8291/LICENSE) | commit [`3adf61e`](https://github.com/karpathy/nanoGPT/tree/3adf61e154c3fe3fca428ad6bc3818b27a3b8291) |
 | `lobsters-link-aggregator.json` | [Lobsters](https://github.com/lobsters/lobsters), a link aggregator | joshua stein and contributors (© 2012-2019) | [BSD 3-clause](https://github.com/lobsters/lobsters/blob/ccc6610e097d43c2254b359d7c25fecd34b54fc2/LICENSE) | commit [`ccc6610`](https://github.com/lobsters/lobsters/tree/ccc6610e097d43c2254b359d7c25fecd34b54fc2) |
 
-- `kutt-url-shortener.json` is laid out by hand (`evals/maps/build_kutt.py` generates it).
-- `privatebin-pastebin.json` has no `layout`: every position comes from the automatic layout (`evals/maps/build_privatebin.py` generates it).
-- `healthchecks-cron-monitor.json` was written as a test of the viewer after the engine refactor (0.6.1), on a repository the viewer was not tuned on. Its layout is automatic, steered by `layout.grid`.
-- The Rivet, Miniflux, Umami, nanoGPT and Lobsters maps were built by the skill from scratch during the [extra check experiment](../../../../../docs/extra-check-experiment.md), with the extra check on; their layout was then tuned through `layout.grid` and hand-sized zone boxes (`layout.zones`).
-- `fastapi-service.json` is a made-up service written for this project.
+How each map is laid out:
+
+- `kutt-url-shortener.json`: by hand. `tools/examples/build_kutt.py` in the repository generates it.
+- `privatebin-pastebin.json`: no `layout` at all; every position comes from the automatic layout. `tools/examples/build_privatebin.py` generates it.
+- `healthchecks-cron-monitor.json`: automatic, steered by `layout.grid`.
+- `rivet-database-extractor.json`, `miniflux-feed-reader.json`, `umami-web-analytics.json`, `nanogpt-gpt-trainer.json`, `lobsters-link-aggregator.json`: automatic, steered by `layout.grid`, with zone boxes sized by hand (`layout.zones`). These five were built with the [extra check](../../interactive-map-repo/SKILL.md) on.
+- `fastapi-service.json`: a made-up service, the smallest complete map.
 
 Each real-project map also names its authors and licence, with links, in the first panel of the rendered page.
