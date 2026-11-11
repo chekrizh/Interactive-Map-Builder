@@ -196,6 +196,10 @@ open /tmp/map.html
 - **The generated page works offline.** Its script, styles, font, icons and logos are inlined; it makes no network requests and sends nothing anywhere.
 - **Everything shipped is readable.** The viewer is committed unminified (built from `app/`), and the icon and logo library is split into JSON files with one item per line (built by `tools/build_library.py`), so every file stays under 256 KB and can be reviewed.
 
+## Feedback
+
+A map got something wrong, the viewer misbehaved, or you made a map you like? [Open an issue](https://github.com/chekrizh/Interactive-Map-Builder/issues/new/choose): one field is enough. Changes are listed in the [changelog](CHANGELOG.md).
+
 ## License
 
 [MIT](LICENSE). Bundled assets keep their own licenses: [Lucide](https://lucide.dev) icons (ISC), [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos) (CC0; brand marks remain trademarks of their owners), the Manrope font (SIL Open Font License). The example maps describe [Kutt](https://github.com/thedevs-network/kutt) (The Devs Network and contributors, MIT), [PrivateBin](https://github.com/PrivateBin/PrivateBin) (Sébastien Sauvage and the PrivateBin contributors, zlib/libpng) and [Healthchecks](https://github.com/healthchecks/healthchecks) (Pēteris Caune and other contributors, BSD 3-clause), [Rivet](https://github.com/rivet-lab/rivet) (Rivet Contributors, MIT), [Miniflux](https://github.com/miniflux/v2) (The Miniflux Authors, Apache 2.0), [Umami](https://github.com/umami-software/umami) (Umami Software, Inc., MIT), [nanoGPT](https://github.com/karpathy/nanoGPT) (Andrej Karpathy, MIT) and [Lobsters](https://github.com/lobsters/lobsters) (joshua stein and contributors, BSD 3-clause); they copy none of their code, and the [examples README](plugins/interactive-map/skills/interactive-map/examples/README.md) links each licence and mapped commit.

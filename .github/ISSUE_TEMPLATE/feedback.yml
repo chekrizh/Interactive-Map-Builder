@@ -1,0 +1,21 @@
+name: Feedback
+description: A map that came out wrong, a viewer bug, an idea, or a map you made
+labels: ["feedback"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Anything goes. A wrong statement on a map, something broken in the viewer, an idea, or a map you liked. Screenshots help.
+    validations:
+      required: true
+  - type: input
+    id: repo
+    attributes:
+      label: Which repository did you map? (optional)
+      placeholder: https://github.com/owner/repo
+  - type: input
+    id: agent
+    attributes:
+      label: Agent and model (optional)
+      placeholder: Claude Code, Opus 5.5
