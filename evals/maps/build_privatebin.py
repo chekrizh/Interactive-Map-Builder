@@ -77,7 +77,7 @@ nodes = [
          "Works on any PHP host with no database at all, which is why it is the default.",
          "<code>lib/Data/Filesystem.php</code> · <code>data/</code>", "data", shape="database"),
     node("sql", "storage", "store", 5, "database", "SQL database", "PDO · SQLite, MySQL, Postgres and more",
-         "Three tables: pastes, comments and a small key-value config table.",
+         "Three tables: <code>paste</code>, <code>comment</code> and a small key-value <code>config</code> table.",
          "For installs that already run a database or need several web servers to share the data.",
          "<code>lib/Data/Database.php</code> · any PDO driver", "data", shape="database", inside="sql"),
     node("cloud", "storage", "store", 5, "cloud", "Object storage", "S3 or Google Cloud",
@@ -337,7 +337,7 @@ insides = {
         "tables": [
             {"name": "paste", "note": "One encrypted paste.", "code": "lib/Data/Database.php:677-689",
              "fields": [{"n": "dataid", "type": "char(16)", "note": "64-bit hash of the ciphertext, hex"},
-                        {"n": "data", "type": "mediumblob", "note": "ciphertext, settings and attachments as JSON; TEXT on Postgres, CLOB on Oracle"},
+                        {"n": "data", "type": "mediumblob", "note": "the whole paste as JSON: ciphertext, settings, attachments and meta with the salt; TEXT on Postgres, CLOB on Oracle"},
                         {"n": "expiredate", "type": "int", "note": "unix time; 0 means never"},
                         {"n": "meta", "type": "text", "note": "the paste's meta without the expiry date: for a new paste, just its salt"}]},
             {"name": "comment", "note": "Encrypted comments, threaded by parent.", "code": "lib/Data/Database.php:696-731",

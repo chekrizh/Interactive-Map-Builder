@@ -347,7 +347,7 @@
    "icon": "database",
    "tool": "PDO · SQLite, MySQL, Postgres and more",
    "concept": "SQL database",
-   "what": "Three tables: pastes, comments and a small key-value config table.",
+   "what": "Three tables: <code>paste</code>, <code>comment</code> and a small key-value <code>config</code> table.",
    "why": "For installs that already run a database or need several web servers to share the data.",
    "tools": "<code>lib/Data/Database.php</code> · any PDO driver",
    "zone": "data",
@@ -977,7 +977,7 @@
       {
        "n": "data",
        "type": "mediumblob",
-       "note": "ciphertext, settings and attachments as JSON; TEXT on Postgres, CLOB on Oracle"
+       "note": "the whole paste as JSON: ciphertext, settings, attachments and meta with the salt; TEXT on Postgres, CLOB on Oracle"
       },
       {
        "n": "expiredate",
