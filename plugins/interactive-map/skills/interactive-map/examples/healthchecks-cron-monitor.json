@@ -269,7 +269,7 @@
       "zone": "web",
       "tool": "Component · hc/api",
       "concept": "REST API",
-      "what": "Create, update, pause and list checks, read pings and flips. A request carries a project API key in <code>X-Api-Key</code> (or <code>api_key</code> in the JSON body); read-only keys see but cannot change. Status badges and a Prometheus metrics URL are read with a key in the URL, without logging in.",
+      "what": "Create, update, pause and list checks, read pings and flips. A request carries a project API key in <code>X-Api-Key</code> (write calls also take <code>api_key</code> in the JSON body); read-only keys see but cannot change. Status badges are read by a signed URL without logging in; the Prometheus metrics view (in <code>hc/integrations/prometheus/</code>) takes a read-only key in the URL or a Bearer header.",
       "why": "Teams create checks from their deploy scripts, so a new cron job gets monitored without anyone opening the dashboard.",
       "tools": "<code>hc/api/views.py</code> · <code>hc/api/decorators.py</code> · pydantic"
     },
@@ -310,7 +310,7 @@
       "inside": "sendalerts",
       "tool": "Process · manage.py sendalerts",
       "concept": "Alert loop",
-      "what": "A loop that never stops: find checks whose deadline has passed and mark them down (a flip), then claim each unprocessed flip and hand it to a pool of worker threads.",
+      "what": "A loop that runs until it gets SIGTERM or SIGINT: find checks whose deadline has passed and mark them down (a flip), then claim each unprocessed flip and hand it to a pool of worker threads.",
       "why": "A job that stops running sends nothing, so no request ever arrives to react to. Something has to look at the clock.",
       "tools": "<code>hc/api/management/commands/sendalerts.py</code> · ThreadPoolExecutor · optional StatsD counters (<code>STATSD_HOST</code>)"
     },
@@ -324,7 +324,7 @@
       "tool": "Component · transports",
       "concept": "Notifier",
       "what": "<code>Channel.notify()</code> records a <code>Notification</code>, calls the channel's transport (Slack, email, Telegram, webhook and about 25 more) and saves the error, if any, on the channel.",
-      "why": "Each transport only knows how to format and post one message; retries, timing and bookkeeping are shared.",
+      "why": "Each transport only knows how to format and post one message; timing and bookkeeping are shared, and HTTP transports share retries.",
       "tools": "<code>hc/api/transports.py</code> · <code>hc/integrations/*/transport.py</code> · pycurl"
     },
     {
@@ -366,7 +366,7 @@
       "zone": "outside",
       "tool": "External system",
       "concept": "Outgoing mail server",
-      "what": "The SMTP relay that delivers email alerts, sign-in links, reports and nags. Bounces come back to <code>POST /api/v1/bounces/</code>, which marks the notification failed and, for a permanent failure, can switch the email channel or the reports off.",
+      "what": "The SMTP relay that delivers email alerts, sign-in links, reports and nags. Bounces come back to <code>POST /api/v1/bounces/</code>, which marks the notification failed; a permanent failure switches the email channel off, or the reports and nags for a report email.",
       "why": "Email is the one channel every account has, so it carries the reports and the sign-in links too.",
       "tools": "Any SMTP service · <code>EMAIL_HOST</code>"
     },
@@ -874,7 +874,7 @@
         },
         {
           "t": "Status changed?",
-          "d": "Any change, new to up included, writes a <code>Flip</code>; the alert loop sends the ones that matter.",
+          "d": "A success or failure that changes the status (new to up included) writes a <code>Flip</code>; the alert loop sends the ones that matter.",
           "code": "hc/api/models.py:535-539"
         },
         {
@@ -1053,7 +1053,7 @@
             {
               "n": "processed",
               "type": "timestamp",
-              "note": "empty until sendalerts claims it; set at once for a pause"
+              "note": "empty until sendalerts claims it; set at once for pauses, resets and manual downs"
             },
             {
               "n": "old_status · new_status",
@@ -1195,7 +1195,7 @@
       },
       {
         "path": "hc/api/management/commands/",
-        "t": "The background processes, each a Django management command, plus maintenance commands. Some of those (in <code>hc/api/</code> and <code>hc/accounts/</code>) are meant to run from cron outside the container: pruning old data, flapping and inactivity notices.",
+        "t": "The background processes, each a Django management command, plus maintenance commands (pruning old objects and tokens, setting the Telegram webhook) that an admin runs now and then inside the container. More such commands live in <code>hc/accounts/management/commands/</code>.",
         "open": true,
         "more": "pruning commands for old pings and objects"
       },
@@ -1284,14 +1284,14 @@
       },
       {
         "path": "static/js/checks.js",
-        "t": "The dashboard's script: polls status every 3 seconds while the user is active, every 60 seconds otherwise, and updates rows in place.",
+        "t": "The dashboard's script: polls status every 3 seconds while the user is active, every 60 seconds otherwise (the timer is in <code>adaptive-setinterval.js</code>), and updates rows that changed.",
         "nodes": [
           "dashboard"
         ]
       },
       {
         "path": "templates/",
-        "t": "Django templates for pages, docs and emails. Integrations keep their message text in their own folders (<code>hc/integrations/*/templates/</code>).",
+        "t": "Django templates for pages, docs and emails. Email alerts use <code>templates/emails/</code>; the other integrations keep their message text in their own folders (<code>hc/integrations/*/templates/</code>).",
         "more": "accounts/, docs/, emails/, front/"
       },
       {
@@ -1313,7 +1313,7 @@
       },
       {
         "path": "requirements.txt",
-        "t": "Django, cronsim, oncalendar, pycurl, minismtpd, psycopg, pydantic and a few more. The Dockerfile adds minio, mysqlclient and gunicorn.",
+        "t": "Django, cronsim, oncalendar, pycurl, minismtpd, psycopg, pydantic and a few more. The Dockerfile adds apprise, minio, mysqlclient and gunicorn.",
         "tag": "config"
       }
     ]
