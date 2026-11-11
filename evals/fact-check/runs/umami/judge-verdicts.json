@@ -1,0 +1,434 @@
+{
+ "claims": [
+  {
+   "j": "J1",
+   "verdict": "correct",
+   "evidence": "src/app/(main)/UpdateNotice.tsx:38-42; src/store/version.ts:17-31; src/lib/constants.ts:19",
+   "quote": "const data = await fetch(`${UPDATES_URL}?v=${current}`",
+   "note": "UPDATES_URL = 'https://api.umami.is/v1/updates'"
+  },
+  {
+   "j": "J2",
+   "verdict": "correct",
+   "evidence": "src/app/share/[slug]/; src/app/share/ShareProvider.tsx:58-80",
+   "quote": "router.replace(`/share/${slug}/${allowedSections[0]}`)",
+   "note": "Share pages are part of the same Next.js UI."
+  },
+  {
+   "j": "J3",
+   "verdict": "correct",
+   "evidence": "src/app/mcp/route.ts:20-24,46-52; src/lib/mcp/auth.ts:10-30; src/lib/auth.ts:71-76; src/app/api/websites/[websiteId]/stats/route.ts:17-27",
+   "quote": "route handlers \u2192 existing user/team authorization. MCP never touches storage directly.",
+   "note": "MCP dispatches in-process to the same route handlers; parseRequest->checkAuth accepts the API key and canViewWebsiteSection runs as for dashboard calls."
+  },
+  {
+   "j": "J4",
+   "verdict": "correct",
+   "evidence": "src/app/api/send/route.ts:75-187,378-383; next.config.ts:119-129",
+   "quote": "if (!process.env.DISABLE_BOT_CHECK && isbot(userAgent)) { return json({ beep: 'boop' });",
+   "note": "Session insert happens only when ClickHouse is off (line 167)."
+  },
+  {
+   "j": "J5",
+   "verdict": "correct",
+   "evidence": "src/app/(collect)/q/[slug]/route.ts:10-62; src/app/(collect)/p/[slug]/route.ts:10-72",
+   "quote": "await POST(req);\n\n  return NextResponse.redirect(link.url);",
+   "note": ""
+  },
+  {
+   "j": "J6",
+   "verdict": "wrong",
+   "evidence": "src/app/(main)/UpdateNotice.tsx:15-22; src/components/common/Favicon.tsx:12",
+   "quote": "!config?.privateMode &&",
+   "note": "'PRIVATE_MODE turns off only the pixel script' is false: PRIVATE_MODE also disables the update check to api.umami.is/v1/updates (UpdateNotice allowUpdate) and favicons. The rest (URLs, DISABLE_TELEMETRY in telemetry route and scripts/postbuild.js) is right."
+  },
+  {
+   "j": "J7",
+   "verdict": "correct",
+   "evidence": "src/app/api/send/route.ts:156-162; src/lib/crypto.ts:108-114; src/tracker/index.ts:380",
+   "quote": "const saltRotation = process.env.SALT_ROTATION || 'month';",
+   "note": "No cookies in tracker; only reads localStorage 'umami.disabled'. Hash also includes website id and app secret."
+  },
+  {
+   "j": "J8",
+   "verdict": "correct",
+   "evidence": "src/app/api/batch/route.ts:7,21-36",
+   "quote": "const schema = z.array(anyObjectParam).max(500);",
+   "note": ""
+  },
+  {
+   "j": "J9",
+   "verdict": "correct",
+   "evidence": "src/components/hooks/queries/useWebsiteStatsQuery.ts:25-34; src/components/hooks/useApi.ts:26-29",
+   "quote": "queryFn: () => get(`/websites/${websiteId}/stats`, { compare, startAt, endAt, ...filters }),",
+   "note": ""
+  },
+  {
+   "j": "J10",
+   "verdict": "correct",
+   "evidence": "README.md (Installing from Source / Installing with Docker / Configure Umami)",
+   "quote": "MCP is disabled by default. Set `MCP_ENABLED=1` to enable the `/mcp` endpoint",
+   "note": ""
+  },
+  {
+   "j": "J11",
+   "verdict": "correct",
+   "evidence": "src/lib/detect.ts:201-262,264-294",
+   "quote": "// CIDR notation",
+   "note": "detect-browser, ua-parser-js, maxmind imported in detect.ts; isbot called in send/record routes."
+  },
+  {
+   "j": "J12",
+   "verdict": "correct",
+   "evidence": "rollup.tracker.config.js:7; src/tracker/index.ts",
+   "quote": "input: 'src/tracker/index.ts',",
+   "note": ""
+  },
+  {
+   "j": "J13",
+   "verdict": "correct",
+   "evidence": "src/app/api/send/route.ts:137-150; src/lib/response.ts:34-38",
+   "quote": "if (hasBlockedIp(ip)) {\n      return forbidden();",
+   "note": "forbidden() returns status 403."
+  },
+  {
+   "j": "J14",
+   "verdict": "wrong",
+   "evidence": "src/app/api/send/route.ts:185-198,378-379",
+   "quote": "// Expire visit after 30 minutes\n    if (!timestamp && now - iat > 1800) {",
+   "note": "Visit does not expire after 30 idle minutes: iat is the visit start carried unchanged in the cache token, so a new visit starts 30 minutes after the visit began regardless of activity. Session-id part is right."
+  },
+  {
+   "j": "J15",
+   "verdict": "correct",
+   "evidence": "src/app/api/record/route.ts:23-70,104-160,185-246",
+   "quote": "const MAX_RECORD_REQUEST_BYTES = 1_000_000;",
+   "note": ""
+  },
+  {
+   "j": "J16",
+   "verdict": "correct",
+   "evidence": "src/lib/load.ts:9-10,25-30; src/app/(collect)/q/[slug]/route.ts:15-27; src/lib/auth.ts:149-161; src/app/api/auth/sso/route.ts:15-17",
+   "quote": "const authKey = `auth:${createAuthKey()}`;",
+   "note": "link/pixel caching is in the q/p routes, not listed files, but statement holds."
+  },
+  {
+   "j": "J17",
+   "verdict": "correct",
+   "evidence": "src/app/api/record/route.ts:15-16,202,241",
+   "quote": "await saveRecording({",
+   "note": ""
+  },
+  {
+   "j": "J18",
+   "verdict": "correct",
+   "evidence": "src/queries/sql/events/saveEvent.ts:263-267",
+   "quote": "if (kafka.enabled) {\n    await sendMessage('event', message);\n  } else {\n    await insert('website_event', [message]);",
+   "note": ""
+  },
+  {
+   "j": "J19",
+   "verdict": "correct",
+   "evidence": "src/app/(main)/App.tsx:1; src/app/(main)/websites/[websiteId]/page.tsx",
+   "quote": "'use client';",
+   "note": "Page files are thin server wrappers around client components; essentially accurate."
+  },
+  {
+   "j": "J20",
+   "verdict": "correct",
+   "evidence": "src/app/api/record/route.ts:174-183",
+   "quote": "// Client info for bot/IP checks",
+   "note": ""
+  },
+  {
+   "j": "J21",
+   "verdict": "wrong",
+   "evidence": "src/lib/load.ts:6-52",
+   "quote": "export async function fetchWebsite(websiteId: string)",
+   "note": "Loaders in src/lib/load.ts cover websites, sessions, accounts and teams, not links; link (and pixel) Redis caching lives in the /q and /p route handlers."
+  },
+  {
+   "j": "J22",
+   "verdict": "correct",
+   "evidence": "db/clickhouse/schema.sql:164-166; db/clickhouse/migrations/",
+   "quote": "CREATE MATERIALIZED VIEW umami.website_event_stats_hourly_mv",
+   "note": ""
+  },
+  {
+   "j": "J23",
+   "verdict": "correct",
+   "evidence": "src/app/api/send/route.ts:378-383",
+   "quote": "return json({ cache: token, sessionId, visitId });",
+   "note": ""
+  },
+  {
+   "j": "J24",
+   "verdict": "correct",
+   "evidence": "src/app/api/send/route.ts:312-348",
+   "quote": "} else if (type === COLLECTION_TYPE.identify) {",
+   "note": ""
+  },
+  {
+   "j": "J25",
+   "verdict": "correct",
+   "evidence": "db/clickhouse/schema.sql:113-162",
+   "quote": "ORDER BY (\n        website_id,\n        event_type,\n        toStartOfHour(created_at),\n        cityHash64(visit_id),\n        visit_id",
+   "note": "website_id UUID, event_type UInt32, views SimpleAggregateFunction(sum, UInt64)."
+  },
+  {
+   "j": "J26",
+   "verdict": "correct",
+   "evidence": "src/lib/load.ts:9-30,42-52; src/queries/prisma/website.ts:227-230; src/lib/redis.ts:59,98-104; src/app/api/teams/route.ts:78-90; src/app/api/share/[slug]/route.ts:42",
+   "quote": "60 * 60 * 24 * 90,",
+   "note": "account:/white-label: keys only read via redis.client.get; no writer in repo."
+  },
+  {
+   "j": "J27",
+   "verdict": "correct",
+   "evidence": "src/components/hooks/queries/useUpdateQuery.ts; src/components/share/SimpleShareCreateForm.tsx (useApi())",
+   "quote": "const { get, useQuery } = useApi();",
+   "note": ""
+  },
+  {
+   "j": "J28",
+   "verdict": "correct",
+   "evidence": "src/app/share/ShareProvider.tsx; src/app/share/[slug]/",
+   "quote": "export function ShareProvider({ slug, children }",
+   "note": ""
+  },
+  {
+   "j": "J29",
+   "verdict": "correct",
+   "evidence": "src/lib/kafka.ts:90-155; grep for kafka in db/ and scripts/ finds nothing",
+   "quote": "const producer = kafka.producer();",
+   "note": "Repository only produces; no Kafka engine tables or consumers in db/clickhouse."
+  },
+  {
+   "j": "J30",
+   "verdict": "correct",
+   "evidence": "src/queries/sql/getWebsiteStats.ts; src/lib/db.ts:396-410",
+   "quote": "return queries[CLICKHOUSE]();",
+   "note": "A few helpers (createSession, getRealtimeData) are not dual, but the description holds generally."
+  },
+  {
+   "j": "J31",
+   "verdict": "correct",
+   "evidence": "prisma/schema.prisma:186-206",
+   "quote": "dataKey        String    @map(\"data_key\") @db.VarChar(500)",
+   "note": ""
+  },
+  {
+   "j": "J32",
+   "verdict": "correct",
+   "evidence": "src/app/api/send/route.ts:378-383; src/lib/crypto.ts:92-94; src/tracker/index.ts:406-414",
+   "quote": "...(typeof cache !== 'undefined' && { 'x-umami-cache': cache }),",
+   "note": ""
+  },
+  {
+   "j": "J33",
+   "verdict": "correct",
+   "evidence": "src/app/api/record/route.ts:106-183",
+   "quote": "return withCorsHeaders(forbidden({ message: 'Business subscription required.' }));",
+   "note": "isNoBilling accounts are also allowed."
+  },
+  {
+   "j": "J34",
+   "verdict": "wrong",
+   "evidence": "src/components/hooks/queries/useUpdateQuery.ts; src/components/input/ExportButton.tsx; src/app/(main)/boards/[boardId]/BoardShareCreateForm.tsx",
+   "quote": "useApi()",
+   "note": "Not one hook per API call: writes use generic useUpdateQuery/useDeleteQuery and several components call useApi() directly; names do not map one-to-one onto routes."
+  },
+  {
+   "j": "J35",
+   "verdict": "correct",
+   "evidence": "src/app/api/send/route.ts:164-182; src/queries/sql/events/saveEvent.ts:217-261",
+   "quote": "if ((!clickhouse.enabled && !cache?.sessionId) || shouldEnsureSession) {",
+   "note": ""
+  },
+  {
+   "j": "J36",
+   "verdict": "correct",
+   "evidence": "src/app/api/send/route.ts:137-140; src/lib/detect.ts:250-252",
+   "quote": "const userAgent = payload?.userAgent || request.headers.get('user-agent');",
+   "note": ""
+  },
+  {
+   "j": "J37",
+   "verdict": "correct",
+   "evidence": "src/lib/kafka.ts:10-15,110-131; src/queries/sql/events/saveEventData.ts:76; src/queries/sql/sessions/saveSessionLink.ts:75",
+   "quote": "const DEFAULT_MAX_MESSAGE_BYTES = 900_000;",
+   "note": "Incomplete topic list (also session_data, session_replay, heatmap_event) but nothing false; enablement needs KAFKA_URL and KAFKA_BROKER."
+  },
+  {
+   "j": "J38",
+   "verdict": "correct",
+   "evidence": "src/app/api/send/route.ts:156-198,378-379",
+   "quote": "let iat = cache?.iat || now;",
+   "note": ""
+  },
+  {
+   "j": "J39",
+   "verdict": "correct",
+   "evidence": "src/app/api/send/route.ts:137-140; src/lib/detect.ts:209-235",
+   "quote": "const { ip, userAgent, device, browser, os, country, region, city } = await getClientInfo(",
+   "note": ""
+  },
+  {
+   "j": "J40",
+   "verdict": "unverifiable",
+   "evidence": "README.md (Start the Application); src/lib/fetch.ts",
+   "quote": "By default, this will launch the application on `http://localhost:3000`.",
+   "note": "The app serves plain HTTP; HTTPS depends on the deployment's proxy, not the code."
+  },
+  {
+   "j": "J41",
+   "verdict": "correct",
+   "evidence": "packages/api-client; packages/mcp; src/app/mcp/route.ts:1-3",
+   "quote": "import { createUmamiMcpHttpHandler } from '@umami/mcp';",
+   "note": ""
+  },
+  {
+   "j": "J42",
+   "verdict": "correct",
+   "evidence": "src/app/api/record/route.ts:200-211,222-238; src/queries/sql/replays/saveRecording.ts:69-71",
+   "quote": "chunk_index: chunkIndex,",
+   "note": ""
+  },
+  {
+   "j": "J43",
+   "verdict": "wrong",
+   "evidence": "src/app/api/send/route.ts:185-198",
+   "quote": "if (!timestamp && now - iat > 1800) {",
+   "note": "A new visit starts 30 minutes after the visit's start (iat carried in token), not after 30 minutes without a beacon."
+  },
+  {
+   "j": "J44",
+   "verdict": "wrong",
+   "evidence": "db/clickhouse/schema.sql:153-161",
+   "quote": "ORDER BY (\n        website_id,\n        event_type,\n        toStartOfHour(created_at),\n        cityHash64(visit_id),\n        visit_id",
+   "note": "Row grain is website, event_type, hour and visit; session_id is not part of the key."
+  },
+  {
+   "j": "J45",
+   "verdict": "correct",
+   "evidence": "docker-compose.yml",
+   "quote": "image: postgres:15-alpine",
+   "note": "Both services have healthchecks."
+  },
+  {
+   "j": "J46",
+   "verdict": "correct",
+   "evidence": "src/app/api/share/[slug]/route.ts:133-186; src/lib/auth.ts:127-133,167-183; src/components/hooks/useApi.ts:22-25; src/permissions/link.ts:6-14",
+   "quote": "data.token = createToken({ ...data, type: SHARE_TOKEN_TYPE }, secret());",
+   "note": ""
+  },
+  {
+   "j": "J47",
+   "verdict": "correct",
+   "evidence": "src/lib/load.ts:6-40; src/app/(collect)/q/[slug]/route.ts:15-27",
+   "quote": "website = await redis.client.fetch(`website:${websiteId}`, () => getWebsite(websiteId), 86400);",
+   "note": ""
+  },
+  {
+   "j": "J48",
+   "verdict": "correct",
+   "evidence": "src/app/api/send/route.ts:185-198",
+   "quote": "let visitId = cache?.visitId || uuid(sessionId, visitSalt);",
+   "note": "jsonwebtoken keeps the supplied iat, so the start time persists."
+  },
+  {
+   "j": "J49",
+   "verdict": "correct",
+   "evidence": "src/app/api/batch/route.ts:7,36",
+   "quote": "const response = await send.POST(newRequest);",
+   "note": ""
+  },
+  {
+   "j": "J50",
+   "verdict": "correct",
+   "evidence": "src/app/api/teams/route.ts; src/queries/prisma/team.ts",
+   "quote": "import ... from '@/queries/prisma'",
+   "note": "Management routes use Prisma query functions."
+  },
+  {
+   "j": "J51",
+   "verdict": "correct",
+   "evidence": "src/queries/prisma/ (user.ts, team.ts, website.ts, share.ts ...)",
+   "quote": "src/queries/prisma/website.ts",
+   "note": ""
+  },
+  {
+   "j": "J52",
+   "verdict": "correct",
+   "evidence": "src/queries/sql/events/saveEvent.ts:264; saveEventData.ts:76; sessions/saveSessionData.ts:146; sessions/saveSessionLink.ts:75; replays/saveRecording.ts:79; heatmap/saveHeatmapEvents.ts:106",
+   "quote": "return sendMessage('heatmap_event', messages);",
+   "note": ""
+  }
+ ],
+ "missing": {
+  "X": [
+   {
+    "what": "Login/authentication path (password login, 2FA, SSO, logout) has no flow; Auth component exists but how the owner gets a token is not shown",
+    "evidence": "src/app/api/auth/login/route.ts:25-56; src/app/api/2fa/verify/route.ts; src/app/api/auth/sso/route.ts",
+    "importance": "high"
+   },
+   {
+    "what": "Short-link / pixel hit path (visitor clicks /q/:slug or loads /p/:slug) has no flow",
+    "evidence": "src/app/(collect)/q/[slug]/route.ts; src/app/(collect)/p/[slug]/route.ts",
+    "importance": "medium"
+   },
+   {
+    "what": "Build/startup database setup: check-db runs 'prisma migrate deploy' and creates tables plus default admin user; build:geo downloads GeoLite2 from MaxMind or a GitHub mirror",
+    "evidence": "package.json:18,21; scripts/check-db.js:76; scripts/build-geo.js:28-31",
+    "importance": "medium"
+   },
+   {
+    "what": "Cloud mode / outside billing system: account:{id}, team:{id}, white-label:{id} plan data in Redis written by an external system, gating replay and API keys; CLOUD_URL redirects",
+    "evidence": "src/lib/load.ts:42-52; src/app/api/record/route.ts:162-172; src/app/api/share/[slug]/route.ts:42; src/app/(main)/App.tsx:49",
+    "importance": "medium"
+   },
+   {
+    "what": "Standalone MCP server process (packages/mcp CLI, stdio/HTTP) that talks to a remote Umami API via @umami/api-client",
+    "evidence": "packages/mcp/bin/umami-mcp.js; packages/mcp/src/stdio.ts; packages/mcp/src/cli.ts",
+    "importance": "medium"
+   },
+   {
+    "what": "Share page viewing has a component but no flow (share API mints token; pages send x-umami-share-token/context headers)",
+    "evidence": "src/app/api/share/[slug]/route.ts:133-186; src/components/hooks/useApi.ts:22-25",
+    "importance": "medium"
+   }
+  ],
+  "Y": [
+   {
+    "what": "Public share pages / anonymous share viewer and the share-token mechanism are absent",
+    "evidence": "src/app/share/; src/app/api/share/[slug]/route.ts:133-186; src/lib/auth.ts:127-133,167-183",
+    "importance": "high"
+   },
+   {
+    "what": "Outside calls to umami.is: update check (api.umami.is/v1/updates), telemetry pixel (i.umami.is), build telemetry POST (api.umami.is/v1/telemetry)",
+    "evidence": "src/store/version.ts:17-31; src/app/api/scripts/telemetry/route.ts; scripts/telemetry.js:9; src/lib/constants.ts:19-20",
+    "importance": "medium"
+   },
+   {
+    "what": "Login/authentication path (password login, 2FA, SSO, logout) has no flow; Auth component exists but how the owner gets a token is not shown",
+    "evidence": "src/app/api/auth/login/route.ts:25-56; src/app/api/2fa/verify/route.ts; src/app/api/auth/sso/route.ts",
+    "importance": "high"
+   },
+   {
+    "what": "Short-link / pixel hit path (visitor clicks /q/:slug or loads /p/:slug) has no flow",
+    "evidence": "src/app/(collect)/q/[slug]/route.ts; src/app/(collect)/p/[slug]/route.ts",
+    "importance": "medium"
+   },
+   {
+    "what": "Build/startup database setup: check-db runs 'prisma migrate deploy' and creates tables plus default admin user; build:geo downloads GeoLite2 from MaxMind or a GitHub mirror",
+    "evidence": "package.json:18,21; scripts/check-db.js:76; scripts/build-geo.js:28-31",
+    "importance": "medium"
+   },
+   {
+    "what": "Cloud mode / outside billing system: account:{id}, team:{id}, white-label:{id} plan data in Redis written by an external system, gating replay and API keys; CLOUD_URL redirects",
+    "evidence": "src/lib/load.ts:42-52; src/app/api/record/route.ts:162-172; src/app/api/share/[slug]/route.ts:42; src/app/(main)/App.tsx:49",
+    "importance": "medium"
+   }
+  ]
+ }
+}

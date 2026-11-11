@@ -1,0 +1,525 @@
+{
+ "claims": [
+  {
+   "j": "J1",
+   "verdict": "correct",
+   "evidence": "app/controllers/stories_controller.rb:23-45; app/models/story.rb:1365-1401",
+   "quote": "@story = Story.new(user: @user)\n    update_story_attributes",
+   "note": "create only assigns story_params; fetched_attributes (Sponge) is only called from #new and #fetch_url_attributes (stories_controller.rb:89,100)."
+  },
+  {
+   "j": "J2",
+   "verdict": "correct",
+   "evidence": "app/jobs/cache_page_job.rb:14; config/initializers/page_caching_monkeypatch.rb:120-128",
+   "quote": "File.atomic_write(tmp) { |f| f.write(content) }\n        File.rename(tmp, path)",
+   "note": ""
+  },
+  {
+   "j": "J3",
+   "verdict": "correct",
+   "evidence": "app/controllers/mod/stories_controller.rb:19-29,65-69",
+   "quote": "permit(:title, :url, :description, :moderation_reason, :merge_story_short_id, ...",
+   "note": "Mod::StoriesController edits and merges Story records."
+  },
+  {
+   "j": "J4",
+   "verdict": "correct",
+   "evidence": "app/controllers/stories_controller.rb:27-29,461-468",
+   "quote": "@story = Story.new(user: @user)\n    update_story_attributes",
+   "note": ""
+  },
+  {
+   "j": "J5",
+   "verdict": "correct",
+   "evidence": "app/models/story_image.rb:23-66; app/jobs/send_webmention_job.rb:68-92; app/controllers/stories_controller.rb:41",
+   "quote": "SendWebmentionJob.set(wait: 5.minutes).perform_later(@story)",
+   "note": "StoryImage reads og:image and writes <short_id>.png; webmention job finds endpoint and POSTs source (story short URL)/target."
+  },
+  {
+   "j": "J6",
+   "verdict": "correct",
+   "evidence": "app/controllers/stories_controller.rb:84-90,92-101",
+   "quote": "s = Story.new\n    s.fetching_ip = request.remote_ip\n    s.url = params[:fetch_url]",
+   "note": ""
+  },
+  {
+   "j": "J7",
+   "verdict": "correct",
+   "evidence": "config/initializers/rack_attack.rb:29-32; app/controllers/concerns/authenticatable.rb:16-21; app/controllers/application_controller.rb:10-11,62-87; hatchbox/Caddyfile.pre:54-76",
+   "quote": "# clear Rails session cookie if not logged in so caddy uses the page cache",
+   "note": ""
+  },
+  {
+   "j": "J8",
+   "verdict": "correct",
+   "evidence": "hatchbox/Caddyfile.pre:7-8,54-80,148-242; hatchbox/lobsters.anubis.env:1; README.md:97-98",
+   "quote": "rewrite @use_cached_file /cache/{file_match.relative}",
+   "note": "Hatchbox {default} proxies to port 9000 where Anubis listens."
+  },
+  {
+   "j": "J9",
+   "verdict": "correct",
+   "evidence": "app/models/story_image.rb:23-66; app/jobs/send_webmention_job.rb:68-92",
+   "quote": "send_webmention(Routes.story_short_id_url(story), story.url, wm_endpoint)",
+   "note": ""
+  },
+  {
+   "j": "J10",
+   "verdict": "correct",
+   "evidence": "app/controllers/stories_controller.rb:256-270",
+   "quote": "if @story.merged_into_story\n      return render plain: \"story has been merged\", status: 400",
+   "note": "is_gone? = deleted (or banned user with negative unmoderated score), story.rb:799-800."
+  },
+  {
+   "j": "J11",
+   "verdict": "correct",
+   "evidence": "app/mailboxes/inbox_mailbox.rb:4-15",
+   "quote": "c = Comment.new(user: sending_user, comment: @decoded, is_from_email: true)",
+   "note": ""
+  },
+  {
+   "j": "J12",
+   "verdict": "wrong",
+   "evidence": "app/controllers/stories_controller.rb:23-29,84-101; app/models/story.rb:1377-1386",
+   "quote": "s.timeout = 3",
+   "note": "Facts (Sponge, 3s timeout, BAD_NETS, PDF) are true, but order is wrong: this fetch happens while the form is being filled in (#new / #fetch_url_attributes), i.e. before step 4's building the story from the posted form in #create, not after it."
+  },
+  {
+   "j": "J13",
+   "verdict": "correct",
+   "evidence": "app/controllers/comments_controller.rb:460-467",
+   "quote": "render partial: \"comments/postedreply\" ... redirect_to Routes.comment_target_path(comment, true)",
+   "note": ""
+  },
+  {
+   "j": "J14",
+   "verdict": "correct",
+   "evidence": "app/controllers/stories_controller.rb:12-14",
+   "quote": "before_action :verify_user_can_submit_stories, only: [:new, :create]",
+   "note": "Also applies to create, but statement only claims it for new in this step."
+  },
+  {
+   "j": "J15",
+   "verdict": "correct",
+   "evidence": "script/expire_page_cache:3-4; README.md:106",
+   "quote": "-type f -mmin +3 -exec rm -f {} +",
+   "note": ""
+  },
+  {
+   "j": "J16",
+   "verdict": "correct",
+   "evidence": "hatchbox/Caddyfile.pre:118-145; config/environments/production.rb:111; app/models/comment_redirect_cache.rb:4-12",
+   "quote": "config.comment_redirect_cache_dir = \"/home/deploy/lobsters/shared/comment_redirects/c\"",
+   "note": ""
+  },
+  {
+   "j": "J17",
+   "verdict": "correct",
+   "evidence": "hatchbox/transport:1; hatchbox/master.cf:127-128; hatchbox/main.cf:91",
+   "quote": "lobste.rs lobsters-ingress:",
+   "note": ""
+  },
+  {
+   "j": "J18",
+   "verdict": "correct",
+   "evidence": "app/models/story.rb:221-222; app/models/comment.rb:103-104",
+   "quote": "where(\"story_texts_fts match ?\", query)",
+   "note": ""
+  },
+  {
+   "j": "J19",
+   "verdict": "correct",
+   "evidence": "config/application.rb:3-15,106-117",
+   "quote": "def open_signups?\n    ENV[\"OPEN_SIGNUPS\"] == \"true\"",
+   "note": ""
+  },
+  {
+   "j": "J20",
+   "verdict": "correct",
+   "evidence": "app/controllers/stories_controller.rb:36-37; app/models/story.rb:281-282,905-907,1166-1168",
+   "quote": "Story.transaction do\n        if @story.save",
+   "note": "Upvote created in after_create, links via recreate_links after_save, both inside the transaction."
+  },
+  {
+   "j": "J21",
+   "verdict": "correct",
+   "evidence": "app/jobs/cache_page_job.rb:10-14",
+   "quote": "ApplicationController.cache_page(session.response.body, path, nil, false)",
+   "note": ""
+  },
+  {
+   "j": "J22",
+   "verdict": "correct",
+   "evidence": "hatchbox/Caddyfile.pre:7-8,64-112,154-242",
+   "quote": "@needs_tls protocol http\nredir @needs_tls https://{host}{uri} 308",
+   "note": ""
+  },
+  {
+   "j": "J23",
+   "verdict": "correct",
+   "evidence": "app/controllers/mod/ (flagged_controller.rb, hotspots_controller.rb, domains_ban_controller.rb, origins_ban_controller.rb, stories_controller.rb, mails_controller.rb)",
+   "quote": "class Mod::FlaggedController < Mod::ModController",
+   "note": ""
+  },
+  {
+   "j": "J24",
+   "verdict": "correct",
+   "evidence": "app/jobs/create_story_card_job.rb:3",
+   "quote": "limits_concurrency to: 1, key: ->(story) { story.short_id }, duration: 5.minutes",
+   "note": ""
+  },
+  {
+   "j": "J25",
+   "verdict": "correct",
+   "evidence": "app/models/story.rb:284-313,583-588,905-907",
+   "quote": "self.short_id = ShortId.new(self.class).generate ... self.hotness = calculated_hotness",
+   "note": ""
+  },
+  {
+   "j": "J26",
+   "verdict": "correct",
+   "evidence": "app/jobs/notify_comment_job.rb:10-95; app/jobs/notify_message_job.rb; app/jobs/notify_mod_mail_message_job.rb",
+   "quote": "users_following_thread << comment.story.user",
+   "note": ""
+  },
+  {
+   "j": "J27",
+   "verdict": "correct",
+   "evidence": "app/controllers/stories_controller.rb:38-44",
+   "quote": "SendWebmentionJob.set(wait: 5.minutes).perform_later(@story) ... CreateStoryCardJob.perform_later(@story)",
+   "note": "Webmention is skipped in development."
+  },
+  {
+   "j": "J28",
+   "verdict": "correct",
+   "evidence": "app/controllers/stories_controller.rb:14",
+   "quote": "before_action :verify_user_can_submit_stories, only: [:new, :create]",
+   "note": ""
+  },
+  {
+   "j": "J29",
+   "verdict": "correct",
+   "evidence": "app/models/search_parser.rb:19-61; db/schema.rb:626-627; app/models/story.rb:221-222",
+   "quote": "create_virtual_table \"comments_fts\", \"fts5\"",
+   "note": ""
+  },
+  {
+   "j": "J30",
+   "verdict": "correct",
+   "evidence": "app/jobs/notify_comment_job.rb:10-95",
+   "quote": "EmailReplyMailer.reply(comment, u).deliver_now",
+   "note": ""
+  },
+  {
+   "j": "J31",
+   "verdict": "correct",
+   "evidence": "app/models/story.rb:1365-1401; extras/sponge.rb:49-67; app/controllers/stories_controller.rb:115-119",
+   "quote": "when /pdf/\n        fetched_attributes_pdf",
+   "note": ""
+  },
+  {
+   "j": "J32",
+   "verdict": "correct",
+   "evidence": "config/initializers/page_caching_monkeypatch.rb:113,120-128; .hatchbox/pre-build:11-13; script/expire_page_cache:3-4",
+   "quote": "# similarly, we carry the full-page cache for unauthenticated users between deploys",
+   "note": ""
+  },
+  {
+   "j": "J33",
+   "verdict": "correct",
+   "evidence": "config/routes.rb:250-275",
+   "quote": "namespace :mod do",
+   "note": ""
+  },
+  {
+   "j": "J34",
+   "verdict": "correct",
+   "evidence": "hatchbox/lobsters.anubis.env:1-2; hatchbox/lobsters-service.server.port.conf:3",
+   "quote": "TARGET=http://localhost:9001",
+   "note": ""
+  },
+  {
+   "j": "J35",
+   "verdict": "correct",
+   "evidence": "app/jobs/create_story_card_job.rb:3",
+   "quote": "limits_concurrency to: 1, key: ->(story) { story.short_id }",
+   "note": ""
+  },
+  {
+   "j": "J36",
+   "verdict": "correct",
+   "evidence": "extras/pushover.rb:8-25; app/models/user.rb:557-561",
+   "quote": "s.fetch(\"https://api.pushover.net/1/messages.json\", :post, ...",
+   "note": ""
+  },
+  {
+   "j": "J37",
+   "verdict": "correct",
+   "evidence": "config/recurring.yml:5-58",
+   "quote": "prefill_page_cache:\n    class: PrefillPageCacheJob\n    schedule: every 2 minutes",
+   "note": ""
+  },
+  {
+   "j": "J38",
+   "verdict": "correct",
+   "evidence": "app/controllers/stories_controller.rb:36-37; app/models/story.rb:281-282",
+   "quote": "Story.transaction do",
+   "note": ""
+  },
+  {
+   "j": "J39",
+   "verdict": "correct",
+   "evidence": "config/routes.rb:100",
+   "quote": "post \"upvote\"",
+   "note": ""
+  },
+  {
+   "j": "J40",
+   "verdict": "correct",
+   "evidence": "app/javascript/user.js:264; app/controllers/stories_controller.rb:92-101",
+   "quote": "fetchWithCSRF('/stories/fetch_url_attributes', {",
+   "note": ""
+  },
+  {
+   "j": "J41",
+   "verdict": "correct",
+   "evidence": "script/expire_page_cache; hatchbox/lobsters.anubis.env:1,5",
+   "quote": "BIND=127.0.0.1:9000 ... DIFFICULTY=4",
+   "note": ""
+  },
+  {
+   "j": "J42",
+   "verdict": "correct",
+   "evidence": "config/recurring.yml:24-38,52-54; app/jobs/wal_checkpoint_job.rb",
+   "quote": "wal_checkpoint:\n    class: WalCheckpointJob\n    schedule: every minute",
+   "note": ""
+  },
+  {
+   "j": "J43",
+   "verdict": "correct",
+   "evidence": "app/controllers/concerns/authenticatable.rb:16-21; app/controllers/login_controller.rb:80",
+   "quote": "session[:u] = user.session_token",
+   "note": ""
+  },
+  {
+   "j": "J44",
+   "verdict": "correct",
+   "evidence": "app/jobs/notify_comment_job.rb:76-82; config/initializers/email.rb:2-4",
+   "quote": "address: ENV.fetch(\"SMTP_HOST\", \"127.0.0.1\"),\n    port: Integer(ENV.fetch(\"SMTP_PORT\", 25))",
+   "note": ""
+  },
+  {
+   "j": "J45",
+   "verdict": "correct",
+   "evidence": "app/controllers/application_controller.rb:131-132",
+   "quote": "Rails.cache.write(\"refill_story_page_cache:#{path}\", true, unless_exist: true, expires_in: 2.minutes)",
+   "note": ""
+  },
+  {
+   "j": "J46",
+   "verdict": "correct",
+   "evidence": "db/schema.rb:625-627",
+   "quote": "create_virtual_table \"story_texts_fts\", \"fts5\"",
+   "note": ""
+  },
+  {
+   "j": "J47",
+   "verdict": "correct",
+   "evidence": "hatchbox/Caddyfile.pre:54-76",
+   "quote": "vars {has_user_cookie} 0 # don't serve cached when user is logged in",
+   "note": ""
+  },
+  {
+   "j": "J48",
+   "verdict": "correct",
+   "evidence": "app/models/vote.rb:109-165; app/models/comment.rb:506-511; app/models/story.rb:905-907",
+   "quote": "Vote.create! story: story, comment: self, user: user, vote: 1",
+   "note": ""
+  },
+  {
+   "j": "J49",
+   "verdict": "correct",
+   "evidence": "app/models/story.rb:284-313,653-660,583-588",
+   "quote": "check_not_banned_domain\n      check_not_banned_origin",
+   "note": ""
+  },
+  {
+   "j": "J50",
+   "verdict": "correct",
+   "evidence": "app/controllers/application_controller.rb:132",
+   "quote": "return unless is_moderator || Rails.cache.write(...)",
+   "note": ""
+  },
+  {
+   "j": "J51",
+   "verdict": "correct",
+   "evidence": "app/models/vote.rb:158-164; app/models/story.rb:730-756; app/models/comment.rb:375-399",
+   "quote": "User.update_counters t.user_id, karma: score_delta\n      t.update_score_and_recalculate!(score_delta, flag_delta)",
+   "note": "Why-part is interpretive; email comments use Comment#record_initial_upvote rather than the vote method but still the same model recount."
+  },
+  {
+   "j": "J52",
+   "verdict": "wrong",
+   "evidence": "app/models/comment.rb:506-511",
+   "quote": "# not calling vote_thusly to save round-trips of validations\n    Vote.create! story: story, comment: self, user: user, vote: 1",
+   "note": "Not every vote goes through Vote.vote_thusly_on_story_or_comment_for_user_because: a new comment's own upvote is created directly."
+  },
+  {
+   "j": "J53",
+   "verdict": "correct",
+   "evidence": "app/controllers/stories_controller.rb:10-11; app/controllers/concerns/authenticatable.rb:64-70",
+   "quote": "render plain: \"not logged in\", status: 400",
+   "note": ""
+  },
+  {
+   "j": "J54",
+   "verdict": "correct",
+   "evidence": "config/initializers/rack_attack.rb; page_caching_monkeypatch.rb; email.rb; content_security_policy.rb",
+   "quote": "ActionMailer::Base.smtp_settings = {",
+   "note": ""
+  },
+  {
+   "j": "J55",
+   "verdict": "correct",
+   "evidence": "app/jobs/restic_job.rb:10-14; config/recurring.yml:17-19; README.md:75-76",
+   "quote": "system(\". #{shared}/etc/restic-env ; restic backup --no-scan #{shared}/etc #{shared}/log #{shared}/database-backups ...",
+   "note": ""
+  },
+  {
+   "j": "J56",
+   "verdict": "correct",
+   "evidence": "app/models/story_image.rb:113-114; app/jobs/send_webmention_job.rb:52-62,74-77",
+   "quote": "sp.try_fetch(endpoint.to_s, :post, {",
+   "note": ""
+  },
+  {
+   "j": "J57",
+   "verdict": "correct",
+   "evidence": "hatchbox/Caddyfile.pre:54-76; hatchbox/lobsters.anubis.env:1-2",
+   "quote": "vars {has_user_cookie} 0",
+   "note": ""
+  },
+  {
+   "j": "J58",
+   "verdict": "correct",
+   "evidence": "config/database.yml.sample:43-45; app/jobs/restic_job.rb; README.md:75-76",
+   "quote": "database: storage/primary.sqlite3",
+   "note": ""
+  },
+  {
+   "j": "J59",
+   "verdict": "correct",
+   "evidence": "app/controllers/stories_controller.rb:23,92; config/routes.rb",
+   "quote": "def create",
+   "note": ""
+  },
+  {
+   "j": "J60",
+   "verdict": "correct",
+   "evidence": "config/recurring.yml:43-48; app/jobs/fetch_email_blocklist_job.rb:7",
+   "quote": "fetch_email_blocklist:\n    class: FetchEmailBlocklistJob\n    schedule: every 7 days",
+   "note": ""
+  },
+  {
+   "j": "J61",
+   "verdict": "correct",
+   "evidence": "app/controllers/application_controller.rb:122-139; app/jobs/cache_page_job.rb:5-14; .hatchbox/post-deploy:12",
+   "quote": "bundle exec rails runner \"RefillStoryPageCacheJob.perform_later\"",
+   "note": ""
+  },
+  {
+   "j": "J62",
+   "verdict": "correct",
+   "evidence": "config/application.rb:106-108; config/initializers/session_store.rb:4-5; app/controllers/login_controller.rb:201-223",
+   "quote": "key: \"lobster_trap\"",
+   "note": ""
+  },
+  {
+   "j": "J63",
+   "verdict": "correct",
+   "evidence": "app/controllers/stories_controller.rb:38-44",
+   "quote": "CreateStoryCardJob.perform_later(@story)",
+   "note": ""
+  },
+  {
+   "j": "J64",
+   "verdict": "correct",
+   "evidence": "app/models/story.rb:583-588,905-907; app/models/vote.rb:158; app/models/comment.rb:506-511",
+   "quote": "Vote.vote_thusly_on_story_or_comment_for_user_because(1, id, nil, user_id, nil, false)",
+   "note": ""
+  },
+  {
+   "j": "J65",
+   "verdict": "correct",
+   "evidence": "script/expire_page_cache; script/lobsters-cron; script/lobsters-ingress; README.md:106-107",
+   "quote": "/home/deploy/.asdf/shims/bundle exec rails action_mailbox:ingress:postfix",
+   "note": "script/ also holds misc tools (ban-asn, detect_metasearch.rb)."
+  }
+ ],
+ "missing": {
+  "X": [
+   {
+    "what": "Login / signup / invitation (and 2FA, password reset) user path has no flow",
+    "evidence": "app/controllers/login_controller.rb:34,201-223; app/controllers/signup_controller.rb:6-21; app/controllers/invitations_controller.rb",
+    "importance": "high"
+   },
+   {
+    "what": "Solid Queue worker/dispatcher process (bin/jobs) as a separately running process with two worker pools (refill_story_pages lane)",
+    "evidence": "Procfile.dev:2; config/queue.yml:1-15",
+    "importance": "medium"
+   },
+   {
+    "what": "Off-site Restic backup repository (external store receiving nightly DB, logs, config backups)",
+    "evidence": "app/jobs/restic_job.rb:10-14",
+    "importance": "medium"
+   },
+   {
+    "what": "Telebugs error-reporting service called from the app",
+    "evidence": "config/initializers/telebugs.rb:18-22; app/controllers/application_controller.rb:109-118",
+    "importance": "medium"
+   },
+   {
+    "what": "Other file stores served directly: comment redirect files (shared/comment_redirects), story card images (public/story_image) and avatar cache",
+    "evidence": "config/environments/production.rb:111; app/models/story_image.rb:2; app/controllers/avatars_controller.rb:34-43",
+    "importance": "medium"
+   },
+   {
+    "what": "Other outside systems the code calls: Gravatar (avatars), GitHub API (disposable-email blocklist), IANA TLD list",
+    "evidence": "app/models/user.rb:393; app/jobs/fetch_email_blocklist_job.rb:7; app/jobs/fetch_iana_tlds_job.rb",
+    "importance": "medium"
+   }
+  ],
+  "Y": [
+   {
+    "what": "Login / signup / invitation (and 2FA, password reset) user path has no flow",
+    "evidence": "app/controllers/login_controller.rb:34,201-223; app/controllers/signup_controller.rb:6-21; app/controllers/invitations_controller.rb",
+    "importance": "high"
+   },
+   {
+    "what": "Solid Queue worker/dispatcher process (bin/jobs) as a separately running process with two worker pools (refill_story_pages lane)",
+    "evidence": "Procfile.dev:2; config/queue.yml:1-15",
+    "importance": "medium"
+   },
+   {
+    "what": "Off-site Restic backup repository (external store receiving nightly DB, logs, config backups)",
+    "evidence": "app/jobs/restic_job.rb:10-14",
+    "importance": "medium"
+   },
+   {
+    "what": "Telebugs error-reporting service called from the app",
+    "evidence": "config/initializers/telebugs.rb:18-22; app/controllers/application_controller.rb:109-118",
+    "importance": "medium"
+   },
+   {
+    "what": "Other file stores served directly: comment redirect files (shared/comment_redirects), story card images (public/story_image) and avatar cache",
+    "evidence": "config/environments/production.rb:111; app/models/story_image.rb:2; app/controllers/avatars_controller.rb:34-43",
+    "importance": "medium"
+   },
+   {
+    "what": "Other outside systems the code calls: Gravatar (avatars), GitHub API (disposable-email blocklist), IANA TLD list",
+    "evidence": "app/models/user.rb:393; app/jobs/fetch_email_blocklist_job.rb:7; app/jobs/fetch_iana_tlds_job.rb",
+    "importance": "medium"
+   }
+  ]
+ }
+}

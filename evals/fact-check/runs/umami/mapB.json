@@ -1,0 +1,1720 @@
+{
+ "id": "umami-analytics",
+ "page": {
+  "title": "Umami: privacy-first web analytics, mapped",
+  "slots": {
+   "overviewDescription": "Umami in context: who uses it, what it is made of and what it talks to.",
+   "mapDescription": "The browser scripts, the Next.js server split into collection and analytics APIs, and the pluggable stores behind one query layer.",
+   "completionLessons": "<li>How a page view becomes a row without a cookie</li><li>How one query layer serves PostgreSQL or ClickHouse</li><li>How the dashboard, share links and MCP reuse the same API and permissions</li>",
+   "completionIntro": "You followed a page view from the tracker into storage and back out onto the dashboard."
+  }
+ },
+ "panels": {
+  "introHtml": "<div class=\"p-eyebrow\">Start here</div><h2>Umami, cookie-free website analytics</h2><p style=\"margin-top:8px\">A map of <a href=\"https://github.com/umami-software/umami\">umami-software/umami</a> 3.4.1 in C4 terms: context on the overview, the browser scripts, the Next.js server and its stores on the full map.</p><p><small>Umami is developed by Umami Software, Inc. and contributors under the <a href=\"https://github.com/umami-software/umami/blob/559e3c607c23d2c72d9bd4f6481bda428255323c/LICENSE\">MIT licence</a>. This map describes it in its own words and is not affiliated with its authors.</small></p><h3>Try it</h3><ul class=\"newlist\"><li>Open a card to see its part of the system.</li><li>Play <b>Track a page view</b> to see how a visit is counted without cookies.</li><li>Click a component for what it does and where it lives in the code.</li></ul><div class=\"panel-actions\"><button type=\"button\" class=\"panel-action\" id=\"gofull\">Open full map</button></div>",
+  "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>One Next.js app, two kinds of traffic</h2><p style=\"margin-top:8px\">Umami runs as a single Next.js process. Public, unauthenticated collection endpoints take events from tracked sites; authenticated API routes serve the dashboard, share pages and MCP clients. Both go through one query layer.</p><h3>How to read it</h3><p>People on the left, scripts in their browsers next, then the server opened into its components, and storage on the right. PostgreSQL is always there; ClickHouse, Kafka and Redis are optional and switched on by environment variables.</p>"
+ },
+ "groups": {
+  "people": {
+   "title": "People and services",
+   "huekey": "person",
+   "icon": "users",
+   "line1": "Visitors are tracked,",
+   "line2": "owners read the numbers.",
+   "chips": "Visitors · Owners · MCP",
+   "text": "Visitors of a tracked website, the site owner or team who reads the dashboard, anonymous viewers of share links, AI assistants that query through MCP with an API key, and Umami's own update and telemetry service.",
+   "members": [
+    "visitor",
+    "analyst",
+    "mcpclient",
+    "shareviewer",
+    "umamiis"
+   ]
+  },
+  "tracking": {
+   "title": "Track in the browser",
+   "huekey": "component",
+   "icon": "radar",
+   "line1": "script.js for page views,",
+   "line2": "recorder.js for replays.",
+   "chips": "tracker · rrweb recorder",
+   "text": "Two small scripts that site owners embed: one sends page views, events and Web Vitals, the other records sessions and heatmap clicks.",
+   "members": [
+    "tracker",
+    "recorder"
+   ]
+  },
+  "ingest": {
+   "title": "Collect events",
+   "huekey": "background",
+   "icon": "inbox",
+   "line1": "Public endpoints, no login.",
+   "line2": "Bots and blocked IPs dropped.",
+   "chips": "/api/send · /api/record · /q · /p",
+   "text": "Unauthenticated routes that turn a beacon into a session and an event, without cookies: the session id is a hash of IP, user agent and a rotating salt.",
+   "members": [
+    "collect",
+    "record",
+    "redirects",
+    "detect"
+   ]
+  },
+  "app": {
+   "title": "Explore the data",
+   "huekey": "component",
+   "icon": "chart-line",
+   "line1": "Dashboard, reports, admin,",
+   "line2": "share pages and MCP.",
+   "chips": "React · /api/websites · /mcp",
+   "text": "The React dashboard and the authenticated JSON API behind it, plus the MCP endpoint that calls the same API in-process.",
+   "members": [
+    "dashboard",
+    "auth",
+    "analyticsApi",
+    "manageApi",
+    "mcp"
+   ]
+  },
+  "data": {
+   "title": "Store and query",
+   "huekey": "store",
+   "icon": "database",
+   "line1": "PostgreSQL by default,",
+   "line2": "ClickHouse for volume.",
+   "chips": "Prisma · ClickHouse · Kafka · Redis",
+   "text": "One query layer picks the backend per call. PostgreSQL holds everything by default; with ClickHouse configured, analytics go there while accounts stay in PostgreSQL.",
+   "members": [
+    "queries",
+    "postgres",
+    "clickhouse",
+    "kafka",
+    "redis",
+    "geoip"
+   ]
+  }
+ },
+ "overview": [
+  {
+   "g": "people"
+  },
+  {
+   "g": "tracking"
+  },
+  {
+   "g": "ingest"
+  },
+  {
+   "g": "app"
+  },
+  {
+   "g": "data"
+  }
+ ],
+ "overviewEdges": [
+  {
+   "id": "o1",
+   "from": "people",
+   "to": "tracking",
+   "label": "visit sites"
+  },
+  {
+   "id": "o2",
+   "from": "tracking",
+   "to": "ingest",
+   "label": "beacons"
+  },
+  {
+   "id": "o3",
+   "from": "people",
+   "to": "app",
+   "label": "read reports"
+  },
+  {
+   "id": "o4",
+   "from": "ingest",
+   "to": "data",
+   "label": "write events"
+  },
+  {
+   "id": "o5",
+   "from": "app",
+   "to": "data",
+   "label": "query"
+  }
+ ],
+ "nodes": [
+  {
+   "id": "visitor",
+   "group": "people",
+   "cat": "person",
+   "step": 1,
+   "icon": "user",
+   "tool": "Person",
+   "concept": "Site visitor",
+   "what": "Someone browsing a website that embeds the Umami script, clicking a Umami short link or loading a tracking pixel.",
+   "why": "Every number on the dashboard comes from these visits. Umami never sets a cookie on them; it recognises a visitor only by a hash of IP, user agent and a salt that changes every month by default.",
+   "tools": "Any browser",
+   "zone": "outside",
+   "shape": "person"
+  },
+  {
+   "id": "analyst",
+   "group": "people",
+   "cat": "person",
+   "step": 2,
+   "icon": "user",
+   "tool": "Person",
+   "concept": "Site owner",
+   "what": "Signs in, adds websites, reads traffic, builds reports and boards, invites a team, shares a public view. An admin also manages users.",
+   "why": "Owners are the only ones who read data. Ownership is per user or per team, and every API call checks it.",
+   "tools": "Browser on the Umami dashboard; default login <code>admin</code> / <code>umami</code> on a fresh install",
+   "zone": "outside",
+   "shape": "person"
+  },
+  {
+   "id": "mcpclient",
+   "group": "people",
+   "cat": "external",
+   "step": 7,
+   "icon": "bot",
+   "logo": "modelcontextprotocol",
+   "tool": "External · optional",
+   "concept": "AI assistant (MCP)",
+   "what": "An MCP client such as Claude or Cursor that asks questions about traffic through read-only tools.",
+   "why": "Lets people ask for numbers in plain language. It authenticates with a user's API key, so it sees exactly what that user sees.",
+   "tools": "Model Context Protocol over HTTP · <code>packages/mcp/README.md</code> lists the tools",
+   "zone": "outside",
+   "shape": "external"
+  },
+  {
+   "id": "tracker",
+   "group": "tracking",
+   "cat": "component",
+   "step": 1,
+   "icon": "radar",
+   "tool": "Script · script.js",
+   "concept": "Tracker script",
+   "what": "A small script embedded with <code>data-website-id</code>. It sends a page view on load and on every <code>pushState</code>, clicks on elements with <code>data-umami-event</code>, <code>umami.track()</code> and <code>umami.identify()</code> calls, and optional Web Vitals.",
+   "why": "Keeps the client side tiny and respects Do Not Track, domain lists and an opt-out flag in localStorage. It also keeps the signed cache token the server returns, so later beacons skip lookups.",
+   "tools": "<code>src/tracker/index.ts</code> built by Rollup into <code>public/script.js</code> · <code>rollup.tracker.config.js</code>",
+   "zone": "browser"
+  },
+  {
+   "id": "recorder",
+   "group": "tracking",
+   "cat": "component",
+   "step": 6,
+   "icon": "video",
+   "tool": "Script · recorder.js",
+   "concept": "Session recorder",
+   "what": "Records DOM changes with rrweb for session replay and collects click and scroll positions for heatmaps, then sends them in batches.",
+   "why": "Replays show what a visitor actually did. It reuses the tracker's session token, so it only works next to <code>script.js</code>.",
+   "tools": "<code>src/recorder/index.js</code> (rrweb) built into <code>public/recorder.js</code> · <code>rollup.recorder.config.js</code>",
+   "zone": "browser"
+  },
+  {
+   "id": "dashboard",
+   "group": "app",
+   "cat": "component",
+   "step": 2,
+   "icon": "layout-dashboard",
+   "logo": "nextdotjs",
+   "tool": "Component · React",
+   "concept": "Dashboard UI",
+   "what": "The web app: websites, realtime, sessions, replays, reports (funnels, journeys, retention, goals, attribution, revenue), boards, links, pixels, teams and settings.",
+   "why": "Everything the owner sees is a client-side page calling the JSON API with a bearer token, so the API is the single source of truth for the UI, scripts and MCP alike.",
+   "tools": "Next.js App Router pages in <code>src/app/(main)/</code> · React Query hooks in <code>src/components/hooks/queries/</code> · <code>useApi.ts</code> · Chart.js",
+   "zone": "browser"
+  },
+  {
+   "id": "collect",
+   "group": "ingest",
+   "cat": "component",
+   "step": 1,
+   "icon": "inbox",
+   "tool": "Component · POST /api/send",
+   "concept": "Collect endpoint",
+   "what": "Takes every tracker beacon: validates it, drops bots and blocked IPs, derives session and visit ids, creates the session and saves the event, identify data or performance metrics. <code>POST /api/batch</code> takes up to 500 such payloads and replays each through this same handler.",
+   "why": "This is the hot path; it must be fast and must never require a login. A signed cache token in the <code>x-umami-cache</code> header lets repeat beacons skip the website lookup and session insert.",
+   "tools": "<code>src/app/api/send/route.ts</code> · <code>src/lib/crypto.ts</code> (salted uuid) · <code>src/lib/jwt.ts</code> · custom paths via <code>COLLECT_API_ENDPOINT</code> in <code>next.config.ts</code> · <code>src/app/api/batch/route.ts</code>",
+   "zone": "ingest",
+   "inside": "collect"
+  },
+  {
+   "id": "record",
+   "group": "ingest",
+   "cat": "component",
+   "step": 6,
+   "icon": "film",
+   "tool": "Component · POST /api/record",
+   "concept": "Replay and heatmap endpoint",
+   "what": "Accepts batches of up to 200 rrweb or heatmap events (1 MB max), checks the session token and the website's recorder settings, then stores replay chunks or heatmap rows.",
+   "why": "Replays are much bigger than page views, so they get their own route with a size limit and per-website switches (recorder, replay, heatmap).",
+   "tools": "<code>src/app/api/record/route.ts</code> · <code>src/lib/recorder.ts</code> · <code>src/queries/sql/replays/saveRecording.ts</code>",
+   "zone": "ingest"
+  },
+  {
+   "id": "redirects",
+   "group": "ingest",
+   "cat": "component",
+   "step": 4,
+   "icon": "link",
+   "tool": "Component · GET /q, /p",
+   "concept": "Short links and pixels",
+   "what": "<code>/q/:slug</code> looks up a short link, records a click and redirects to its URL; <code>/p/:slug</code> records a hit and returns a 1x1 GIF.",
+   "why": "Tracks places where no script can run, such as emails and printed links. Both reuse the collect handler by calling its <code>POST</code> function in-process.",
+   "tools": "<code>src/app/(collect)/q/[slug]/route.ts</code> · <code>src/app/(collect)/p/[slug]/route.ts</code>",
+   "zone": "ingest"
+  },
+  {
+   "id": "detect",
+   "group": "ingest",
+   "cat": "component",
+   "step": 1,
+   "icon": "scan-search",
+   "tool": "Component · lib/detect",
+   "concept": "Client info",
+   "what": "Turns the request into browser, OS, device, country, region and city, and checks the IP against <code>IGNORE_IP</code> (with CIDR ranges).",
+   "why": "Location comes from CDN headers (Cloudflare, Vercel and others) when present, otherwise from a local GeoLite2 file, so no IP has to be stored.",
+   "tools": "<code>src/lib/detect.ts</code> · <code>detect-browser</code>, <code>ua-parser-js</code> · <code>maxmind</code> · <code>isbot</code> (called in the routes)",
+   "zone": "ingest"
+  },
+  {
+   "id": "auth",
+   "group": "app",
+   "cat": "component",
+   "step": 2,
+   "icon": "shield-check",
+   "tool": "Component · lib/auth, permissions",
+   "concept": "Auth and permissions",
+   "what": "Login with bcrypt, optional two-factor, signed tokens; reads a bearer token, API key or share token on every request and decides who may see or change a website, team, link, pixel, board or report.",
+   "why": "All authorisation lives here, so the dashboard, share pages, API keys and MCP get the same rules. Tokens carry a hash of the password, so changing it logs old sessions out.",
+   "tools": "<code>src/lib/auth.ts</code> · <code>src/lib/jwt.ts</code> · <code>src/permissions/</code> · <code>src/app/api/auth/login/route.ts</code> · <code>src/lib/api-key.ts</code>",
+   "zone": "api"
+  },
+  {
+   "id": "analyticsApi",
+   "group": "app",
+   "cat": "component",
+   "step": 2,
+   "icon": "chart-line",
+   "tool": "Component · /api/websites/:id/*",
+   "concept": "Analytics API",
+   "what": "Read routes per website: stats, pageviews, metrics, events, sessions, realtime, replays, heatmaps and reports (funnels, journeys, retention, goals, attribution, revenue, UTM, performance).",
+   "why": "Each route is thin: validate the query with zod, check permission, build filters (date range, segment, cohort), call one query function. That keeps the SQL in one place.",
+   "tools": "<code>src/app/api/websites/[websiteId]/</code> · <code>src/lib/request.ts</code> (parseRequest, getQueryFilters) · <code>src/app/api/realtime/</code>",
+   "zone": "api"
+  },
+  {
+   "id": "manageApi",
+   "group": "app",
+   "cat": "component",
+   "step": 2,
+   "icon": "settings",
+   "tool": "Component · /api/*",
+   "concept": "Management API",
+   "what": "Create, update and delete users, teams, websites, links, pixels, boards, shares, segments and API keys; admin routes; share-token minting for public pages.",
+   "why": "Configuration is plain CRUD over PostgreSQL through Prisma, kept apart from the analytics reads so neither depends on the other's backend.",
+   "tools": "<code>src/app/api/users/</code>, <code>teams/</code>, <code>links/</code>, <code>pixels/</code>, <code>boards/</code>, <code>share/</code>, <code>admin/</code> · <code>src/queries/prisma/</code>",
+   "zone": "api"
+  },
+  {
+   "id": "mcp",
+   "group": "app",
+   "cat": "component",
+   "step": 7,
+   "icon": "plug",
+   "tool": "Component · /mcp",
+   "concept": "MCP endpoint",
+   "what": "A stateless MCP server over HTTP, off unless <code>MCP_ENABLED=1</code>. Its tools call the typed API client, whose fetch is replaced by an in-process dispatcher to an allow-list of read routes.",
+   "why": "MCP never touches storage directly: every tool goes through the same route handlers and permission checks as the dashboard, with no loopback HTTP.",
+   "tools": "<code>src/app/mcp/route.ts</code> · <code>src/lib/mcp/</code> · <code>packages/mcp/</code> · <code>packages/api-client/</code>",
+   "zone": "api"
+  },
+  {
+   "id": "queries",
+   "group": "data",
+   "cat": "component",
+   "step": 1,
+   "icon": "split",
+   "tool": "Component · src/queries",
+   "concept": "Query layer",
+   "what": "One function per question (saveEvent, getWebsiteStats, getFunnel ...). Each analytics function holds a PostgreSQL and a ClickHouse version; <code>runQuery</code> picks one. Account data goes through Prisma only.",
+   "why": "This is what makes the store pluggable: the routes never know where analytics live. The Redis-backed loaders for websites and sessions sit beside it in <code>src/lib/load.ts</code>; short links and pixels cache themselves in their own route handlers.",
+   "tools": "<code>src/queries/sql/</code> · <code>src/queries/prisma/</code> · <code>src/lib/db.ts</code> · <code>src/lib/prisma.ts</code> · <code>src/lib/clickhouse.ts</code> · <code>src/lib/load.ts</code>",
+   "zone": "data",
+   "inside": "queries"
+  },
+  {
+   "id": "postgres",
+   "group": "data",
+   "cat": "store",
+   "step": 1,
+   "icon": "database",
+   "logo": "postgresql",
+   "tool": "PostgreSQL · Prisma",
+   "concept": "PostgreSQL",
+   "what": "Users, teams, websites, links, pixels, reports, boards, API keys and, by default, all analytics: sessions, events, event and session data, revenue, replays and heatmaps.",
+   "why": "The only required dependency. Migrations run at start-up, so an upgrade is a restart. An optional read replica takes the read queries.",
+   "tools": "<code>prisma/schema.prisma</code> · <code>prisma/migrations/</code> · <code>scripts/check-db.js</code> · <code>DATABASE_URL</code>, <code>DATABASE_REPLICA_URL</code>",
+   "zone": "data",
+   "shape": "database",
+   "inside": "postgres"
+  },
+  {
+   "id": "clickhouse",
+   "group": "data",
+   "cat": "store",
+   "step": 5,
+   "icon": "database",
+   "logo": "clickhouse",
+   "tool": "Optional · CLICKHOUSE_URL",
+   "concept": "ClickHouse",
+   "what": "When configured, holds the analytics tables (events, event and session data, replays, heatmaps) plus materialised views that pre-aggregate per hour.",
+   "why": "Column storage and hourly rollups keep dashboards fast at high volume. Accounts and configuration stay in PostgreSQL either way.",
+   "tools": "<code>db/clickhouse/schema.sql</code> · <code>db/clickhouse/migrations/</code> · <code>src/lib/clickhouse.ts</code> (@clickhouse/client)",
+   "zone": "data",
+   "shape": "database",
+   "inside": "clickhouse"
+  },
+  {
+   "id": "kafka",
+   "group": "data",
+   "cat": "store",
+   "step": 5,
+   "icon": "list-ordered",
+   "logo": "apachekafka",
+   "tool": "Optional · KAFKA_URL",
+   "concept": "Kafka",
+   "what": "With ClickHouse and Kafka both set, writes are produced to topics instead of inserted directly: <code>event</code>, <code>event_data</code>, <code>session_data</code>, <code>session_link</code>, <code>session_replay</code> and <code>heatmap_event</code>.",
+   "why": "Buffers write bursts away from ClickHouse. Not visible in the code: what consumes the topics into ClickHouse; the repository only produces.",
+   "tools": "<code>src/lib/kafka.ts</code> (kafkajs, batches up to 900 KB, acks=1) · <code>KAFKA_BROKER</code>",
+   "zone": "data",
+   "shape": "queue"
+  },
+  {
+   "id": "redis",
+   "group": "data",
+   "cat": "store",
+   "step": 3,
+   "icon": "zap",
+   "logo": "redis",
+   "tool": "Optional · REDIS_URL",
+   "concept": "Redis",
+   "what": "Caches <code>website:{id}</code> and <code>session:{id}</code> (through <code>src/lib/load.ts</code>) and <code>link:{slug}</code> and <code>pixel:{slug}</code> (in the <code>/q</code> and <code>/p</code> routes) for 24 hours when loaded (a cloud-mode website reset rewrites <code>website:{id}</code> with the 1-hour default), and stores login sessions under <code>auth:{key}</code> when enabled.",
+   "why": "Takes the website lookup off the collect hot path, and turns the login token into a revocable server-side session. SSO login needs it. In cloud mode it also holds plan data: <code>POST /api/teams</code> writes <code>team:{id}</code> for 90 days, while <code>account:{id}</code> and <code>white-label:{id}</code> are only read here, so probably an outside billing system writes them.",
+   "tools": "<code>src/lib/redis.ts</code> · <code>src/lib/load.ts</code> · <code>saveAuth</code> in <code>src/lib/auth.ts</code> · <code>src/app/(collect)/q/[slug]/route.ts</code>",
+   "zone": "data",
+   "shape": "database"
+  },
+  {
+   "id": "geoip",
+   "group": "data",
+   "cat": "external",
+   "step": 1,
+   "icon": "globe",
+   "tool": "Data file · GeoLite2",
+   "concept": "GeoLite2 database",
+   "what": "MaxMind's city database, downloaded at build time into <code>geo/GeoLite2-City.mmdb</code> and read in-process.",
+   "why": "Gives country, region and city without sending the IP anywhere at runtime. Skipped when a CDN already sends location headers.",
+   "tools": "<code>scripts/build-geo.js</code> · <code>GEOLITE_DB_PATH</code>, <code>MAXMIND_LICENSE_KEY</code>, <code>GEO_DATABASE_URL</code>",
+   "zone": "data",
+   "shape": "external"
+  },
+  {
+   "id": "umamiis",
+   "group": "people",
+   "cat": "external",
+   "step": 2,
+   "icon": "cloud",
+   "tool": "External · optional",
+   "concept": "umami.is services",
+   "what": "Umami's own services: the dashboard asks <code>api.umami.is/v1/updates</code> for a newer version, a telemetry script loads a pixel from <code>i.umami.is</code>, and the build posts to <code>api.umami.is/v1/telemetry</code>.",
+   "why": "Lets the project count installs and tell owners about updates. <code>DISABLE_TELEMETRY</code> turns off both telemetry calls; <code>PRIVATE_MODE</code> turns off only the pixel script; no visitor data is sent.",
+   "tools": "<code>src/store/version.ts</code> · <code>src/app/api/scripts/telemetry/route.ts</code> · <code>scripts/telemetry.js</code> · <code>src/lib/constants.ts</code>",
+   "zone": "outside",
+   "shape": "external"
+  },
+  {
+   "id": "shareviewer",
+   "group": "people",
+   "cat": "person",
+   "step": 2,
+   "icon": "user",
+   "tool": "Person · anonymous",
+   "concept": "Share page viewer",
+   "what": "Anyone with a share link: opens <code>/share/:slug</code> and sees a read-only dashboard for the shared website, link, pixel or board.",
+   "why": "Public dashboards without accounts. The share API mints a share token from the <code>share</code> table; the page sends it with the share-context header and the same permission checks admit it for the shared entities only.",
+   "tools": "<code>src/app/share/[slug]/</code> · <code>src/app/api/share/[slug]/route.ts</code> · <code>parseShareToken</code> in <code>src/lib/auth.ts</code>",
+   "zone": "outside",
+   "shape": "person"
+  }
+ ],
+ "zones": [
+  {
+   "id": "outside",
+   "label": "Outside · people and clients",
+   "hue": "external"
+  },
+  {
+   "id": "browser",
+   "label": "Browser · scripts and dashboard",
+   "hue": "component"
+  },
+  {
+   "id": "ingest",
+   "label": "Umami server · collection",
+   "hue": "background"
+  },
+  {
+   "id": "api",
+   "label": "Umami server · app API",
+   "hue": "component"
+  },
+  {
+   "id": "data",
+   "label": "Data · query layer and stores",
+   "hue": "store"
+  }
+ ],
+ "edges": [
+  {
+   "id": "vi_tr",
+   "from": "visitor",
+   "to": "tracker",
+   "label": "views a page"
+  },
+  {
+   "id": "vi_rc",
+   "from": "visitor",
+   "to": "recorder",
+   "label": "DOM, clicks, scrolls"
+  },
+  {
+   "id": "vi_rd",
+   "from": "visitor",
+   "to": "redirects",
+   "label": "GET /q/:slug"
+  },
+  {
+   "id": "tr_co",
+   "from": "tracker",
+   "to": "collect",
+   "label": "POST /api/send"
+  },
+  {
+   "id": "rc_re",
+   "from": "recorder",
+   "to": "record",
+   "label": "POST /api/record"
+  },
+  {
+   "id": "rd_co",
+   "from": "redirects",
+   "to": "collect",
+   "label": "in-process POST"
+  },
+  {
+   "id": "co_de",
+   "from": "collect",
+   "to": "detect",
+   "label": "IP, user agent"
+  },
+  {
+   "id": "re_de",
+   "from": "record",
+   "to": "detect",
+   "label": "bot, IP check"
+  },
+  {
+   "id": "de_ge",
+   "from": "detect",
+   "to": "geoip",
+   "label": "IP lookup"
+  },
+  {
+   "id": "co_qu",
+   "from": "collect",
+   "to": "queries",
+   "label": "session, event"
+  },
+  {
+   "id": "re_qu",
+   "from": "record",
+   "to": "queries",
+   "label": "replay, heatmap"
+  },
+  {
+   "id": "rd_qu",
+   "from": "redirects",
+   "to": "queries",
+   "label": "find link"
+  },
+  {
+   "id": "an_da",
+   "from": "analyst",
+   "to": "dashboard",
+   "label": "HTTPS"
+  },
+  {
+   "id": "da_au",
+   "from": "dashboard",
+   "to": "auth",
+   "label": "POST /api/auth/login"
+  },
+  {
+   "id": "da_aa",
+   "from": "dashboard",
+   "to": "analyticsApi",
+   "label": "GET JSON, Bearer"
+  },
+  {
+   "id": "da_ma",
+   "from": "dashboard",
+   "to": "manageApi",
+   "label": "CRUD JSON"
+  },
+  {
+   "id": "aa_au",
+   "from": "analyticsApi",
+   "to": "auth",
+   "label": "checkAuth, canView"
+  },
+  {
+   "id": "ma_au",
+   "from": "manageApi",
+   "to": "auth",
+   "label": "checkAuth, can*"
+  },
+  {
+   "id": "aa_qu",
+   "from": "analyticsApi",
+   "to": "queries",
+   "label": "stats, reports"
+  },
+  {
+   "id": "ma_qu",
+   "from": "manageApi",
+   "to": "queries",
+   "label": "Prisma CRUD"
+  },
+  {
+   "id": "au_qu",
+   "from": "auth",
+   "to": "queries",
+   "label": "user, API key"
+  },
+  {
+   "id": "au_rd",
+   "from": "auth",
+   "to": "redis",
+   "label": "auth:{key}"
+  },
+  {
+   "id": "mc_mc",
+   "from": "mcpclient",
+   "to": "mcp",
+   "label": "MCP over HTTP"
+  },
+  {
+   "id": "mc_au",
+   "from": "mcp",
+   "to": "auth",
+   "label": "check API key"
+  },
+  {
+   "id": "mc_aa",
+   "from": "mcp",
+   "to": "analyticsApi",
+   "label": "in-process dispatch"
+  },
+  {
+   "id": "qu_pg",
+   "from": "queries",
+   "to": "postgres",
+   "label": "Prisma, SQL"
+  },
+  {
+   "id": "qu_ch",
+   "from": "queries",
+   "to": "clickhouse",
+   "label": "SQL over HTTP"
+  },
+  {
+   "id": "qu_ka",
+   "from": "queries",
+   "to": "kafka",
+   "label": "event topics"
+  },
+  {
+   "id": "ka_ch",
+   "from": "kafka",
+   "to": "clickhouse",
+   "label": "consumed elsewhere"
+  },
+  {
+   "id": "qu_rd",
+   "from": "queries",
+   "to": "redis",
+   "label": "cache lookups"
+  },
+  {
+   "id": "da_ui",
+   "from": "dashboard",
+   "to": "umamiis",
+   "label": "update check"
+  },
+  {
+   "id": "sv_da",
+   "from": "shareviewer",
+   "to": "dashboard",
+   "label": "opens /share/:slug"
+  }
+ ],
+ "flows": {
+  "track": {
+   "title": "Track a page view",
+   "hue": "background",
+   "desc": "A visitor opens a tracked page. The tracker sends one beacon; the server derives a cookie-free session and stores an event in PostgreSQL.",
+   "hops": [
+    {
+     "e": "vi_tr",
+     "t": "The page loads <code>script.js</code> with <code>data-website-id</code>. Once the document is ready, the tracker sends a page view, and again on every <code>pushState</code> or <code>replaceState</code> in a single-page app."
+    },
+    {
+     "e": "tr_co",
+     "t": "<code>POST /api/send</code> with <code>{type: 'event', payload: {website, url, referrer, title, screen, language, hostname}}</code>. From the second beacon on, the header <code>x-umami-cache</code> carries the token the server returned last time."
+    },
+    {
+     "e": "co_qu",
+     "t": "Without a valid cache token, the website is looked up first; an unknown or deleted website gets a 400."
+    },
+    {
+     "e": "qu_rd",
+     "t": "With Redis on, the website sits under <code>website:{id}</code> for 24 hours, so this lookup rarely reaches PostgreSQL."
+    },
+    {
+     "e": "co_de",
+     "t": "Browser, OS and device come from the user agent; location from CDN headers if any. Bots get <code>{beep: 'boop'}</code> and nothing is stored; IPs in <code>IGNORE_IP</code> get a 403."
+    },
+    {
+     "e": "de_ge",
+     "t": "Otherwise the IP is looked up in the local GeoLite2 file for country, region and city."
+    },
+    {
+     "e": "co_qu",
+     "t": "The session id is a UUID v5 of website, IP, user agent, a salt that rotates monthly by default, and the distinct id if set. The visit id is a UUID of the session and the start of the hour; the cache token carries the visit's start time, and 30 minutes after that start a new visit begins, however active the visitor is. The session row is inserted (on conflict, nothing), then the event is saved with its UTM tags, click ids and referrer."
+    },
+    {
+     "e": "qu_pg",
+     "t": "One <code>website_event</code> row; custom event data also goes to <code>event_data</code>, and a <code>revenue</code> property with a currency to <code>revenue</code>."
+    },
+    {
+     "e": "tr_co",
+     "rev": true,
+     "t": "The answer is <code>{cache, sessionId, visitId}</code>. The cache token is signed with the app secret; the tracker sends it back so later beacons skip the website lookup and session insert."
+    }
+   ]
+  },
+  "scale": {
+   "title": "Write at scale: ClickHouse and Kafka",
+   "hue": "store",
+   "desc": "The same beacon with CLICKHOUSE_URL set. Sessions become columns on each event, and Kafka can buffer the writes.",
+   "hops": [
+    {
+     "e": "tr_co",
+     "t": "The tracker does not know which backend runs; the beacon is identical."
+    },
+    {
+     "e": "co_qu",
+     "t": "With ClickHouse on, the collect route skips the session insert: browser, OS, device and location are copied onto every event row instead."
+    },
+    {
+     "e": "qu_ka",
+     "t": "If <code>KAFKA_URL</code> and <code>KAFKA_BROKER</code> are set too, <code>saveEvent</code> produces the flat event to the <code>event</code> topic and its properties to <code>event_data</code>."
+    },
+    {
+     "e": "ka_ch",
+     "t": "Something outside this repository moves the topics into ClickHouse.",
+     "note": "Not visible in the code: the Kafka consumer. The ClickHouse schema in this repository has no Kafka engine table."
+    },
+    {
+     "e": "qu_ch",
+     "t": "Without Kafka, the row is inserted straight into <code>website_event</code>. A materialised view rolls it into <code>website_event_stats_hourly</code>, which the stats queries read."
+    }
+   ]
+  },
+  "read": {
+   "title": "Read the dashboard",
+   "hue": "component",
+   "desc": "A site owner signs in and opens a website. The page asks the analytics API for stats, which checks access and runs one aggregate query twice.",
+   "hops": [
+    {
+     "e": "an_da",
+     "t": "The owner opens the dashboard; the pages are React components rendered in the browser."
+    },
+    {
+     "e": "da_au",
+     "t": "Sign-in posts username and password. The password is checked with bcrypt; with two-factor on, a short-lived partial token is returned first."
+    },
+    {
+     "e": "au_rd",
+     "t": "With Redis, the session is stored under <code>auth:{key}</code> and the token only carries that key; without Redis the token itself carries the user id. Either way it includes a hash of the password, so a password change ends old sessions."
+    },
+    {
+     "e": "da_aa",
+     "t": "<code>useWebsiteStatsQuery</code> calls <code>GET /api/websites/:id/stats?startAt&amp;endAt&amp;filters</code> with <code>Authorization: Bearer</code>."
+    },
+    {
+     "e": "aa_au",
+     "t": "<code>parseRequest</code> validates the query with zod and runs <code>checkAuth</code>; <code>canViewWebsiteSection</code> allows admins, the owner, team members, or a share token for that website."
+    },
+    {
+     "e": "aa_qu",
+     "t": "Filters are built from the query: date range (clipped by the website's reset date), URL and session filters, segment. <code>getWebsiteStats</code> runs for the range and again for the comparison period."
+    },
+    {
+     "e": "qu_pg",
+     "t": "One SQL aggregate over <code>website_event</code> grouped by session and visit gives pageviews, visitors, visits, bounces and total time. On ClickHouse the same function reads the hourly rollup instead."
+    },
+    {
+     "e": "da_aa",
+     "rev": true,
+     "t": "JSON with the numbers and a <code>comparison</code> object; React Query caches it and the cards and chart render."
+    }
+   ]
+  },
+  "replay": {
+   "title": "Record a session replay",
+   "hue": "external",
+   "desc": "The recorder batches rrweb events and posts them with the tracker's session token; the server stores compressed chunks.",
+   "hops": [
+    {
+     "e": "vi_rc",
+     "t": "<code>recorder.js</code> records DOM snapshots and changes with rrweb, and click and scroll positions for heatmaps."
+    },
+    {
+     "e": "rc_re",
+     "t": "It posts batches to <code>/api/record</code> with the <code>x-umami-cache</code> token it reads from <code>window.umami.getSession()</code>, so the tracker must have sent a beacon first."
+    },
+    {
+     "e": "re_de",
+     "t": "Requests over 1 MB, without a valid session token, or for a website whose recorder is off are refused; in cloud mode a Business plan is required. Then the same bot and IP checks as page views."
+    },
+    {
+     "e": "re_qu",
+     "t": "Replay events become one chunk keyed by session, visit and chunk index; heatmap events become rows with page coordinates and scroll depth."
+    },
+    {
+     "e": "qu_pg",
+     "t": "On PostgreSQL the chunk is gzipped into <code>session_replay.events</code>; on ClickHouse it is inserted into <code>session_replay</code> with ZSTD compression."
+    }
+   ]
+  },
+  "mcp": {
+   "title": "Ask an AI assistant",
+   "hue": "person",
+   "desc": "An MCP client calls a tool. The server checks the API key and runs the same route handler the dashboard uses, in-process.",
+   "hops": [
+    {
+     "e": "mc_mc",
+     "t": "The client posts an MCP request to <code>/mcp</code> with an API key as bearer token. With <code>MCP_ENABLED</code> unset the route answers 404."
+    },
+    {
+     "e": "mc_au",
+     "t": "<code>authenticateMcpRequest</code> accepts only API keys: the key is hashed and looked up in <code>api_key</code>, then its user is loaded."
+    },
+    {
+     "e": "mc_aa",
+     "t": "A tool such as <code>get_website_stats</code> calls <code>@umami/api-client</code>, whose fetch is <code>createInProcessFetch</code>: it matches an allow-listed route and calls the handler directly, with no HTTP round trip."
+    },
+    {
+     "e": "aa_au",
+     "t": "The handler checks the API key and the website permission exactly as for the dashboard."
+    },
+    {
+     "e": "aa_qu",
+     "t": "The same query function runs against whichever backend is configured."
+    },
+    {
+     "e": "mc_mc",
+     "rev": true,
+     "t": "The tool result goes back to the assistant as MCP JSON."
+    }
+   ]
+  }
+ },
+ "buildSteps": [
+  null,
+  {
+   "title": "Count page views",
+   "text": "A script that posts a beacon, an endpoint that turns it into a session and an event, and PostgreSQL to keep them.",
+   "decision": "No cookies: the session id is a salted hash of IP and user agent, recomputed on each beacon, with a signed token as a shortcut.",
+   "runnable": "pnpm install && pnpm build && pnpm start",
+   "nodes": [
+    "visitor",
+    "tracker",
+    "collect",
+    "detect",
+    "geoip",
+    "queries",
+    "postgres"
+   ]
+  },
+  {
+   "title": "A dashboard to read them",
+   "text": "Sign-in, a JSON API per website and a React dashboard on top.",
+   "decision": "Every read goes through the same API and permission checks, so share pages and API keys come almost for free.",
+   "nodes": [
+    "analyst",
+    "dashboard",
+    "auth",
+    "analyticsApi",
+    "manageApi",
+    "shareviewer",
+    "umamiis"
+   ]
+  },
+  {
+   "title": "Cache the hot lookups",
+   "text": "Redis for websites, sessions and links, and for server-side login sessions.",
+   "decision": "Optional: every caller checks <code>redis.enabled</code> and falls back to the database.",
+   "nodes": [
+    "redis"
+   ]
+  },
+  {
+   "title": "Links and pixels",
+   "text": "Track clicks on short links and opens of a 1x1 image.",
+   "decision": "They call the collect handler in-process instead of duplicating its logic.",
+   "nodes": [
+    "redirects"
+   ]
+  },
+  {
+   "title": "Scale the analytics store",
+   "text": "ClickHouse for events and rollups, Kafka to buffer writes.",
+   "decision": "Each query function carries both SQL dialects and <code>runQuery</code> picks one from the environment.",
+   "nodes": [
+    "clickhouse",
+    "kafka"
+   ]
+  },
+  {
+   "title": "Replays and heatmaps",
+   "text": "A second script and endpoint for rrweb sessions and click maps.",
+   "decision": "A separate route with its own size cap and per-website switches, so heavy payloads stay off the page-view path.",
+   "nodes": [
+    "recorder",
+    "record"
+   ]
+  },
+  {
+   "title": "Answer AI assistants",
+   "text": "An MCP endpoint with read-only tools.",
+   "decision": "Tools go through the typed API client and the existing handlers, never to storage directly.",
+   "nodes": [
+    "mcpclient",
+    "mcp"
+   ]
+  }
+ ],
+ "tourChapters": [
+  {
+   "name": "Context",
+   "hue": "--ink"
+  },
+  {
+   "name": "Collecting",
+   "hue": "--h-background"
+  },
+  {
+   "name": "Reading",
+   "hue": "--h-component"
+  },
+  {
+   "name": "Scaling",
+   "hue": "--h-store"
+  },
+  {
+   "name": "Recap",
+   "hue": "--ink"
+  }
+ ],
+ "tour": [
+  {
+   "ch": 0,
+   "level": 0,
+   "title": "Analytics without cookies",
+   "body": [
+    "Umami counts visits to websites that embed its script and shows them to the site owner, without cookies and without sending data to third parties.",
+    "It is one Next.js app: public endpoints collect events, an authenticated API serves the dashboard, and a query layer writes to PostgreSQL or ClickHouse."
+   ],
+   "why": "Knowing that collection and reporting share one process and one query layer explains most of the code layout."
+  },
+  {
+   "ch": 1,
+   "flow": "track",
+   "hops": [
+    0,
+    2
+   ],
+   "title": "The beacon",
+   "body": [
+    "Follow a page view from the tracker to the collect endpoint."
+   ],
+   "why": "The payload is small and carries no identifier: the server works out who the visitor is."
+  },
+  {
+   "ch": 1,
+   "flow": "track",
+   "hops": [
+    2,
+    7
+   ],
+   "title": "Who is this, without a cookie?",
+   "body": [
+    "Filter bots, find the location, hash a session id, store the event."
+   ],
+   "why": "The monthly salt means the same visitor becomes a new session next month by design; that is the privacy trade-off."
+  },
+  {
+   "ch": 1,
+   "flow": "track",
+   "hops": [
+    7,
+    9
+   ],
+   "title": "Rows and a token back",
+   "body": [
+    "The event lands in PostgreSQL and the tracker gets a signed token for the next beacon."
+   ],
+   "why": "The token is a cache, not an identity: losing it only costs an extra lookup."
+  },
+  {
+   "ch": 2,
+   "flow": "read",
+   "title": "From login to a stats card",
+   "body": [
+    "Sign in, then one API call per card, each checked against ownership and team membership."
+   ],
+   "why": "The same handlers serve share pages and API keys, so access rules are written once."
+  },
+  {
+   "ch": 2,
+   "flow": "mcp",
+   "title": "The same API for AI assistants",
+   "body": [
+    "MCP tools reach the analytics routes in-process, with an API key."
+   ],
+   "why": "No new data path to secure: MCP can only do what its key's user can do in the dashboard."
+  },
+  {
+   "ch": 3,
+   "flow": "scale",
+   "title": "When PostgreSQL is not enough",
+   "body": [
+    "Set CLICKHOUSE_URL and the same functions write and read ClickHouse, optionally through Kafka."
+   ],
+   "why": "Swapping backends is configuration, not a fork, because each query carries both dialects."
+  },
+  {
+   "ch": 4,
+   "whole": true,
+   "title": "The whole of Umami, on one map",
+   "recap": {
+    "people": "Visitors are counted; owners and AI assistants read.",
+    "tracking": "Two scripts send page views, events and replays.",
+    "ingest": "Public endpoints turn beacons into sessions and events.",
+    "app": "Dashboard, API and MCP share one auth and permission layer.",
+    "data": "One query layer over PostgreSQL, or ClickHouse with Kafka, plus Redis."
+   },
+   "body": [
+    "A tracker, a collect endpoint, an authenticated API and a query layer with two backends.",
+    "The design choice that shapes everything: no cookies, so identity is a salted hash computed on the server."
+   ]
+  }
+ ],
+ "insides": {
+  "collect": {
+   "kind": "steps",
+   "title": "Inside the collect endpoint",
+   "sub": "What <code>POST /api/send</code> does with one beacon, in order. Early exits answer without storing anything.",
+   "cap": "The same handler serves page views, custom events, identify calls and Web Vitals; short links and pixels call it in-process too.",
+   "steps": [
+    {
+     "t": "Validate the body",
+     "d": "zod schema: type is event, identify or performance; exactly one of website, link or pixel; event names may not start like a spreadsheet formula.",
+     "code": "src/app/api/send/route.ts:33-81",
+     "exit": {
+      "when": "invalid",
+      "t": "400 with the validation errors"
+     }
+    },
+    {
+     "t": "Read the cache token",
+     "d": "A signed token from the previous beacon carries website, session and visit ids.",
+     "code": "src/app/api/send/route.ts:112-121"
+    },
+    {
+     "t": "Check the website exists",
+     "d": "Only when there is no valid token; Redis first if enabled.",
+     "code": "src/app/api/send/route.ts:124-130",
+     "exit": {
+      "when": "unknown website",
+      "t": "Website not found",
+      "code": "src/lib/load.ts:6-20"
+     }
+    },
+    {
+     "t": "Work out the client",
+     "d": "Browser, OS, device and location from headers or GeoLite2.",
+     "code": "src/app/api/send/route.ts:137-140"
+    },
+    {
+     "t": "Drop bots and ignored IPs",
+     "code": "src/app/api/send/route.ts:143-150",
+     "exit": {
+      "when": "bot or IGNORE_IP",
+      "t": "beep boop, or 403"
+     }
+    },
+    {
+     "t": "Derive the session id",
+     "d": "UUID v5 of source, IP, user agent, rotating salt and distinct id.",
+     "code": "src/app/api/send/route.ts:152-163"
+    },
+    {
+     "t": "Create the session",
+     "d": "PostgreSQL only, and only without a token or when the session drifted.",
+     "code": "src/app/api/send/route.ts:166-182"
+    },
+    {
+     "t": "Derive the visit id",
+     "d": "From session and start of the hour; a new visit 30 minutes after the visit started (time carried in the token), not after 30 idle minutes.",
+     "code": "src/app/api/send/route.ts:185-198"
+    },
+    {
+     "t": "Save the event",
+     "d": "Parse URL and referrer, read UTM tags and click ids, pick the event type, call saveEvent.",
+     "code": "src/app/api/send/route.ts:200-311"
+    },
+    {
+     "t": "Or link an identity",
+     "d": "identify: link the session to the distinct id and save session properties.",
+     "code": "src/app/api/send/route.ts:312-348"
+    },
+    {
+     "t": "Or save Web Vitals",
+     "code": "src/app/api/send/route.ts:349-376"
+    },
+    {
+     "t": "Answer with a new token",
+     "code": "src/app/api/send/route.ts:378-383"
+    }
+   ]
+  },
+  "queries": {
+   "kind": "steps",
+   "title": "Inside the query layer: saveEvent",
+   "sub": "How one query function serves two backends. Every analytics read and write in <code>src/queries/sql/</code> follows this shape.",
+   "cap": "Account data (users, teams, websites) never goes through runQuery: it lives in PostgreSQL through Prisma whatever the analytics backend.",
+   "steps": [
+    {
+     "t": "Pick the backend",
+     "d": "CLICKHOUSE_URL set means ClickHouse; a postgresql URL otherwise means Prisma.",
+     "code": "src/lib/db.ts:26-40"
+    },
+    {
+     "t": "PostgreSQL: insert the event",
+     "d": "Every string truncated to its column length.",
+     "code": "src/queries/sql/events/saveEvent.ts:106-142"
+    },
+    {
+     "t": "Save event properties",
+     "code": "src/queries/sql/events/saveEvent.ts:144-154"
+    },
+    {
+     "t": "Save revenue",
+     "d": "Only when the data has revenue above 0 and a currency.",
+     "code": "src/queries/sql/events/saveEvent.ts:155-167"
+    },
+    {
+     "t": "ClickHouse: build a flat row",
+     "d": "Session columns (browser, country, ...) are copied onto the event.",
+     "code": "src/queries/sql/events/saveEvent.ts:213-261"
+    },
+    {
+     "t": "Send to Kafka or insert",
+     "code": "src/queries/sql/events/saveEvent.ts:263-267",
+     "async": true
+    },
+    {
+     "t": "Save event properties",
+     "code": "src/queries/sql/events/saveEvent.ts:269-279"
+    }
+   ]
+  },
+  "postgres": {
+   "kind": "schema",
+   "title": "Inside PostgreSQL",
+   "sub": "The tables the flows touch, from <code>prisma/schema.prisma</code>. Relations are enforced by Prisma, not by foreign keys.",
+   "cap": "There is no visitor table: a visitor is a <code>session_id</code> derived from a hash, and a visit is a <code>visit_id</code> inside it. Users, websites, teams, links and pixels are soft-deleted through <code>deleted_at</code>.",
+   "tables": [
+    {
+     "name": "user",
+     "note": "Accounts; role user, view-only or admin.",
+     "code": "prisma/schema.prisma:12-38",
+     "fields": [
+      {
+       "n": "user_id",
+       "type": "uuid"
+      },
+      {
+       "n": "username",
+       "type": "varchar",
+       "note": "unique"
+      },
+      {
+       "n": "password",
+       "type": "varchar(60)",
+       "note": "bcrypt hash"
+      },
+      {
+       "n": "role",
+       "type": "varchar"
+      }
+     ]
+    },
+    {
+     "name": "website",
+     "note": "A tracked site, owned by a user or a team.",
+     "code": "prisma/schema.prisma:98-131",
+     "fields": [
+      {
+       "n": "website_id",
+       "type": "uuid",
+       "note": "the data-website-id"
+      },
+      {
+       "n": "user_id",
+       "ref": "user"
+      },
+      {
+       "n": "team_id",
+       "type": "uuid"
+      },
+      {
+       "n": "reset_at",
+       "type": "timestamptz",
+       "note": "hides data before it"
+      },
+      {
+       "n": "recorder_enabled",
+       "type": "boolean"
+      },
+      {
+       "n": "deleted_at",
+       "type": "timestamptz",
+       "note": "soft delete"
+      }
+     ]
+    },
+    {
+     "name": "session",
+     "note": "One per derived session id; device and location stored once.",
+     "code": "prisma/schema.prisma:55-85",
+     "fields": [
+      {
+       "n": "session_id",
+       "type": "uuid",
+       "note": "salted hash, not random"
+      },
+      {
+       "n": "website_id",
+       "ref": "website"
+      },
+      {
+       "n": "browser, os, device",
+       "type": "varchar"
+      },
+      {
+       "n": "country, region, city",
+       "type": "varchar"
+      },
+      {
+       "n": "distinct_id",
+       "type": "varchar",
+       "note": "from identify"
+      }
+     ]
+    },
+    {
+     "name": "website_event",
+     "note": "One row per page view, event, link or pixel hit, or Web Vitals sample.",
+     "code": "prisma/schema.prisma:133-184",
+     "fields": [
+      {
+       "n": "event_id",
+       "type": "uuid"
+      },
+      {
+       "n": "website_id",
+       "ref": "website",
+       "note": "also link or pixel id"
+      },
+      {
+       "n": "session_id",
+       "ref": "session"
+      },
+      {
+       "n": "visit_id",
+       "type": "uuid"
+      },
+      {
+       "n": "url_path, referrer_domain",
+       "type": "varchar"
+      },
+      {
+       "n": "utm_*, gclid, fbclid ...",
+       "type": "varchar"
+      },
+      {
+       "n": "event_type",
+       "type": "int",
+       "note": "page view, custom, link, pixel, performance"
+      },
+      {
+       "n": "lcp, inp, cls, fcp, ttfb",
+       "type": "decimal"
+      }
+     ]
+    },
+    {
+     "name": "event_data",
+     "note": "Custom event properties, one row per key.",
+     "code": "prisma/schema.prisma:186-206",
+     "fields": [
+      {
+       "n": "website_event_id",
+       "ref": "website_event"
+      },
+      {
+       "n": "data_key",
+       "type": "varchar"
+      },
+      {
+       "n": "string_value, number_value, date_value",
+       "note": "typed by data_type"
+      }
+     ]
+    },
+    {
+     "name": "session_replay",
+     "note": "Replay chunks.",
+     "code": "prisma/schema.prisma:415-437",
+     "fields": [
+      {
+       "n": "session_id",
+       "ref": "session"
+      },
+      {
+       "n": "chunk_index",
+       "type": "int"
+      },
+      {
+       "n": "events",
+       "type": "bytea",
+       "note": "gzipped rrweb JSON"
+      }
+     ]
+    }
+   ]
+  },
+  "clickhouse": {
+   "kind": "schema",
+   "title": "Inside ClickHouse",
+   "sub": "The analytics tables when ClickHouse is on, from <code>db/clickhouse/schema.sql</code>.",
+   "cap": "No session table: session columns are denormalised onto every event row. Dashboards read a pre-aggregated hourly table filled by a materialised view, not the raw events.",
+   "tables": [
+    {
+     "name": "website_event",
+     "note": "Raw events, partitioned by month, ordered by hour, website, session, visit.",
+     "code": "db/clickhouse/schema.sql:2-55",
+     "fields": [
+      {
+       "n": "website_id, session_id, visit_id, event_id",
+       "type": "UUID"
+      },
+      {
+       "n": "browser, os, country ...",
+       "type": "LowCardinality(String)",
+       "note": "copied from the session"
+      },
+      {
+       "n": "url_path, referrer_domain",
+       "type": "String"
+      },
+      {
+       "n": "event_type, event_name",
+       "type": "UInt32, String"
+      },
+      {
+       "n": "created_at",
+       "type": "DateTime"
+      }
+     ]
+    },
+    {
+     "name": "website_event_stats_hourly",
+     "note": "AggregatingMergeTree, one row per website, event type, hour and visit.",
+     "code": "db/clickhouse/schema.sql:113-162",
+     "fields": [
+      {
+       "n": "website_id, event_type",
+       "type": "UUID, UInt32"
+      },
+      {
+       "n": "session_id, visit_id",
+       "ref": "website_event"
+      },
+      {
+       "n": "views",
+       "type": "sum UInt64"
+      },
+      {
+       "n": "min_time, max_time",
+       "type": "min, max DateTime",
+       "note": "visit duration"
+      },
+      {
+       "n": "entry_url, exit_url",
+       "type": "argMin, argMax"
+      }
+     ]
+    },
+    {
+     "name": "event_data",
+     "note": "Custom event properties.",
+     "code": "db/clickhouse/schema.sql:57-74",
+     "fields": [
+      {
+       "n": "event_id",
+       "ref": "website_event"
+      },
+      {
+       "n": "data_key",
+       "type": "String"
+      },
+      {
+       "n": "string_value, number_value, date_value"
+      }
+     ]
+    },
+    {
+     "name": "session_replay",
+     "note": "Replay chunks, compressed by the column codec.",
+     "code": "db/clickhouse/schema.sql:311-327",
+     "fields": [
+      {
+       "n": "session_id, visit_id",
+       "type": "UUID"
+      },
+      {
+       "n": "chunk_index",
+       "type": "UInt32"
+      },
+      {
+       "n": "events",
+       "type": "String",
+       "note": "ZSTD(3)"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "files": {
+  "entries": [
+   {
+    "path": "README.md",
+    "t": "Install from source or Docker; DATABASE_URL, API_URL, two-factor and MCP settings.",
+    "tag": "docs"
+   },
+   {
+    "path": "package.json",
+    "t": "The build pipeline: database client, tracker, recorder, GeoLite2, OpenAPI client, packages, Next.js.",
+    "tag": "config",
+    "why": "pnpm build runs about eight steps in order; reading the scripts block shows what a deploy actually produces."
+   },
+   {
+    "path": "Dockerfile",
+    "t": "Three-stage image: install, build, a slim runtime that runs as a non-root user.",
+    "tag": "deploy"
+   },
+   {
+    "path": "docker-compose.yml",
+    "t": "Umami plus PostgreSQL 15, with health checks.",
+    "tag": "deploy",
+    "nodes": [
+     "postgres"
+    ]
+   },
+   {
+    "path": "scripts/start-docker.sh",
+    "t": "Container start: check the database and migrate, patch the tracker endpoint, then exec the server.",
+    "tag": "entry point",
+    "nodes": [
+     "postgres",
+     "tracker"
+    ]
+   },
+   {
+    "path": "scripts/check-db.js",
+    "t": "Checks the connection and PostgreSQL version and runs prisma migrate deploy.",
+    "nodes": [
+     "postgres"
+    ],
+    "why": "Migrations run on every start, so an upgrade is pull and restart."
+   },
+   {
+    "path": "scripts/build-geo.js",
+    "t": "Downloads the GeoLite2 city database into geo/ at build time.",
+    "nodes": [
+     "geoip"
+    ]
+   },
+   {
+    "path": "next.config.ts",
+    "t": "Headers, CORS and rewrites for custom tracker names and collect endpoints.",
+    "tag": "config",
+    "nodes": [
+     "collect",
+     "tracker"
+    ],
+    "why": "Ad blockers block /script.js and /api/send by name; these rewrites let an install rename both."
+   },
+   {
+    "path": "docker/proxy.ts",
+    "t": "Next.js proxy copied into the Docker build: runtime rewrites for the same custom paths and the CSP.",
+    "tag": "deploy",
+    "nodes": [
+     "collect"
+    ]
+   },
+   {
+    "path": "src/tracker/index.ts",
+    "t": "The tracker script source.",
+    "tag": "client",
+    "nodes": [
+     "tracker"
+    ]
+   },
+   {
+    "path": "src/recorder/index.js",
+    "t": "The rrweb session recorder source.",
+    "tag": "client",
+    "nodes": [
+     "recorder"
+    ]
+   },
+   {
+    "path": "src/app/",
+    "t": "Next.js App Router: pages and API routes side by side.",
+    "open": true
+   },
+   {
+    "path": "src/app/api/send/route.ts",
+    "t": "The collect endpoint for every beacon.",
+    "tag": "hot path",
+    "nodes": [
+     "collect"
+    ]
+   },
+   {
+    "path": "src/app/api/record/route.ts",
+    "t": "Replay and heatmap ingestion.",
+    "nodes": [
+     "record"
+    ]
+   },
+   {
+    "path": "src/app/(collect)/",
+    "t": "Short link redirects (q) and tracking pixels (p).",
+    "nodes": [
+     "redirects"
+    ]
+   },
+   {
+    "path": "src/app/api/websites/[websiteId]/",
+    "t": "One folder per analytics question: stats, metrics, sessions, funnels, journeys, retention and more.",
+    "nodes": [
+     "analyticsApi"
+    ],
+    "more": "about 30 sub-routes"
+   },
+   {
+    "path": "src/app/api/auth/",
+    "t": "Login, logout, token verify and SSO.",
+    "nodes": [
+     "auth"
+    ]
+   },
+   {
+    "path": "src/app/api/teams/",
+    "t": "Teams and members; users, links, pixels, boards and share sit in sibling folders.",
+    "nodes": [
+     "manageApi"
+    ]
+   },
+   {
+    "path": "src/app/mcp/route.ts",
+    "t": "The MCP endpoint.",
+    "nodes": [
+     "mcp"
+    ]
+   },
+   {
+    "path": "src/app/(main)/",
+    "t": "Dashboard pages: websites, boards, links, pixels, teams, settings, admin.",
+    "nodes": [
+     "dashboard"
+    ]
+   },
+   {
+    "path": "src/components/hooks/queries/",
+    "t": "React Query hooks for the API: most reads have a named hook, writes use generic hooks such as useUpdateQuery.",
+    "nodes": [
+     "dashboard"
+    ],
+    "why": "Most pages fetch through these hooks rather than fetch directly; some providers and forms call useApi() themselves."
+   },
+   {
+    "path": "src/lib/",
+    "t": "Server and shared helpers, one concern per file.",
+    "open": true
+   },
+   {
+    "path": "src/lib/auth.ts",
+    "t": "Bearer, API key and share token checks; Redis-backed sessions.",
+    "nodes": [
+     "auth"
+    ]
+   },
+   {
+    "path": "src/lib/detect.ts",
+    "t": "User agent parsing, geolocation and the IP block list.",
+    "nodes": [
+     "detect"
+    ]
+   },
+   {
+    "path": "src/lib/db.ts",
+    "t": "runQuery: picks PostgreSQL or ClickHouse per call.",
+    "nodes": [
+     "queries"
+    ]
+   },
+   {
+    "path": "src/lib/redis.ts",
+    "t": "Redis client with fetch-or-load caching.",
+    "nodes": [
+     "redis"
+    ]
+   },
+   {
+    "path": "src/lib/kafka.ts",
+    "t": "Kafka producer with size-capped batches.",
+    "nodes": [
+     "kafka"
+    ]
+   },
+   {
+    "path": "src/lib/clickhouse.ts",
+    "t": "ClickHouse client, filters and insert.",
+    "nodes": [
+     "clickhouse"
+    ]
+   },
+   {
+    "path": "src/lib/mcp/",
+    "t": "MCP API-key auth and the in-process route dispatcher.",
+    "nodes": [
+     "mcp"
+    ]
+   },
+   {
+    "path": "src/permissions/",
+    "t": "canView and canUpdate rules per entity.",
+    "nodes": [
+     "auth"
+    ],
+    "why": "Kept apart from routes so every route, share page and MCP tool asks the same questions."
+   },
+   {
+    "path": "src/queries/sql/",
+    "t": "Analytics queries, each with a PostgreSQL and a ClickHouse version.",
+    "nodes": [
+     "queries"
+    ],
+    "more": "grouped by topic: events, sessions, funnels, replays ..."
+   },
+   {
+    "path": "src/queries/prisma/",
+    "t": "Account and configuration queries through Prisma.",
+    "nodes": [
+     "queries"
+    ]
+   },
+   {
+    "path": "prisma/schema.prisma",
+    "t": "The PostgreSQL schema.",
+    "tag": "schema",
+    "nodes": [
+     "postgres"
+    ]
+   },
+   {
+    "path": "prisma/migrations/",
+    "t": "Ordered SQL migrations applied at start-up.",
+    "nodes": [
+     "postgres"
+    ],
+    "more": "26 migrations"
+   },
+   {
+    "path": "db/clickhouse/schema.sql",
+    "t": "The ClickHouse schema with materialised views; migrations sit beside it.",
+    "tag": "schema",
+    "nodes": [
+     "clickhouse"
+    ]
+   },
+   {
+    "path": "packages/",
+    "t": "Workspace packages: the typed API client and the MCP server.",
+    "nodes": [
+     "mcp"
+    ]
+   },
+   {
+    "path": "src/app/share/",
+    "t": "Public read-only share pages.",
+    "nodes": [
+     "shareviewer",
+     "dashboard"
+    ]
+   },
+   {
+    "path": "src/app/api/batch/route.ts",
+    "t": "Batch collect: up to 500 beacons through the send handler.",
+    "nodes": [
+     "collect"
+    ]
+   }
+  ]
+ },
+ "source": {
+  "repo": "https://github.com/umami-software/umami",
+  "ref": "559e3c607c23d2c72d9bd4f6481bda428255323c"
+ }
+}

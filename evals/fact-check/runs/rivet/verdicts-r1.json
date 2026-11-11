@@ -1,0 +1,1168 @@
+{
+ "claims": [
+  {
+   "id": "node:operator",
+   "verdict": "confirmed",
+   "evidence": "README.md:37",
+   "quote": "Run it from cron, Airflow, a Kubernetes `CronJob`, or `docker run`."
+  },
+  {
+   "id": "node:agent",
+   "verdict": "confirmed",
+   "evidence": "src/bin/rivet-mcp.rs:1-4",
+   "quote": "Speaks JSON-RPC 2.0 over stdin/stdout (one object per line). Integrates with Claude Desktop and Claude Code."
+  },
+  {
+   "id": "node:srcdb",
+   "verdict": "confirmed",
+   "evidence": "Cargo.toml:91-222",
+   "quote": "postgres = { version = \"0.19\" ... tiberius = ... oracle = [\"dep:oracledb\", \"dep:rustls\"]"
+  },
+  {
+   "id": "node:cli",
+   "verdict": "confirmed",
+   "evidence": "src/cli/mod.rs:29-52",
+   "quote": "let exit_class = crate::error::classify_exit(&e); let code = crate::error::error_code(&e); if json_errors {"
+  },
+  {
+   "id": "node:config",
+   "verdict": "confirmed",
+   "evidence": "src/config/mod.rs:891",
+   "quote": "url_env: DATABASE_URL (URL from env var — recommended) ... url_file: /etc/rivet/source.url"
+  },
+  {
+   "id": "node:planner",
+   "verdict": "confirmed",
+   "evidence": "src/plan/contract.rs:285-295",
+   "quote": "pub enum ExtractionStrategy { Snapshot, Incremental(..), Chunked(..), Keyset(..), TimeWindow {"
+  },
+  {
+   "id": "node:preflight",
+   "verdict": "confirmed",
+   "evidence": "src/preflight/mod.rs:373",
+   "quote": "pub fn check("
+  },
+  {
+   "id": "node:mcp",
+   "verdict": "confirmed",
+   "evidence": "src/mcp.rs:7-8",
+   "quote": "The server speaks JSON-RPC 2.0 over stdin/stdout ... All tools are read-only — no writes, no DDL."
+  },
+  {
+   "id": "node:runner",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1421-1505",
+   "quote": "if dispatches_to_cdc_runner(export.mode) { ... super::cdc_job::run_cdc_export("
+  },
+  {
+   "id": "node:strategies",
+   "verdict": "wrong",
+   "evidence": "src/pipeline/mod.rs:46-50",
+   "quote": "pub(crate) mod retry { pub(crate) use crate::error::retry::is_transient; ... pub(crate) use crate::tuning::retry_backoff_ms;",
+   "fix": "There is no src/pipeline/retry.rs: `pipeline::retry` is an inline re-export module in src/pipeline/mod.rs:47 over src/error/retry.rs and tuning. The rest (run_with_reconnect in single.rs, chunked/, keyset.rs) is right."
+  },
+  {
+   "id": "node:drivers",
+   "verdict": "confirmed",
+   "evidence": "src/source/batch_controller.rs:3-13",
+   "quote": "All three source engines run the same batch-sizing policy ... cap the batch to a memory budget ... sleep `throttle_ms` between batches."
+  },
+  {
+   "id": "node:sink",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/sink/pipelined.rs:3-6",
+   "quote": "The source thread only fetches rows, converts them to Arrow ... a dedicated worker thread owns the real [`ExportSink`]"
+  },
+  {
+   "id": "node:cdcstream",
+   "verdict": "wrong",
+   "evidence": "src/source/postgres/cdc.rs:4",
+   "quote": "Consumes a `test_decoding` slot via `pg_logical_slot_get_changes()`",
+   "fix": "PostgreSQL CDC still reads a test_decoding slot (pg_create_logical_replication_slot($1, 'test_decoding') at line 712, parse_test_decoding at 968). pgoutput.rs is a decoder not yet wired in (ADR-0031: 'partially implemented'; pgoutput.rs:21-25 'Nothing in the non-test build calls this YET')."
+  },
+  {
+   "id": "node:cdcsink",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:426-498",
+   "quote": "encode_and_upload ... record_part ... write_manifest_without_success_marker ... stream.checkpoint_of(p).save(ck)?; ... stream.ack(p)?;"
+  },
+  {
+   "id": "node:commit",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/commit.rs:446-470",
+   "quote": "Both body hashes in one read: xxh3 fingerprint ... + base64 MD5 ... local MD5 differs from the store-reported checksum"
+  },
+  {
+   "id": "node:destinations",
+   "verdict": "confirmed",
+   "evidence": "src/destination/mod.rs:273-277",
+   "quote": "DestinationType::Local => ... S3 => ... Gcs => ... Azure => ... Stdout =>"
+  },
+  {
+   "id": "node:state",
+   "verdict": "confirmed",
+   "evidence": "src/state/mod.rs:57",
+   "quote": "const STATE_DB_NAME: &str = \".rivet_state.db\";"
+  },
+  {
+   "id": "node:verify",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/validate_cmd.rs:3-10",
+   "quote": "`rivet validate` — re-run the manifest-aware `--validate` pass against an existing destination ... no source query, no extraction, no state writes."
+  },
+  {
+   "id": "node:loaddriver",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1226-1251",
+   "quote": "One load per table at a time ... let lease = take_table_lease(job.state, &target_fqtn)?; ... prepare_load("
+  },
+  {
+   "id": "node:adapters",
+   "verdict": "confirmed",
+   "evidence": "src/load/mod.rs:136-234",
+   "quote": "fn materialize( ... fn append_changelog( ... fn compact( ... fn create_view( ... fn row_count("
+  },
+  {
+   "id": "node:compact",
+   "verdict": "confirmed",
+   "evidence": "src/load/snowflake.rs:1854",
+   "quote": "The buffer is renamed, replaced into the base inside one transaction, and dropped only after the COMMIT"
+  },
+  {
+   "id": "node:bucket",
+   "verdict": "confirmed",
+   "evidence": "src/manifest.rs:38-42",
+   "quote": "pub const MANIFEST_FILENAME: &str = \"manifest.json\"; ... pub const SUCCESS_FILENAME: &str = \"_SUCCESS\";"
+  },
+  {
+   "id": "node:warehouse",
+   "verdict": "confirmed",
+   "evidence": "docs/cheat-sheet.md:60-65",
+   "quote": "BigQuery: the dataset must already exist, because rivet does not create ... ClickHouse (preview): the database must already exist."
+  },
+  {
+   "id": "node:slack",
+   "verdict": "confirmed",
+   "evidence": "src/notify.rs:16-22",
+   "quote": "\"*{}* | status: `{}` | rows: {} | duration: {}ms{}{}\", summary.export_name, summary.status,"
+  },
+  {
+   "id": "edge:op_cli",
+   "verdict": "confirmed",
+   "evidence": "README.md:67-69",
+   "quote": "rivet run -c cdc.yaml ... rivet load -c cdc.yaml ... rivet compact -c cdc.yaml"
+  },
+  {
+   "id": "edge:ag_mcp",
+   "verdict": "confirmed",
+   "evidence": "src/mcp.rs:16-24",
+   "quote": "Run the MCP server loop on stdin/stdout until EOF. ... for line in stdin.lock().lines() {"
+  },
+  {
+   "id": "edge:mcp_src",
+   "verdict": "confirmed",
+   "evidence": "src/mcp.rs:1-8",
+   "quote": "MCP (Model Context Protocol) server — read-only DB introspection tools."
+  },
+  {
+   "id": "edge:cli_cfg",
+   "verdict": "confirmed",
+   "evidence": "src/cli/dispatch.rs:499-502",
+   "quote": "let p = parse_params(&params)?; ... Config::load_with_params(&config, p.as_ref())"
+  },
+  {
+   "id": "edge:cli_pre",
+   "verdict": "confirmed",
+   "evidence": "src/cli/dispatch.rs:540",
+   "quote": "let type_clean = preflight::check("
+  },
+  {
+   "id": "edge:pre_src",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:114",
+   "quote": "crate::preflight::type_report::probe_mappings( src, &plan.base_query,"
+  },
+  {
+   "id": "edge:cli_run",
+   "verdict": "confirmed",
+   "evidence": "src/cli/dispatch.rs:505",
+   "quote": "pipeline::run("
+  },
+  {
+   "id": "edge:run_plan",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1546",
+   "quote": "let plan = match crate::plan::build::build_plan_on("
+  },
+  {
+   "id": "edge:run_str",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1180-1187",
+   "quote": "Ok(()) => run_with_reconnect( state, &progress, plan, &mut summary,"
+  },
+  {
+   "id": "edge:str_drv",
+   "verdict": "confirmed",
+   "evidence": "src/source/mod.rs:398",
+   "quote": "fn export(&mut self, request: &ExportRequest<'_>, sink: &mut dyn BatchSink) -> Result<()>;"
+  },
+  {
+   "id": "edge:drv_src",
+   "verdict": "confirmed",
+   "evidence": "src/source/batch_controller.rs:4",
+   "quote": "PostgreSQL `FETCH N` from a server cursor"
+  },
+  {
+   "id": "edge:drv_sink",
+   "verdict": "confirmed",
+   "evidence": "src/source/mod.rs:398",
+   "quote": "sink: &mut dyn BatchSink"
+  },
+  {
+   "id": "edge:sink_com",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/commit.rs:503-512",
+   "quote": "pub(crate) fn write_sink_parts( ... let parts = match sink.seal_parts() {"
+  },
+  {
+   "id": "edge:com_dest",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/commit.rs:444",
+   "quote": "let outcome = dest.write(tmp_path, &file_name)?;"
+  },
+  {
+   "id": "edge:dest_bkt",
+   "verdict": "confirmed",
+   "evidence": "src/destination/cloud.rs:31",
+   "quote": "use opendal::layers::RetryLayer;"
+  },
+  {
+   "id": "edge:com_state",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/commit.rs:649",
+   "quote": "file_log write failed for '{}' (file was produced)"
+  },
+  {
+   "id": "edge:run_state",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1112-1118",
+   "quote": "let lease = chunked::claim_run(state, plan) ... let progress = state.claim(plan.progress_key())?;"
+  },
+  {
+   "id": "edge:run_slack",
+   "verdict": "confirmed",
+   "evidence": "src/notify.rs:99",
+   "quote": "match reqwest::blocking::Client::builder()"
+  },
+  {
+   "id": "edge:run_cdc",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc_job.rs:751-752",
+   "quote": "run_capture( CdcCapture {"
+  },
+  {
+   "id": "edge:cdc_str",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:616,498",
+   "quote": "while let Some(ev) = stream.next_change() { ... stream.ack(p)?;"
+  },
+  {
+   "id": "edge:str_src",
+   "verdict": "wrong",
+   "evidence": "src/source/postgres/cdc.rs:4-7",
+   "quote": "Consumes a `test_decoding` slot via `pg_logical_slot_get_changes()` ... the *poll* model (no streaming-protocol crate; `START_REPLICATION` needs the immature ...)",
+   "fix": "Not a replication protocol on PostgreSQL: rivet polls the slot with SQL (pg_logical_slot_peek_changes, cdc.rs:814); SQL Server reads change tables by query. Only the MySQL binlog (and Mongo change stream) is a streaming protocol. Label should be 'log reads (slot polling over SQL, binlog, change tables, change stream)'."
+  },
+  {
+   "id": "edge:cdc_dest",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:417-418,482-483",
+   "quote": "write_manifest_without_success_marker(*dest, marker)"
+  },
+  {
+   "id": "edge:cdc_state",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:326-329",
+   "quote": "The part is durable at the destination NOW — so the ledger learns about it NOW, at the same seam the batch path uses (`commit.rs` `record_file`)"
+  },
+  {
+   "id": "edge:cli_load",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:49",
+   "quote": "pub fn run_loads(args: LoadArgs) -> Result<()> {"
+  },
+  {
+   "id": "edge:cli_comp",
+   "verdict": "confirmed",
+   "evidence": "src/load/compact.rs:226",
+   "quote": "pub fn run_compacts(args: CompactArgs) -> Result<()> {"
+  },
+  {
+   "id": "edge:load_state",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:615-621",
+   "quote": "pub(super) fn take_table_lease ... s.take_lease_waiting(target_fqtn, &what)"
+  },
+  {
+   "id": "edge:load_bkt",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:812-813",
+   "quote": "load::reconcile::own_manifests( load::reconcile::fetch_manifests_keyed(store, &plan.gcs_prefix)?,"
+  },
+  {
+   "id": "edge:load_ad",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1215-1216",
+   "quote": "run: impl FnOnce( &dyn load::TargetLoader,"
+  },
+  {
+   "id": "edge:comp_ad",
+   "verdict": "confirmed",
+   "evidence": "src/load/mod.rs:155-158",
+   "quote": "Merge `<table>__changes` ... into the base `table` and drop the buffer. ... fn compact("
+  },
+  {
+   "id": "edge:ad_wh",
+   "verdict": "confirmed",
+   "evidence": "src/load/bq_rest.rs:7",
+   "quote": "`POST /bigquery/v2/projects/{project}/jobs` — insert the query job"
+  },
+  {
+   "id": "edge:cli_ver",
+   "verdict": "confirmed",
+   "evidence": "src/cli/args.rs:606-611",
+   "quote": "Validate(ValidateArgs), ... Reconcile {"
+  },
+  {
+   "id": "edge:ver_dest",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/validate_manifest.rs:14-17",
+   "quote": "Inputs (read-only): the destination's `manifest.json` body ... the listing of every object under the destination prefix"
+  },
+  {
+   "id": "edge:ver_state",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/reconcile_cmd.rs:169",
+   "quote": "let tasks = state.list_chunk_tasks_for_run(&run_id)?;"
+  },
+  {
+   "id": "edge:ver_src",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/reconcile_cmd.rs:182",
+   "quote": "\"SELECT COUNT(*) FROM ({chunk_query}) {}\","
+  },
+  {
+   "id": "edge:ver_str",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/repair_cmd.rs:55",
+   "quote": "use super::chunked::{ChunkSource, run_chunked_sequential};"
+  },
+  {
+   "id": "flow:batch/1",
+   "verdict": "confirmed",
+   "evidence": "src/cli/mod.rs:29-37",
+   "quote": "crate::redact::install_logger(LOG_ROUTE); ... if let Err(e) = dispatch(cli) {"
+  },
+  {
+   "id": "flow:batch/2",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/run.rs:532-541",
+   "quote": "let config = Config::load_with_params(config_path, params)?; ... let run_set = RunSet::select(&config, export_name)?;"
+  },
+  {
+   "id": "flow:batch/3",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/run.rs:583-592",
+   "quote": "Run schema migrations once in the parent BEFORE forking children. ... if let Err(e) = StateStore::open(config_path) {"
+  },
+  {
+   "id": "flow:batch/4",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1546-1555",
+   "quote": "let plan = match crate::plan::build::build_plan_on("
+  },
+  {
+   "id": "flow:batch/5",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1112,1135",
+   "quote": "let lease = chunked::claim_run(state, plan) ... if let Err(e) = begin_batch_run(state, plan, tail.family, &summary.run_id) {"
+  },
+  {
+   "id": "flow:batch/6",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/single.rs:94-103",
+   "quote": "Fail fast with a doctor pointer on the first attempt. ... cannot reach the source — run `rivet doctor -c {config_path}` to diagnose"
+  },
+  {
+   "id": "flow:batch/7",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/single.rs:277-293,417",
+   "quote": "let cursor_state = if plan.strategy.needs_cursor_state() { Some(progress.cursor()?) ... let request = source::ExportRequest::wrapped("
+  },
+  {
+   "id": "flow:batch/8",
+   "verdict": "confirmed",
+   "evidence": "src/source/postgres/mod.rs:7",
+   "quote": "the cursor + FETCH export loop"
+  },
+  {
+   "id": "flow:batch/9",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/single.rs:427",
+   "quote": "Pipelined path (on by default; disable with `RIVET_PIPELINE_WRITES=0`)"
+  },
+  {
+   "id": "flow:batch/10",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/commit.rs:484-490",
+   "quote": "Seam 1a — finalize the sink's writer and write EVERY part it produced: the rotated `completed_parts` plus the final partial temp file."
+  },
+  {
+   "id": "flow:batch/11",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/commit.rs:444-470",
+   "quote": "let outcome = dest.write(tmp_path, &file_name)?; ... the part corrupted in transit"
+  },
+  {
+   "id": "flow:batch/12",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/single.rs:479-485",
+   "quote": "let stamp = super::summary::run_scoped_stamp(&summary.run_id, &plan.export_name); ... part_file_name(&plan.export_name, &stamp, idx, count, ext)"
+  },
+  {
+   "id": "flow:batch/13",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/commit.rs:578-585,649",
+   "quote": "record_committed_part_with_fingerprint( ... file_log write failed"
+  },
+  {
+   "id": "flow:batch/14",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1266",
+   "quote": "let finalized = finalize_manifest(plan, tail.family, state, &summary, tail.kind);"
+  },
+  {
+   "id": "flow:batch/15",
+   "verdict": "wrong",
+   "evidence": "src/pipeline/job.rs:1279-1318",
+   "quote": "if let Err(e) = state.store_journal(&summary.journal) { ... } else if let Err(e) = commit_incremental_cursor(state, plan, &summary) { ... state.record_metric_full(",
+   "fix": "The journal is stored (line 1279) and the run_status row closed (1289) BEFORE the cursor is advanced (1303); only the metrics row (1318) comes after the cursor."
+  },
+  {
+   "id": "flow:batch/16",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1327",
+   "quote": "crate::notify::maybe_send(tail.notifications, &summary);"
+  },
+  {
+   "id": "flow:cdc/1",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1451-1495",
+   "quote": "let pending = match super::cdc_job::initial_snapshot_pending( ... run_export_job(config_path, config, synth, state, config_dir, opts);"
+  },
+  {
+   "id": "flow:cdc/2",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1421",
+   "quote": "if dispatches_to_cdc_runner(export.mode) {"
+  },
+  {
+   "id": "flow:cdc/3",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1429-1436",
+   "quote": "let _run_lease = match cdc_run_lease(state, &export.name, ...) ... super::cdc_job::claim_checkpoint(config_path, export)"
+  },
+  {
+   "id": "flow:cdc/4",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc_job.rs:751-752",
+   "quote": "run_capture( CdcCapture {"
+  },
+  {
+   "id": "flow:cdc/5",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/mod.rs:92,117-123",
+   "quote": "create_change_stream(&cap.cdc_cfg, ...) ... RowImage::Partial { why } => { return ( Vec::new(), Err(crate::source::cdc::open_partial_image_refusal("
+  },
+  {
+   "id": "flow:cdc/6",
+   "verdict": "wrong",
+   "evidence": "src/source/postgres/cdc.rs:712,814",
+   "quote": "SELECT pg_create_logical_replication_slot($1, 'test_decoding') ... pg_logical_slot_peek_changes($1, NULL, $2)",
+   "fix": "On PostgreSQL the slot uses the test_decoding plugin, polled with pg_logical_slot_peek_changes, not pgoutput (the pgoutput decoder in pgoutput.rs is not yet wired in). The flow also omits Oracle LogMiner, which create_change_stream supports."
+  },
+  {
+   "id": "flow:cdc/7",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:616,729-731",
+   "quote": "while let Some(ev) = stream.next_change() { ... if let Some(at) = commit_at { last_commit = Some(at); unacked_commit = true;"
+  },
+  {
+   "id": "flow:cdc/8",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:429-431,482-483",
+   "quote": "s.encode_and_upload(engine, format, run_token) ... write_manifest_without_success_marker(*dest, manifest)"
+  },
+  {
+   "id": "flow:cdc/9",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:471-474",
+   "quote": "A `Success` run-unique manifest (no `_SUCCESS` marker yet ...) ... the terminal write at clean end adds `_SUCCESS`."
+  },
+  {
+   "id": "flow:cdc/10",
+   "verdict": "wrong",
+   "evidence": "src/pipeline/cdc/sink.rs:434-452,465-483",
+   "quote": "Every part that reached the store is recorded ... if *unacked_commit && let Some(p) = last_commit { ... write_manifest_without_success_marker",
+   "fix": "Order: the part is recorded in the state DB right after its upload (record_part, lines 441-447), BEFORE the manifest rewrite of step 8/9, not after it."
+  },
+  {
+   "id": "flow:cdc/11",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:491-498",
+   "quote": "stream.checkpoint_of(p).save(ck)?; ... stream.ack(p)?;"
+  },
+  {
+   "id": "flow:load/1",
+   "verdict": "confirmed",
+   "evidence": "README.md:67-68",
+   "quote": "rivet run -c cdc.yaml # capture changes → Parquet in GCS\nrivet load -c cdc.yaml"
+  },
+  {
+   "id": "flow:load/2",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:50-53",
+   "quote": "let plans = load::plan::plan_loads(&args.config, &args.selection)?; // One run id for the whole invocation ... so warehouse cost slices per load run"
+  },
+  {
+   "id": "flow:load/3",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1226-1228",
+   "quote": "two concurrent loads both read the ledger before either writes it and append the same runs twice. let lease = take_table_lease(job.state, &target_fqtn)?;"
+  },
+  {
+   "id": "flow:load/4",
+   "verdict": "wrong",
+   "evidence": "src/load/reconcile.rs:124-144",
+   "quote": "let missing = runs_with_missing_parts(new, &all_parquet); ... declare parts that are no longer under {gcs_prefix} — refusing to load",
+   "fix": "prepare_load does read every manifest, refuse foreign/non-Success runs and keep unloaded ones, but it checks parts against the listing by key presence only (select_load_uris / runs_with_missing_parts); there is no size or MD5 comparison in the load path."
+  },
+  {
+   "id": "flow:load/5",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:185-186,343",
+   "quote": "Incremental: APPEND the delta + a cursor-ordered current-state view. ... loader.fqtn(&format!(\"{}__changes\", plan.table))"
+  },
+  {
+   "id": "flow:load/6",
+   "verdict": "confirmed",
+   "evidence": "src/load/clickhouse.rs:306",
+   "quote": "let insert = format!(\"INSERT INTO {target} FORMAT Parquet\");"
+  },
+  {
+   "id": "flow:load/7",
+   "verdict": "confirmed",
+   "evidence": "src/load/mod.rs:727-747",
+   "quote": "let rows_loaded = loader.materialize(...)?; check_loaded_rows(...) ... NOT cleaning up source"
+  },
+  {
+   "id": "flow:load/8",
+   "verdict": "confirmed",
+   "evidence": "src/load/mod.rs:728-730; src/load/staging.rs:146-147",
+   "quote": "check_loaded_rows(...)?; let source_cleaned = maybe_cleanup(cleanup); ... prefix_is_active(ledger_active, manifest_active)"
+  },
+  {
+   "id": "flow:load/9",
+   "verdict": "confirmed",
+   "evidence": "src/state/load_journal_store.rs:70,98",
+   "quote": "INSERT INTO load_run ... INSERT INTO loaded_source_run"
+  },
+  {
+   "id": "flow:load/10",
+   "verdict": "confirmed",
+   "evidence": "README.md:69",
+   "quote": "rivet compact -c cdc.yaml # MERGE each buffer into its base table, drop the buffer"
+  },
+  {
+   "id": "flow:load/11",
+   "verdict": "confirmed",
+   "evidence": "src/load/mod.rs:158",
+   "quote": "fn compact("
+  },
+  {
+   "id": "flow:load/12",
+   "verdict": "confirmed",
+   "evidence": "src/load/snowflake.rs:1854",
+   "quote": "The buffer is renamed, replaced into the base inside one transaction, and dropped only after the COMMIT"
+  },
+  {
+   "id": "flow:verify/1",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/validate_cmd.rs:13-14",
+   "quote": "\"Is the output at this prefix still complete?\" — Airflow / CI poller between runs."
+  },
+  {
+   "id": "flow:verify/2",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/validate_cmd.rs:6-10",
+   "quote": "the same M5/M6 verification surface that `rivet run --validate` already performs ... no source query, no extraction, no state writes."
+  },
+  {
+   "id": "flow:verify/3",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/validate_manifest.rs:217-247",
+   "quote": "PartChecksumMismatch { ... ValueChecksumMismatch { detail: String }, ... PartRowCountMismatch { detail: String },"
+  },
+  {
+   "id": "flow:verify/4",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/validate_cmd.rs:15",
+   "quote": "\"Did someone delete a part by mistake?\" — operator triage on a suspected-broken dataset."
+  },
+  {
+   "id": "flow:verify/5",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/reconcile_cmd.rs:6-8,169",
+   "quote": "v1 supports chunked exports with `chunk_checkpoint: true` ... let tasks = state.list_chunk_tasks_for_run(&run_id)?;"
+  },
+  {
+   "id": "flow:verify/6",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/reconcile_cmd.rs:182",
+   "quote": "\"SELECT COUNT(*) FROM ({chunk_query}) {}\","
+  },
+  {
+   "id": "flow:verify/7",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/repair_cmd.rs:10-14",
+   "quote": "re-run just those chunks via [`chunked::run_chunked_sequential`] ... new files alongside the originals; Rivet does not delete or overwrite the old files."
+  },
+  {
+   "id": "inside:runner/step1",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1100-1111",
+   "quote": "if let Some(e) = unexpanded_partition_error(plan) { ... super::incarnation::bound_to_collection(plan)"
+  },
+  {
+   "id": "inside:runner/exit1",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1100-1103",
+   "quote": "let summary = synthetic_failed_summary(&plan.export_name, &e); return (Err(e), summary);"
+  },
+  {
+   "id": "inside:runner/step2",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1112-1129",
+   "quote": "chunked::claim_run(state, plan) ... state.claim(plan.progress_key())? ... recover_checkpoint_run ... refuse_a_cursor_past_the_manifest"
+  },
+  {
+   "id": "inside:runner/exit2",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1124-1128",
+   "quote": "Err(e) => { let summary = synthetic_failed_summary(&plan.export_name, &e); return (Err(e), summary);"
+  },
+  {
+   "id": "inside:runner/step3",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1135-1143",
+   "quote": "begin_batch_run(state, plan, tail.family, &summary.run_id) ... capture_open_forensics(...) ... HarmBracket::open_on(meta.get());"
+  },
+  {
+   "id": "inside:runner/step4",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1152-1156",
+   "quote": "settle_columns_are_temporal(...) .and_then(|()| plan_open_columns(..., tail.strict)) .and_then(|()| super::frame::RunnerFrame::refuse_cross_shape_prefix(plan));"
+  },
+  {
+   "id": "inside:runner/exit4",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1157-1158",
+   "quote": "let result = match gate { Err(e) => Err(e),"
+  },
+  {
+   "id": "inside:runner/step5",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1159-1188",
+   "quote": "if plan.strategy.is_resumable() { run_chunked_parallel_checkpoint( ... chunked::run_chunked_parallel( ... Ok(()) => run_with_reconnect("
+  },
+  {
+   "id": "inside:runner/step6",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1189-1207",
+   "quote": "Ok(()) => super::finalize::finalize_export(plan, Some(state), &mut summary), ... code_a_revoked_column( ... code_a_missing_relation("
+  },
+  {
+   "id": "inside:runner/step7",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1253-1264",
+   "quote": "if should_reconcile(tail.allow_reconcile, plan.reconcile, failed) { let could_not_verify = reconcile_source_count("
+  },
+  {
+   "id": "inside:runner/step8",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1266-1271",
+   "quote": "let finalized = finalize_manifest(...); ... if let Some(why) = &manifest_gap { summary.status = \"failed\".into();"
+  },
+  {
+   "id": "inside:runner/step9",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1279-1289",
+   "quote": "state.store_journal(&summary.journal) ... ledger_finish_owned_runs(state, &plan.export_name, &ledger_run_id, &summary);"
+  },
+  {
+   "id": "inside:runner/step10",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1294-1305",
+   "quote": "if !cursor_may_advance(&summary.status, &manifest_gap) { ... } else if let Err(e) = commit_incremental_cursor(state, plan, &summary) {"
+  },
+  {
+   "id": "inside:runner/step11",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1318-1327",
+   "quote": "state.record_metric_full(...) ... finalize_run_report(...); crate::notify::maybe_send(tail.notifications, &summary);"
+  },
+  {
+   "id": "inside:runner/step12",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1329-1330",
+   "quote": "let gates = [validate_run_gate(&summary), reconcile_gate, cursor_gate]; let final_result = resolve_final_result(failed, result, manifest_gap, gates);"
+  },
+  {
+   "id": "inside:cdcsink/step1",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:402-404",
+   "quote": "let pending: Vec<usize> = (0..sinks.len()) .filter(|&i| !sinks[i].buf.is_empty())"
+  },
+  {
+   "id": "inside:cdcsink/step2",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:408-419",
+   "quote": "filter(|&i| !sinks[i].marked) ... write_manifest_without_success_marker(*dest, marker)"
+  },
+  {
+   "id": "inside:cdcsink/step3",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:426-433",
+   "quote": "crate::workers::run_each( &view, |s| Ok(s.encode_and_upload(engine, format, run_token)),"
+  },
+  {
+   "id": "inside:cdcsink/step4",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:434-435",
+   "quote": "Every part that reached the store is recorded, even when a sibling's upload failed: it is durable either way"
+  },
+  {
+   "id": "inside:cdcsink/step5",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:453-455",
+   "quote": "if let Some(e) = first_err { return Err(e); }"
+  },
+  {
+   "id": "inside:cdcsink/exit5",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:453-455",
+   "quote": "if let Some(e) = first_err { return Err(e); }"
+  },
+  {
+   "id": "inside:cdcsink/step6",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:465",
+   "quote": "if *unacked_commit && let Some(p) = last_commit {"
+  },
+  {
+   "id": "inside:cdcsink/exit6",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:386-388",
+   "quote": "a trailing mid-transaction tail is flushed but never acked past — it is re-read"
+  },
+  {
+   "id": "inside:cdcsink/step7",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:471-483",
+   "quote": "A `Success` run-unique manifest (no `_SUCCESS` marker yet ...) is idempotently rewritten as a superset"
+  },
+  {
+   "id": "inside:cdcsink/step8",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:491-493",
+   "quote": "if let Some(ck) = run.checkpoint { stream.checkpoint_of(p).save(ck)?; }"
+  },
+  {
+   "id": "inside:cdcsink/step9",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:498",
+   "quote": "stream.ack(p)?;"
+  },
+  {
+   "id": "inside:loaddriver/step1",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1226-1228",
+   "quote": "two concurrent loads both read the ledger before either writes it ... let lease = take_table_lease(job.state, &target_fqtn)?;"
+  },
+  {
+   "id": "inside:loaddriver/exit1",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:624-627",
+   "quote": "Some(None) => crate::rivet_bail!( crate::error::codes::LOAD_TABLE_BUSY,"
+  },
+  {
+   "id": "inside:loaddriver/step2",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1229",
+   "quote": "build_missing_base(job.plan, job.state, &**loader)?;"
+  },
+  {
+   "id": "inside:loaddriver/step3",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1245-1251",
+   "quote": "let inputs = match load::before_write(prepare_load( store, job.plan, job.state, &target_fqtn,"
+  },
+  {
+   "id": "inside:loaddriver/exit3",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1242-1255",
+   "quote": "every stop is typed and journaled as `refused` here ... ctx.record(&[], 0, load::ledger::ledger_status(&e));"
+  },
+  {
+   "id": "inside:loaddriver/step4",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1256-1275",
+   "quote": "if nothing_to_load(...) => { ... print_up_to_date(&job); ctx.record_empty_runs(...); ... Ok(None) => { print_up_to_date(&job); ctx.record_skip();"
+  },
+  {
+   "id": "inside:loaddriver/exit4",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1271-1274",
+   "quote": "Ok(None) => { print_up_to_date(&job); ctx.record_skip(); return Ok(None);"
+  },
+  {
+   "id": "inside:loaddriver/step5",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1287-1300",
+   "quote": "load::refuse_view_as_base( ... load::ensure_target_own( ... partition_budget_ok(store, job.plan, &budgeted)"
+  },
+  {
+   "id": "inside:loaddriver/step6",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1301-1306",
+   "quote": "load::before_write(ctx.record_writing())?; let landed = run(&**loader, store, &inputs, &mut legs)?;"
+  },
+  {
+   "id": "inside:loaddriver/step7",
+   "verdict": "confirmed",
+   "evidence": "src/load/mod.rs:727",
+   "quote": "let rows_loaded = loader.materialize(table, specs, uris, expected_rows)?;"
+  },
+  {
+   "id": "inside:loaddriver/step8",
+   "verdict": "confirmed",
+   "evidence": "src/load/mod.rs:728",
+   "quote": "check_loaded_rows(&loader.fqtn(table), rows_loaded, expected_rows)?;"
+  },
+  {
+   "id": "inside:loaddriver/exit8",
+   "verdict": "confirmed",
+   "evidence": "src/load/mod.rs:739-747",
+   "quote": "count validation failed for `{fqtn}`: loaded {rows_loaded} rows, expected {expected} — NOT cleaning up source"
+  },
+  {
+   "id": "inside:loaddriver/step9",
+   "verdict": "confirmed",
+   "evidence": "src/load/mod.rs:730",
+   "quote": "let source_cleaned = maybe_cleanup(cleanup);"
+  },
+  {
+   "id": "inside:loaddriver/step10",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1315-1318",
+   "quote": "if closing_record_applies(&remaining, &legs.consumed) { ctx.record_success(&remaining, rows as i64);"
+  },
+  {
+   "id": "inside:state/table1",
+   "verdict": "confirmed",
+   "evidence": "src/state/migrations.rs:15-19",
+   "quote": "CREATE TABLE IF NOT EXISTS export_state ( export_name TEXT PRIMARY KEY, last_cursor_value TEXT, last_run_at TEXT );"
+  },
+  {
+   "id": "inside:state/table2",
+   "verdict": "confirmed",
+   "evidence": "src/state/migrations.rs:298-305",
+   "quote": "CREATE TABLE IF NOT EXISTS run_status ( run_id TEXT PRIMARY KEY, export_name TEXT NOT NULL, prefix TEXT NOT NULL, status TEXT NOT NULL, started_at TEXT NOT NULL, finished_at TEXT"
+  },
+  {
+   "id": "inside:state/table3",
+   "verdict": "confirmed",
+   "evidence": "src/state/migrations.rs:44-54,158",
+   "quote": "CREATE TABLE IF NOT EXISTS file_manifest ( ... row_count INTEGER NOT NULL, bytes INTEGER NOT NULL, format TEXT NOT NULL, compression TEXT ... ALTER TABLE file_manifest RENAME TO file_log;"
+  },
+  {
+   "id": "inside:state/table4",
+   "verdict": "confirmed",
+   "evidence": "src/state/migrations.rs:70-83",
+   "quote": "CREATE TABLE IF NOT EXISTS chunk_task ( ... chunk_index INTEGER NOT NULL, start_key TEXT NOT NULL, end_key TEXT NOT NULL, status TEXT NOT NULL, attempts INTEGER ... rows_written INTEGER,"
+  },
+  {
+   "id": "inside:state/table5",
+   "verdict": "confirmed",
+   "evidence": "src/state/migrations.rs:59-67,277-278",
+   "quote": "CREATE TABLE IF NOT EXISTS chunk_run ( run_id TEXT PRIMARY KEY, export_name TEXT NOT NULL, plan_hash TEXT NOT NULL, status TEXT NOT NULL, ... CREATE UNIQUE INDEX IF NOT EXISTS idx_chunk_run_one_inprogress ON chunk_run(export_name) WHERE status='in_progress';"
+  },
+  {
+   "id": "inside:state/table6",
+   "verdict": "confirmed",
+   "evidence": "src/state/migrations.rs:20-38",
+   "quote": "CREATE TABLE IF NOT EXISTS export_metrics ( ... duration_ms INTEGER NOT NULL, total_rows INTEGER NOT NULL, peak_rss_mb INTEGER, status TEXT NOT NULL, error_message TEXT, ... run_id TEXT"
+  },
+  {
+   "id": "inside:state/table7",
+   "verdict": "confirmed",
+   "evidence": "src/state/migrations.rs:221-231",
+   "quote": "CREATE TABLE IF NOT EXISTS load_run ( load_id TEXT PRIMARY KEY, ... target_table TEXT NOT NULL, warehouse TEXT NOT NULL, mode TEXT NOT NULL, source_run_ids TEXT NOT NULL, rows_loaded INTEGER NOT NULL, status TEXT NOT NULL,"
+  },
+  {
+   "id": "inside:state/table8",
+   "verdict": "confirmed",
+   "evidence": "src/state/migrations.rs:234-240",
+   "quote": "CREATE TABLE IF NOT EXISTS loaded_source_run ( target_table TEXT NOT NULL, source_run_id TEXT NOT NULL, load_id TEXT NOT NULL,"
+  },
+  {
+   "id": "files:src/main.rs",
+   "verdict": "confirmed",
+   "evidence": "src/main.rs:5-7",
+   "quote": "fn main() { rivet::cli::run_binary(); }"
+  },
+  {
+   "id": "files:src/cli/",
+   "verdict": "confirmed",
+   "evidence": "src/cli/args.rs:1-6; src/cli/dispatch.rs:297",
+   "quote": "Pure clap surface ... Behavior — validation, dispatch, parameter parsing — lives in sibling modules ... clap_markdown::help_markdown::<Cli>()"
+  },
+  {
+   "id": "files:src/config/",
+   "verdict": "confirmed",
+   "evidence": "src/config/mod.rs:44-58",
+   "quote": "pub source: SourceConfig, pub exports: Vec<ExportConfig>, ... pub notifications: Option<NotificationsConfig>, ... pub load: Option<load::LoadSection>,"
+  },
+  {
+   "id": "files:src/plan/",
+   "verdict": "wrong",
+   "evidence": "src/plan/prioritization.rs:1-4",
+   "quote": "Source-aware extraction prioritization ... they classify and rank exports for human review",
+   "fix": "src/plan/prioritization.rs ranks exports (advisory, ADR-0006), not chunks. The folder holds resolved plans, sealed artifacts (artifact.rs), export prioritization and repair plans (repair.rs)."
+  },
+  {
+   "id": "files:src/pipeline/",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1094",
+   "quote": "fn execute_resolved_plan("
+  },
+  {
+   "id": "files:src/pipeline/run.rs",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/run.rs:512,541",
+   "quote": "pub fn run( ... let run_set = RunSet::select(&config, export_name)?;"
+  },
+  {
+   "id": "files:src/pipeline/job.rs",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1093-1094",
+   "quote": "/// THE post-plan execution script, written once. fn execute_resolved_plan("
+  },
+  {
+   "id": "files:src/pipeline/single.rs",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/single.rs:20",
+   "quote": "pub(crate) fn run_with_reconnect("
+  },
+  {
+   "id": "files:src/pipeline/chunked/",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/chunked/",
+   "quote": "math.rs, sequential_checkpoint.rs, parallel_checkpoint.rs, resume_m8.rs"
+  },
+  {
+   "id": "files:src/pipeline/sink/",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/sink/mod.rs:4",
+   "quote": "rotates files at `max_file_size_bytes`, and runs inline quality checks."
+  },
+  {
+   "id": "files:src/pipeline/commit.rs",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/commit.rs:436,565",
+   "quote": "pub(crate) fn write_part_file( ... pub(crate) fn record_part("
+  },
+  {
+   "id": "files:src/pipeline/cdc/",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/mod.rs:80",
+   "quote": "pub(crate) fn run_capture("
+  },
+  {
+   "id": "files:src/pipeline/validate_cmd.rs",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/validate_cmd.rs:3-4",
+   "quote": "`rivet validate` — re-run the manifest-aware `--validate` pass against an existing destination"
+  },
+  {
+   "id": "files:src/source/",
+   "verdict": "confirmed",
+   "evidence": "src/source/mod.rs:396",
+   "quote": "pub trait Source: Send {"
+  },
+  {
+   "id": "files:src/source/postgres/",
+   "verdict": "wrong",
+   "evidence": "src/source/postgres/cdc.rs:712",
+   "quote": "\"SELECT pg_create_logical_replication_slot($1, 'test_decoding')\"",
+   "fix": "The PostgreSQL change stream in cdc.rs is a test_decoding slot reader; pgoutput.rs is only a pure decoder not yet called by the non-test build (pgoutput.rs:21-25)."
+  },
+  {
+   "id": "files:src/source/cdc/",
+   "verdict": "confirmed",
+   "evidence": "src/source/cdc/mod.rs:545",
+   "quote": "pub(crate) trait ChangeStream {"
+  },
+  {
+   "id": "files:src/format/",
+   "verdict": "confirmed",
+   "evidence": "src/format/mod.rs:11-20",
+   "quote": "pub trait FormatWriter { ... pub trait Format {"
+  },
+  {
+   "id": "files:src/destination/",
+   "verdict": "confirmed",
+   "evidence": "src/destination/mod.rs:273-277",
+   "quote": "DestinationType::Local ... S3 ... Gcs ... Azure ... Stdout"
+  },
+  {
+   "id": "files:src/manifest.rs",
+   "verdict": "confirmed",
+   "evidence": "src/manifest.rs:3-4,253",
+   "quote": "Public JSON manifest written next to every cloud-or-local-file run's output. ... pub struct RunManifest {"
+  },
+  {
+   "id": "files:src/state/",
+   "verdict": "confirmed",
+   "evidence": "src/state/",
+   "quote": "cursor.rs, checkpoint.rs, run_status_store.rs, load_lease.rs, load_journal_store.rs"
+  },
+  {
+   "id": "files:src/state/migrations.rs",
+   "verdict": "confirmed",
+   "evidence": "src/state/migrations.rs:1",
+   "quote": "State-DB schema version and the SQLite / PostgreSQL migration ladders."
+  },
+  {
+   "id": "files:src/load/",
+   "verdict": "confirmed",
+   "evidence": "src/load/",
+   "quote": "orchestrate.rs, reconcile.rs, compact.rs, bigquery/, snowflake.rs, clickhouse.rs"
+  },
+  {
+   "id": "files:src/load/orchestrate.rs",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:45-48",
+   "quote": "`rivet load`: ... loads its exports into the shared target on a pool of up to 16 workers"
+  },
+  {
+   "id": "files:src/load/bigquery/",
+   "verdict": "confirmed",
+   "evidence": "src/load/bigquery/ddl.rs:1",
+   "quote": "The SQL the BigQuery loader runs: `LOAD DATA`, the change-log DDL"
+  },
+  {
+   "id": "files:src/load/snowflake.rs",
+   "verdict": "confirmed",
+   "evidence": "src/load/snowflake_rest.rs:5",
+   "quote": "`POST /api/v2/statements?requestId=<uuid>` — the script as one multi-statement request"
+  },
+  {
+   "id": "files:src/load/clickhouse.rs",
+   "verdict": "confirmed",
+   "evidence": "src/load/clickhouse.rs:2-3",
+   "quote": "as `INSERT … FORMAT Parquet` over the HTTP interface; a CDC change log is a ... `ReplacingMergeTree(__ver)`"
+  },
+  {
+   "id": "files:src/load/compact.rs",
+   "verdict": "confirmed",
+   "evidence": "src/load/compact.rs:1",
+   "quote": "`rivet compact`: merge each base-and-buffer table's buffer into its base and drop the buffer."
+  },
+  {
+   "id": "files:src/preflight/",
+   "verdict": "confirmed",
+   "evidence": "src/preflight/",
+   "quote": "analysis.rs, doctor.rs, type_report.rs, mod.rs (pub fn check)"
+  },
+  {
+   "id": "files:src/init/",
+   "verdict": "confirmed",
+   "evidence": "src/init/",
+   "quote": "mod.rs, postgres.rs, mysql.rs, mssql.rs, mongo.rs, oracle.rs, yaml_scaffold.rs"
+  },
+  {
+   "id": "files:src/bin/rivet-mcp.rs",
+   "verdict": "confirmed",
+   "evidence": "src/bin/rivet-mcp.rs:3-5",
+   "quote": "See the `rivet::mcp` module for the tool list and protocol details."
+  },
+  {
+   "id": "files:Cargo.toml",
+   "verdict": "confirmed",
+   "evidence": "Cargo.toml:2,17-30",
+   "quote": "name = \"rivet-cli\" ... name = \"rivet-mcp\" ... name = \"seed\" ... required-features = [\"dev-seed\"]"
+  },
+  {
+   "id": "files:Dockerfile",
+   "verdict": "confirmed",
+   "evidence": "Dockerfile:31-43",
+   "quote": "FROM debian:bookworm-slim ... COPY --from=builder /src/target/release/rivet-mcp ... USER rivet"
+  },
+  {
+   "id": "files:docker-compose.yaml",
+   "verdict": "confirmed",
+   "evidence": "docker-compose.yaml:589-616,674,733,860",
+   "quote": "minio: ... fake-gcs: ... azurite: ... pgbouncer: ... proxysql: ... clickhouse:"
+  },
+  {
+   "id": "files:docs/architecture.md",
+   "verdict": "confirmed",
+   "evidence": "docs/architecture.md:11,44,141,250",
+   "quote": "## Data flow ... ## Key traits ... ## Memory model ... ## Project structure"
+  },
+  {
+   "id": "files:docs/adr/",
+   "verdict": "confirmed",
+   "evidence": "docs/adr/",
+   "quote": "0001-state-update-invariants.md, 0012-cloud-manifest-contract.md, 0024-pg-cdc-pgoutput-migration.md, 0034-load-table-spec.md"
+  }
+ ],
+ "missing": [
+  {
+   "what": "Warehouses read the bucket directly (BigQuery LOAD DATA from GCS, Snowflake via a storage integration)",
+   "evidence": "src/load/plan.rs:636-647; src/load/bigquery/ddl.rs:1",
+   "why": "For BigQuery and Snowflake the data moves bucket -> warehouse, not through rivet; the load is refused unless the destination is GCS (ClickHouse also reads S3/Azure). The map has no bucket->warehouse connection and does not say load is GCS-only for those two."
+  },
+  {
+   "what": "CDC checkpoint file on disk (cdc.checkpoint, e.g. ./cdc/<table>.ckpt)",
+   "evidence": "src/source/cdc/mod.rs:207-215,1860; src/pipeline/cdc/sink.rs:491-492",
+   "why": "The CDC resume position is saved to a local file, not the state DB; it is the store that makes MySQL/SQL Server/Mongo/Oracle resume, and claim_checkpoint guards it. The map's state store and capture sink never mention it."
+  },
+  {
+   "what": "Google OAuth token endpoint and Secret Manager (gcp_auth / url_secret)",
+   "evidence": "src/gcp_auth.rs:48; src/config/gcp_secret.rs:14",
+   "why": "rivet mints Google access tokens itself (service-account JWT grant to oauth2.googleapis.com) for GCS and BigQuery, and can read the source URL from Secret Manager; neither outside system is on the map."
+  },
+  {
+   "what": "rivet plan / rivet apply path has no flow",
+   "evidence": "src/pipeline/job.rs:1631-1656; src/cli/args.rs:537-539",
+   "why": "apply replays a sealed plan through run_export_job_with_chunk_source into the same execute_resolved_plan; it is a main entry point (ADR-0005) mentioned only in the planner node."
+  },
+  {
+   "what": "Standalone rivet cdc subcommand",
+   "evidence": "src/cli/args.rs:125-129",
+   "why": "A separate URL-driven capture entry point beside rivet run with mode: cdc; the CLI node lists it but no flow or edge covers it."
+  }
+ ]
+}

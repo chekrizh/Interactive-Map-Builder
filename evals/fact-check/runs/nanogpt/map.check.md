@@ -1,0 +1,13 @@
+# Check log: nanoGPT map
+
+Summary so far: 128 claims checked in round 1, all confirmed; 0 wrong, 0 not found. No claims fixed; 3 gaps reported, all 3 accepted (one as an assumption in panel text). 1 round so far.
+
+## Round 1
+
+No claim was judged wrong or not_found, and the checker left no notes calling a confirmed claim loose. Gaps from the `missing` list:
+
+- **tiktoken downloads its GPT-2 BPE files from OpenAI's blob storage** (data/openwebtext/prepare.py:19, data/shakespeare/prepare.py:20, sample.py:72). The map showed tiktoken only as a library. The download is done by the library at run time and is not visible in this repository's code. Why I missed it: I modelled outside systems only from URLs and HTTP calls that appear in the repo, and treated libraries as technology. Fix: a "Not visible in this repo" note in the tools text of OpenWebText prep, Shakespeare BPE prep and the sampling script. No new node, because the claim rests on tiktoken's behaviour, not on code here.
+- **Multi-process DDP topology** (train.py:82-100, 211-212, 293-298, 335-336). The map folded DDP into "Run setup" and the training loop, with no element for the peer ranks or the gradient all-reduce. The code runs N train.py processes under torchrun in one NCCL process group, divides gradient accumulation by world size, and lets only rank 0 evaluate, log and checkpoint. Why I missed it: I treated a script as one container, but under torchrun it is a pool of parallel processes. Fix: new node `ddp` ("DDP peer processes", shape worker, build step 6), edge `loop_ddp` "all-reduce grads (NCCL)", and a hop for it in the "One training iteration" flow.
+- **No flow for the main train-from-scratch path, or for resume** (train.py:149-157, 158-180, 200-201; README quick start). The only start flow was the GPT-2 finetune. Why: I picked the branch that touched the most components (pretrained weights, Hugging Face) instead of the README's main entry point. Fix: the "Start a finetune from GPT-2" flow is replaced by "Start a training run from scratch" (config/train_shakespeare_char.py: meta.pkl vocab 65, or 50304 without it; fresh GPT; AdamW, compile, DDP). One hop note names the resume branch (restores weights, optimizer, iter_num, best_val_loss) and the gpt2* branch. I replaced the flow instead of adding a sixth, to stay within 2 to 5 flows. The finetune path is still described in the GPT-2 weight import panel and in build step 6. The tour step that played the old flow now plays the new one.
+
+Rendered again with --repo-dir: no errors, warnings or layout problems. The new card is pinned at grid cell [1, 6] in the train column.

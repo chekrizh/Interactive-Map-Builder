@@ -1,0 +1,235 @@
+{
+ "claims": [
+  {
+   "id": "node:strategies",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/single.rs:31-84; src/pipeline/single.rs:249-292",
+   "quote": "for attempt in 0..=plan.tuning.max_retries { ... let mut src = match source::create_source(&plan.source) {  /  if let ExtractionStrategy::Keyset(kp) = &plan.strategy { ... if matches!(plan.strategy, ExtractionStrategy::Chunked(_)) {"
+  },
+  {
+   "id": "node:cdcstream",
+   "verdict": "confirmed",
+   "evidence": "src/source/cdc/mod.rs:544-567; src/source/postgres/cdc.rs:814",
+   "quote": "\"SELECT lsn::text, data FROM pg_logical_slot_peek_changes($1, NULL, $2)\""
+  },
+  {
+   "id": "node:cdcsink",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:484-498; src/cli/dispatch.rs:432-468",
+   "quote": "stream.checkpoint_of(p).save(ck)?; ... stream.ack(p)?;  /  // without a state store to record into ... state: None,"
+  },
+  {
+   "id": "node:state",
+   "verdict": "confirmed",
+   "evidence": "src/state/mod.rs:307-311",
+   "quote": "- **SQLite** (default) \u2014 a single `.rivet_state.db` file next to the config. ... - **PostgreSQL** \u2014 a shared database addressed by `RIVET_STATE_URL`."
+  },
+  {
+   "id": "node:loaddriver",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1226-1228; src/load/plan.rs:638-642",
+   "quote": "let lease = take_table_lease(job.state, &target_fqtn)?;  /  if !load.target.reads_from(dest.destination_type) { ... reads GCS only (Snowflake via storage integration, BigQuery via LOAD DATA; ClickHouse also reads S3 and Azure)"
+  },
+  {
+   "id": "node:bucket",
+   "verdict": "confirmed",
+   "evidence": "src/manifest.rs:38-56; Cargo.toml:82",
+   "quote": "pub const MANIFEST_FILENAME: &str = \"manifest.json\"; ... pub const SUCCESS_FILENAME: &str = \"_SUCCESS\"; ... format!(\"manifest-{}.json\", file_token(run_id))"
+  },
+  {
+   "id": "node:warehouse",
+   "verdict": "confirmed",
+   "evidence": "src/load/bq_rest.rs:7; src/load/snowflake_rest.rs:5; src/load/clickhouse.rs:1-2; README.md:63",
+   "quote": "POST /bigquery/v2/projects/{project}/jobs  /  POST /api/v2/statements  /  rivet reads each staged Parquet part and sends it as `INSERT \u2026 FORMAT Parquet` over the HTTP interface  /  the dataset must exist; rivet load does not create it"
+  },
+  {
+   "id": "edge:str_src",
+   "verdict": "confirmed",
+   "evidence": "src/source/postgres/cdc.rs:814",
+   "quote": "SELECT lsn::text, data FROM pg_logical_slot_peek_changes($1, NULL, $2)"
+  },
+  {
+   "id": "edge:bkt_wh",
+   "verdict": "confirmed",
+   "evidence": "src/load/bigquery/ddl.rs:223-231; src/load/bigquery/ddl.rs:315",
+   "quote": "\"FROM FILES (\\n  format = 'PARQUET', ... uris = [\\n{list}\\n  ]\\n)\"  /  \"LOAD DATA {kw} `{fqtn}` (..."
+  },
+  {
+   "id": "edge:cli_cdc",
+   "verdict": "confirmed",
+   "evidence": "src/cli/dispatch.rs:403-432",
+   "quote": "// --output: the typed file sink, via the same `run_capture` assembler the `mode: cdc` run uses. ... crate::pipeline::cdc::run_capture("
+  },
+  {
+   "id": "flow:batch/15",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1279-1318",
+   "quote": "if let Err(e) = state.store_journal(&summary.journal) { ... ledger_finish_owned_runs(...); ... if !cursor_may_advance(&summary.status, &manifest_gap) { ... } else if let Err(e) = commit_incremental_cursor(state, plan, &summary) { ... state.record_metric_full("
+  },
+  {
+   "id": "flow:cdc/1",
+   "verdict": "confirmed",
+   "evidence": "src/init/yaml_scaffold.rs:1347; src/pipeline/cdc_job.rs:367-370",
+   "quote": "\"      initial: snapshot  # first run: anchor, then read the whole table as the baseline; later runs take only changes\"  /  if cdc.captures_changes_only() { return Ok(Vec::new()); }"
+  },
+  {
+   "id": "flow:cdc/2",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/job.rs:1421",
+   "quote": "if dispatches_to_cdc_runner(export.mode) {"
+  },
+  {
+   "id": "flow:cdc/3",
+   "verdict": "wrong",
+   "evidence": "src/pipeline/job.rs:1429-1439; src/source/cdc/checkpoint_identity.rs:95-99,183-197",
+   "quote": "let _run_lease = match cdc_run_lease(state, ...)  /  super::cdc_job::claim_checkpoint(config_path, export)  /  /// The owner record beside the checkpoint at `ckpt`. ... name.push(\".owner\"); ... std::fs::write(&record, serde_json::to_vec(me)?)?;",
+   "fix": "Only the run lease is in the state store. The checkpoint claim is not: claim_checkpoint writes a `<checkpoint>.owner` file beside the checkpoint file, and that file is what stops two configs (which each have their own state DB) from reading the same stream."
+  },
+  {
+   "id": "flow:cdc/4",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc_job.rs:701-751",
+   "quote": "let outputs = wired.iter().map(|(t, d, u)| super::cdc::CaptureOutput { ... run_capture( CdcCapture {"
+  },
+  {
+   "id": "flow:cdc/5",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/mod.rs:92-126",
+   "quote": "let mut stream = match create_change_stream(&cap.cdc_cfg, PeekBound::Sized(cap.rollover)) { ... RowImage::Partial { why } => { return (Vec::new(), Err(crate::source::cdc::open_partial_image_refusal(engine, &why)),"
+  },
+  {
+   "id": "flow:cdc/6",
+   "verdict": "confirmed",
+   "evidence": "src/source/postgres/cdc.rs:814; src/source/cdc/mod.rs:822-838",
+   "quote": "SELECT lsn::text, data FROM pg_logical_slot_peek_changes($1, NULL, $2)  /  Mssql { ... Oracle LogMiner ... Mongo {"
+  },
+  {
+   "id": "flow:cdc/7",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:616,709-731",
+   "quote": "while let Some(ev) = stream.next_change() { ... let routed = match split { ... last_commit = Some(at); unacked_commit = true;"
+  },
+  {
+   "id": "flow:cdc/8",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:425-432",
+   "quote": "crate::workers::run_each(&view, |s| Ok(s.encode_and_upload(engine, format, run_token)),)"
+  },
+  {
+   "id": "flow:cdc/9",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc_job.rs:701-706",
+   "quote": "super::cdc::CaptureOutput { table: t.clone(), dest: d.as_ref(), dest_uri: u.clone(),"
+  },
+  {
+   "id": "flow:cdc/10",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:434-446; src/pipeline/cdc/sink.rs:351-362",
+   "quote": "// Every part that reached the store is recorded, even when a sibling's upload failed ... state.record_durable_part(crate::state::DurablePart {"
+  },
+  {
+   "id": "flow:cdc/11",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:465-490",
+   "quote": "A `Success` run-unique manifest (no `_SUCCESS` marker yet \u2014 the prefix is not complete) is idempotently rewritten as a superset ... the terminal write at clean end adds `_SUCCESS`."
+  },
+  {
+   "id": "flow:cdc/12",
+   "verdict": "confirmed",
+   "evidence": "src/pipeline/cdc/sink.rs:491-498",
+   "quote": "if let Some(ck) = run.checkpoint { stream.checkpoint_of(p).save(ck)?; } ... stream.ack(p)?;"
+  },
+  {
+   "id": "flow:load/1",
+   "verdict": "confirmed",
+   "evidence": "README.md:67-69",
+   "quote": "rivet run     -c cdc.yaml ... rivet load    -c cdc.yaml ... rivet compact -c cdc.yaml"
+  },
+  {
+   "id": "flow:load/2",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:49-53",
+   "quote": "let plans = load::plan::plan_loads(&args.config, &args.selection)?; // One run id for the whole invocation, shared across every table \u2014 so warehouse cost slices per load run"
+  },
+  {
+   "id": "flow:load/3",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:1226-1228; src/load/orchestrate.rs:845",
+   "quote": "// One load per table at a time: two concurrent loads both read the ledger before either writes it and append the same runs twice. let lease = take_table_lease(job.state, &target_fqtn)?;  /  s.loaded_source_run_ids(target_fqtn)"
+  },
+  {
+   "id": "flow:load/4",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:811-835; src/load/reconcile.rs:487-496; src/load/reconcile.rs:135-143",
+   "quote": "load::reconcile::fetch_manifests_keyed(store, &plan.gcs_prefix)? ... .filter(|(_, m)| m.status == ManifestStatus::Success) ... .filter(|(_, m)| !loaded.contains(&m.run_id))  /  \"run(s) {} declare parts that are no longer under {gcs_prefix} \u2014 refusing to load\""
+  },
+  {
+   "id": "flow:load/5",
+   "verdict": "confirmed",
+   "evidence": "src/load/orchestrate.rs:2164-2168; src/load/cdc.rs:3",
+   "quote": "a delta APPENDs into `<table>__changes` ...  /  rivet CDC appends a change log to `<table>__changes`"
+  },
+  {
+   "id": "flow:load/6",
+   "verdict": "confirmed",
+   "evidence": "src/load/bq_rest.rs:4-7; src/load/snowflake_rest.rs:5; src/load/clickhouse.rs:306",
+   "quote": "POST /bigquery/v2/projects/{project}/jobs  /  POST /api/v2/statements?requestId=<uuid> \u2014 the script as one multi-statement request  /  let insert = format!(\"INSERT INTO {target} FORMAT Parquet\");"
+  },
+  {
+   "id": "flow:load/7",
+   "verdict": "confirmed",
+   "evidence": "src/load/snowflake.rs:415; src/load/clickhouse.rs:1-2",
+   "quote": "CREATE OR REPLACE STAGE {stage} URL='{url}' STORAGE_INTEGRATION={si}  /  rivet reads each staged Parquet part and sends it as `INSERT \u2026 FORMAT Parquet`"
+  },
+  {
+   "id": "flow:load/8",
+   "verdict": "confirmed",
+   "evidence": "src/load/mod.rs:727-730; src/load/mod.rs:739-748",
+   "quote": "let rows_loaded = loader.materialize(table, specs, uris, expected_rows)?; check_loaded_rows(...)?; let source_cleaned = maybe_cleanup(cleanup);  /  \"count validation failed ... NOT cleaning up source\""
+  },
+  {
+   "id": "flow:load/9",
+   "verdict": "confirmed",
+   "evidence": "src/load/staging.rs:227-249; src/load/staging.rs:340-348",
+   "quote": "match cleanup_verdict(plan.load.cleanup_source, || { prefix_has_active_run(store, &plan.gcs_prefix, state) }) { CleanupVerdict::NotRequested => None, CleanupVerdict::RefusedRunActive => {"
+  },
+  {
+   "id": "flow:load/10",
+   "verdict": "confirmed",
+   "evidence": "src/state/load_journal_store.rs:70,98",
+   "quote": "\"INSERT INTO load_run  ...  \"INSERT INTO loaded_source_run"
+  },
+  {
+   "id": "flow:load/11",
+   "verdict": "confirmed",
+   "evidence": "README.md:34,69",
+   "quote": "rivet compact -c cdc.yaml    # MERGE each buffer into its base table, drop the buffer"
+  },
+  {
+   "id": "flow:load/12",
+   "verdict": "confirmed",
+   "evidence": "src/load/compact.rs:226,322",
+   "quote": "pub fn run_compacts(args: CompactArgs) -> Result<()> { ... .compact(&pinned.table, &specs, pk, order)"
+  },
+  {
+   "id": "flow:load/13",
+   "verdict": "wrong",
+   "evidence": "src/load/cdc.rs:1611-1672; src/load/bigquery/mod.rs:783-785; src/load/cdc.rs:705-709",
+   "quote": "WHILE i < ARRAY_LENGTH(days) DO ... SET chunk = ... {by_days} ... SET jobs = jobs + 1;  /  // Other keys (hour/month/year, integer ranges): the range probe, then one MERGE per window of constant bounds, then the DROP \u2014 separate jobs.  /  \"BEGIN;\\n DELETE FROM {base} USING ... INSERT INTO {base} ... COMMIT;\"",
+   "fix": "Snowflake part is right (BEGIN; DELETE; INSERT; COMMIT, then DROP). BigQuery is not always one MERGE per table: an unpartitioned (or load-date) base gets one MERGE; a day-partitioned base gets one MERGE per chunk of up to 4000 touched days (MERGE_PARTITION_CAP) plus one for NULL partition keys, in one scripted job; hour/month/year or integer-range keys get one MERGE per window as separate jobs, then the DROP."
+  },
+  {
+   "id": "files:src/plan/",
+   "verdict": "confirmed",
+   "evidence": "src/plan/mod.rs:1-13; src/plan/prioritization.rs:1-4; src/plan/repair.rs:1-4; src/plan/artifact.rs:1-4",
+   "quote": "pub mod artifact; ... pub mod prioritization; ... pub mod repair;  /  These types are **advisory only**  /  produces a `RepairPlan`  /  A `PlanArtifact` captures a complete, resolved execution plan"
+  },
+  {
+   "id": "files:src/source/postgres/",
+   "verdict": "confirmed",
+   "evidence": "src/source/postgres/cdc.rs:4; src/source/postgres/cdc.rs:814; src/source/cdc/spill.rs:24",
+   "quote": "Consumes a `test_decoding` slot ...  /  pg_logical_slot_peek_changes  /  (NOT `pgoutput` \u2014 that module is staged, unused here"
+  }
+ ],
+ "missing": []
+}

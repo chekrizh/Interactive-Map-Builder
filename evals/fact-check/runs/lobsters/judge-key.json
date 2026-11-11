@@ -1,0 +1,548 @@
+[
+ {
+  "src": "B",
+  "id": "flow:submit/6",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 6 of 11 (Request pipeline -> Story submission and votes): The member posts the form to /stories . StoriesController#create builds the story from the form; it does not fetch the URL again.",
+  "code": [],
+  "j": "J1"
+ },
+ {
+  "src": "AB",
+  "id": "inside:pagecache/step8",
+  "kind": "code step",
+  "text": "Inside the page cache refill, step 8: Write the file. Through the patched writer: temp file, then rename.",
+  "code": [
+   "app/jobs/cache_page_job.rb:14"
+  ],
+  "j": "J2"
+ },
+ {
+  "src": "AB",
+  "id": "edge:mo_ra",
+  "kind": "connection",
+  "text": "Moderation tools -> Votes and ranking: edit, merge",
+  "code": [],
+  "j": "J3"
+ },
+ {
+  "src": "A",
+  "id": "flow:submit/4",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 4 of 10 (Request pipeline -> Story submission and votes): StoriesController builds the story from the form.",
+  "code": [],
+  "j": "J4"
+ },
+ {
+  "src": "B",
+  "id": "flow:submit/11",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 11 of 11 (Link preview and webmention -> Linked websites): It reads the page's card image and saves a PNG; minutes later the webmention job finds the site's endpoint, if any, and posts the story's URL to it.",
+  "code": [],
+  "j": "J5"
+ },
+ {
+  "src": "B",
+  "id": "flow:submit/4",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 4 of 11 (Request pipeline -> Story submission and votes): StoriesController#fetch_url_attributes (or #new ) builds a throwaway story from the URL.",
+  "code": [],
+  "j": "J6"
+ },
+ {
+  "src": "A",
+  "id": "node:pipeline",
+  "kind": "component",
+  "text": "Request pipeline (Component · Rack + ApplicationController). Rack::Attack throttles each IP, config/routes.rb picks the controller, and ApplicationController loads the user from the session, drops unknown cookies, and clears the session cookie for anonymous visitors. Why: Clearing the cookie is what keeps logged-out visitors on the cached path: Caddy only serves a file when there is no app cookie. Built with: app/controllers/application_controller.rb · app/controllers/concerns/authenticatable.rb · config/initializers/rack_attack.rb",
+  "code": [],
+  "j": "J7"
+ },
+ {
+  "src": "A",
+  "id": "node:caddy",
+  "kind": "component",
+  "text": "Caddy web server (Container · Caddy via Hatchbox). Terminates TLS, redirects to HTTPS, blocks some bots, and for a request without an app cookie serves the page straight from public/cache/ . Anything else goes on to Anubis on port 9000. Why: This is the reason a small server copes: a cached front page is a static file and never wakes Ruby. Built with: hatchbox/Caddyfile.pre · hatchbox/Caddyfile · hatchbox/Caddyfile.post",
+  "code": [],
+  "j": "J8"
+ },
+ {
+  "src": "A",
+  "id": "flow:submit/10",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 10 of 10 (Link preview and webmention -> Linked websites): It reads the page's card image and saves a PNG; minutes later the webmention job finds the site's endpoint, if any, and posts the story's URL to it.",
+  "code": [],
+  "j": "J9"
+ },
+ {
+  "src": "AB",
+  "id": "flow:upvote/4",
+  "kind": "flow step",
+  "text": "Flow \"A member upvotes a story\", step 4 of 10 (Request pipeline -> Story submission and votes): StoriesController#upvote refuses deleted or merged stories, then calls the vote method with +1.",
+  "code": [],
+  "j": "J10"
+ },
+ {
+  "src": "AB",
+  "id": "files:app/mailboxes/inbox_mailbox.rb",
+  "kind": "repository path",
+  "text": "app/mailboxes/inbox_mailbox.rb: Turns an emailed reply into a comment. Implements: Reply by email.",
+  "code": [
+   "app/mailboxes/inbox_mailbox.rb"
+  ],
+  "j": "J11"
+ },
+ {
+  "src": "A",
+  "id": "flow:submit/5",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 5 of 10 (Story submission and votes -> Linked websites): While the member fills in the form, /stories/new?url= or the form's call to /stories/fetch_url_attributes has Rails fetch the page with Sponge (3-second timeout, private IPs refused) to suggest its title and canonical URL; PDFs are read too.",
+  "code": [],
+  "j": "J12"
+ },
+ {
+  "src": "AB",
+  "id": "inside:comments/step9",
+  "kind": "code step",
+  "text": "Inside posting a comment, step 9: Return the comment. A partial for the page's script, or a redirect.",
+  "code": [
+   "app/controllers/comments_controller.rb:460-467"
+  ],
+  "j": "J13"
+ },
+ {
+  "src": "B",
+  "id": "flow:submit/3",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 3 of 11 (Anubis bot filter -> Request pipeline): require_logged_in_user and, for new , verify_user_can_submit_stories run before the action.",
+  "code": [],
+  "j": "J14"
+ },
+ {
+  "src": "AB",
+  "id": "edge:cr_pf",
+  "kind": "connection",
+  "text": "Cron scripts -> Full-page cache: rm after 3 min",
+  "code": [],
+  "j": "J15"
+ },
+ {
+  "src": "B",
+  "id": "node:caddy",
+  "kind": "component",
+  "text": "Caddy web server (Container · Caddy via Hatchbox). Terminates TLS, redirects to HTTPS, blocks some bots, and for a request without an app cookie serves the page straight from public/cache/ . It also answers /c/<short_id> with a 302 from a redirect file that Rails wrote under shared/comment_redirects/c . Anything else goes on to Anubis on port 9000. Why: This is the reason a small server copes: a cached front page is a static file and never wakes Ruby. Built with: hatchbox/Caddyfile.pre · hatchbox/Caddyfile · hatchbox/Caddyfile.post",
+  "code": [],
+  "j": "J16"
+ },
+ {
+  "src": "AB",
+  "id": "edge:me_po",
+  "kind": "connection",
+  "text": "Member -> Mail server: reply email",
+  "code": [],
+  "j": "J17"
+ },
+ {
+  "src": "AB",
+  "id": "edge:se_db",
+  "kind": "connection",
+  "text": "Search -> Primary database: FTS5 MATCH",
+  "code": [],
+  "j": "J18"
+ },
+ {
+  "src": "AB",
+  "id": "files:config/application.rb",
+  "kind": "repository path",
+  "text": "config/application.rb: Which Rails frameworks load, site name and domain, signup switches.",
+  "code": [
+   "config/application.rb"
+  ],
+  "j": "J19"
+ },
+ {
+  "src": "B",
+  "id": "flow:submit/8",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 8 of 11 (Votes and ranking -> Primary database): The story, its taggings and the vote are saved in one transaction; links in the text are recorded.",
+  "code": [],
+  "j": "J20"
+ },
+ {
+  "src": "AB",
+  "id": "edge:pc_pf",
+  "kind": "connection",
+  "text": "Page cache refill -> Full-page cache: write HTML",
+  "code": [],
+  "j": "J21"
+ },
+ {
+  "src": "AB",
+  "id": "files:hatchbox/Caddyfile.pre",
+  "kind": "repository path",
+  "text": "hatchbox/Caddyfile.pre: TLS redirect, bot blocks, and the rules that serve cached pages. The single most important file for performance: it decides when Rails is skipped. Implements: Caddy web server, Full-page cache.",
+  "code": [
+   "hatchbox/Caddyfile.pre"
+  ],
+  "j": "J22"
+ },
+ {
+  "src": "AB",
+  "id": "files:app/controllers/mod/",
+  "kind": "repository path",
+  "text": "app/controllers/mod/: Flag dashboards, hotspots, bans, merges, mod mail. Implements: Moderation tools.",
+  "code": [
+   "app/controllers/mod/"
+  ],
+  "j": "J23"
+ },
+ {
+  "src": "B",
+  "id": "flow:submit/10",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 10 of 11 (Job queue -> Link preview and webmention): The worker runs the card job: one job per story at a time.",
+  "code": [],
+  "j": "J24"
+ },
+ {
+  "src": "A",
+  "id": "flow:submit/6",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 6 of 10 (Story submission and votes -> Votes and ranking): Validation checks tags, duplicates, banned domains and origins, and new-user rules. On create the story gets a short id, its submitter's upvote and its first hotness .",
+  "code": [],
+  "j": "J25"
+ },
+ {
+  "src": "B",
+  "id": "node:notify",
+  "kind": "component",
+  "text": "Reply and mention notifier (Job · NotifyCommentJob). For each new comment: notify the story's submitter (if following) and the parent comment's author, then anyone @-mentioned. Each gets one Notification row, and by their settings an email and a Pushover push. Why: Emailing inside the request would make posting slow and fragile; as a job, a failed send never loses the comment. Built with: app/jobs/notify_comment_job.rb · app/mailers/email_reply_mailer.rb · extras/pushover.rb · sibling jobs notify_message_job.rb and notify_mod_mail_message_job.rb do the same for private messages and mod mail",
+  "code": [],
+  "j": "J26"
+ },
+ {
+  "src": "B",
+  "id": "flow:submit/9",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 9 of 11 (Story submission and votes -> Job queue): CreateStoryCardJob is queued now, SendWebmentionJob with a 5-minute wait, and the member is redirected to the new story.",
+  "code": [],
+  "j": "J27"
+ },
+ {
+  "src": "A",
+  "id": "flow:submit/3",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 3 of 10 (Anubis bot filter -> Request pipeline): verify_user_can_submit_stories runs before the action.",
+  "code": [],
+  "j": "J28"
+ },
+ {
+  "src": "AB",
+  "id": "node:search",
+  "kind": "component",
+  "text": "Search (Component · Search). Parses a query with tag:, domain:, submitter:, title: and quoted terms, then matches story text or comments through SQLite FTS5 tables. Why: Search runs in the main database with no search server, in line with the project's rule of few moving parts. Built with: app/models/search.rb · app/models/search_parser.rb · app/models/full_text_search.rb",
+  "code": [],
+  "j": "J29"
+ },
+ {
+  "src": "A",
+  "id": "node:notify",
+  "kind": "component",
+  "text": "Reply and mention notifier (Job · NotifyCommentJob). For each new comment: notify the story's submitter (if following) and the parent comment's author, then anyone @-mentioned. Each gets one Notification row, and by their settings an email and a Pushover push. Why: Emailing inside the request would make posting slow and fragile; as a job, a failed send never loses the comment. Built with: app/jobs/notify_comment_job.rb · app/mailers/email_reply_mailer.rb · extras/pushover.rb",
+  "code": [],
+  "j": "J30"
+ },
+ {
+  "src": "B",
+  "id": "flow:submit/5",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 5 of 11 (Story submission and votes -> Linked websites): Rails fetches the page with Sponge (3-second timeout, private IPs refused) to suggest its title and canonical URL; PDFs are read too. The title lands in the form, which the member can edit.",
+  "code": [],
+  "j": "J31"
+ },
+ {
+  "src": "AB",
+  "id": "node:pagefiles",
+  "kind": "component",
+  "text": "Full-page cache (Files · public/cache/). Rendered HTML, JSON and RSS files named after their URL, shared between deploys. A cron job deletes files older than 3 minutes, except story pages under s/ , which jobs rewrite. Why: A file on disk that Caddy can serve is the cheapest possible response. The writer is patched to write atomically so Caddy never serves a half-written file. Built with: actionpack-page_caching · config/initializers/page_caching_monkeypatch.rb · script/expire_page_cache",
+  "code": [],
+  "j": "J32"
+ },
+ {
+  "src": "AB",
+  "id": "edge:mo_ca",
+  "kind": "connection",
+  "text": "Moderator -> Caddy web server: HTTPS /mod",
+  "code": [],
+  "j": "J33"
+ },
+ {
+  "src": "AB",
+  "id": "edge:an_pi",
+  "kind": "connection",
+  "text": "Anubis bot filter -> Request pipeline: proxy :9001",
+  "code": [],
+  "j": "J34"
+ },
+ {
+  "src": "A",
+  "id": "flow:submit/9",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 9 of 10 (Job queue -> Link preview and webmention): The worker runs the card job: one job per story at a time.",
+  "code": [],
+  "j": "J35"
+ },
+ {
+  "src": "AB",
+  "id": "edge:pu_me",
+  "kind": "connection",
+  "text": "Pushover -> Member: push",
+  "code": [],
+  "j": "J36"
+ },
+ {
+  "src": "A",
+  "id": "node:recurring",
+  "kind": "component",
+  "text": "Recurring jobs (Solid Queue recurring tasks). Scheduled in config/recurring.yml : prefill the page cache every 2 minutes, WAL checkpoint every minute, traffic stats every 5 minutes, flagged commenters every 15, hotspot refresh hourly, stats graphs, sitemap and a Restic backup nightly. Why: The queue's own scheduler replaces most cron entries, so jobs share one process, one log and the Mission Control dashboard. Built with: config/recurring.yml · config/queue.yml · app/jobs/",
+  "code": [],
+  "j": "J37"
+ },
+ {
+  "src": "A",
+  "id": "flow:submit/7",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 7 of 10 (Votes and ranking -> Primary database): The story, its taggings and the vote are saved in one transaction; links in the text are recorded.",
+  "code": [],
+  "j": "J38"
+ },
+ {
+  "src": "AB",
+  "id": "edge:pi_st",
+  "kind": "connection",
+  "text": "Request pipeline -> Story submission and votes: POST upvote",
+  "code": [],
+  "j": "J39"
+ },
+ {
+  "src": "B",
+  "id": "flow:submit/1",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 1 of 11 (Member -> Caddy web server): The member opens /stories/new and pastes a URL; the page's script calls /stories/fetch_url_attributes (or the member arrives at /stories/new?url= from the bookmarklet).",
+  "code": [],
+  "j": "J40"
+ },
+ {
+  "src": "AB",
+  "id": "flow:frontpage/3",
+  "kind": "flow step",
+  "text": "Flow \"A visitor opens the front page\", step 3 of 8 (Caddy web server -> Anubis bot filter): On a miss (expired by cron, or never written) the request goes to Anubis on port 9000, which may ask the browser to solve a challenge first.",
+  "code": [],
+  "j": "J41"
+ },
+ {
+  "src": "AB",
+  "id": "edge:re_db",
+  "kind": "connection",
+  "text": "Recurring jobs -> Primary database: stats, WAL",
+  "code": [],
+  "j": "J42"
+ },
+ {
+  "src": "B",
+  "id": "node:pipeline",
+  "kind": "component",
+  "text": "Request pipeline (Component · Rack + ApplicationController). Rack::Attack throttles each IP, config/routes.rb picks the controller, and ApplicationController loads the user from session[:u] (set to the user's session_token by LoginController at login), drops unknown cookies, and clears the session cookie for anonymous visitors. Why: Clearing the cookie is what keeps logged-out visitors on the cached path: Caddy only serves a file when there is no app cookie. Built with: app/controllers/application_controller.rb · app/controllers/concerns/authenticatable.rb · config/initializers/rack_attack.rb",
+  "code": [],
+  "j": "J43"
+ },
+ {
+  "src": "AB",
+  "id": "flow:comment/10",
+  "kind": "flow step",
+  "text": "Flow \"A comment reaches the person it answers\", step 10 of 13 (Reply and mention notifier -> Mail server): If the recipient wants reply emails, EmailReplyMailer.reply goes out over SMTP to the local Postfix. A send error is swallowed.",
+  "code": [],
+  "j": "J44"
+ },
+ {
+  "src": "AB",
+  "id": "inside:pagecache/step3",
+  "kind": "code step",
+  "text": "Inside the page cache refill, step 3: Already queued in the last 2 minutes?.",
+  "code": [
+   "app/controllers/application_controller.rb:131-132"
+  ],
+  "j": "J45"
+ },
+ {
+  "src": "AB",
+  "id": "files:db/schema.rb",
+  "kind": "repository path",
+  "text": "db/schema.rb: The primary database's tables and FTS5 indexes. Implements: Primary database.",
+  "code": [
+   "db/schema.rb"
+  ],
+  "j": "J46"
+ },
+ {
+  "src": "A",
+  "id": "flow:submit/2",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 2 of 10 (Caddy web server -> Anubis bot filter): Logged in, so the request goes through Anubis to Rails.",
+  "code": [],
+  "j": "J47"
+ },
+ {
+  "src": "B",
+  "id": "files:app/models/vote.rb",
+  "kind": "repository path",
+  "text": "app/models/vote.rb: The method that site votes, flags and a story's first upvote go through; a new comment's own upvote is created directly in Comment#record_initial_upvote . Implements: Votes and ranking.",
+  "code": [
+   "app/models/vote.rb"
+  ],
+  "j": "J48"
+ },
+ {
+  "src": "B",
+  "id": "flow:submit/7",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 7 of 11 (Story submission and votes -> Votes and ranking): Validation checks tags, duplicates, banned domains and origins, and new-user rules. On create the story gets a short id, its submitter's upvote and its first hotness .",
+  "code": [],
+  "j": "J49"
+ },
+ {
+  "src": "AB",
+  "id": "inside:pagecache/exit3",
+  "kind": "code exit",
+  "text": "Inside the page cache refill, step 3: when debounced, Skip; mod actions bypass this",
+  "code": [
+   "app/controllers/application_controller.rb:131-132"
+  ],
+  "j": "J50"
+ },
+ {
+  "src": "A",
+  "id": "node:ranking",
+  "kind": "component",
+  "text": "Votes and ranking (Models · Story, Comment, Vote). Vote.vote_thusly_on_story_or_comment_for_user_because records a vote, adjusts karma and has the story or comment recount its score from the votes table. Stories then get a new hotness , comments a new confidence . Why: Ranking lives in the models, so a vote from the site, a moderator action or a comment saved from email all go through the same code. Built with: app/models/vote.rb · app/models/story.rb · app/models/comment.rb",
+  "code": [],
+  "j": "J51"
+ },
+ {
+  "src": "A",
+  "id": "files:app/models/vote.rb",
+  "kind": "repository path",
+  "text": "app/models/vote.rb: The one method every vote and flag goes through. Implements: Votes and ranking.",
+  "code": [
+   "app/models/vote.rb"
+  ],
+  "j": "J52"
+ },
+ {
+  "src": "AB",
+  "id": "flow:upvote/3",
+  "kind": "flow step",
+  "text": "Flow \"A member upvotes a story\", step 3 of 10 (Anubis bot filter -> Request pipeline): Rails loads the user from session[:u] . Without one, the action answers 400 instead of redirecting, since it is called from JavaScript.",
+  "code": [],
+  "j": "J53"
+ },
+ {
+  "src": "AB",
+  "id": "files:config/initializers/",
+  "kind": "repository path",
+  "text": "config/initializers/: Rack::Attack throttles, the page cache patch, SMTP settings, CSP.",
+  "code": [
+   "config/initializers/"
+  ],
+  "j": "J54"
+ },
+ {
+  "src": "B",
+  "id": "node:primary",
+  "kind": "component",
+  "text": "Primary database (SQLite · storage/primary.sqlite3). Users, stories, comments, votes, tags, notifications, messages, moderation logs, plus FTS5 tables for search. Backed up nightly: ResticJob copies it with .backup and pushes it, with logs and config, to a restic repository whose location is set in shared/etc/restic-env , outside the repo. Why: One file on the same disk: no database server to run. The app builds its own SQLite with compile flags, so the README says to use bin/sqlite3 . Built with: db/schema.rb · db/migrate/ · config/database.yml.sample",
+  "code": [],
+  "j": "J55"
+ },
+ {
+  "src": "AB",
+  "id": "edge:en_si",
+  "kind": "connection",
+  "text": "Link preview and webmention -> Linked websites: GET, POST",
+  "code": [],
+  "j": "J56"
+ },
+ {
+  "src": "B",
+  "id": "flow:submit/2",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 2 of 11 (Caddy web server -> Anubis bot filter): Logged in, so the request goes through Anubis to Rails.",
+  "code": [],
+  "j": "J57"
+ },
+ {
+  "src": "A",
+  "id": "node:primary",
+  "kind": "component",
+  "text": "Primary database (SQLite · storage/primary.sqlite3). Users, stories, comments, votes, tags, notifications, messages, moderation logs, plus FTS5 tables for search. Backed up nightly with .backup and Restic. Why: One file on the same disk: no database server to run. The app builds its own SQLite with compile flags, so the README says to use bin/sqlite3 . Built with: db/schema.rb · db/migrate/ · config/database.yml.sample",
+  "code": [],
+  "j": "J58"
+ },
+ {
+  "src": "A",
+  "id": "flow:submit/1",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 1 of 10 (Member -> Caddy web server): The member opens /stories/new , pastes a URL, and finally posts the form to /stories .",
+  "code": [],
+  "j": "J59"
+ },
+ {
+  "src": "B",
+  "id": "node:recurring",
+  "kind": "component",
+  "text": "Recurring jobs (Solid Queue recurring tasks). Scheduled in config/recurring.yml : prefill the page cache every 2 minutes, WAL checkpoint every minute, traffic stats every 5 minutes, flagged commenters every 15, hotspot refresh hourly, stats graphs, sitemap and a Restic backup nightly. A few also fetch outside lists: a disposable-email blocklist weekly, the IANA TLD list monthly. Why: The queue's own scheduler replaces most cron entries, so jobs share one process, one log and the Mission Control dashboard. Built with: config/recurring.yml · config/queue.yml · app/jobs/",
+  "code": [],
+  "j": "J60"
+ },
+ {
+  "src": "AB",
+  "id": "node:pagecache",
+  "kind": "component",
+  "text": "Page cache refill (Jobs · CachePageJob and friends). After a vote, comment or edit, Rails enqueues CachePageJob for the story's page. The job renders the path in-process as an anonymous request and writes the HTML file. PrefillPageCacheJob warms the busiest pages every 2 minutes; RefillStoryPageCacheJob rewrites every story page after a deploy. Why: Pages are refreshed by a job instead of being deleted, so Caddy keeps serving a file and no visitor waits for a render. Built with: app/jobs/cache_page_job.rb · app/jobs/prefill_page_cache_job.rb · app/jobs/refill_story_page_cache_job.rb",
+  "code": [],
+  "j": "J61"
+ },
+ {
+  "src": "AB",
+  "id": "node:member",
+  "kind": "component",
+  "text": "Member (Person). A logged-in user, admitted by invitation unless signups are opened. Submits stories, comments, votes and flags, filters tags, and in mailing-list mode can reply by email. Why: Every write comes from a member. A logged-in request carries a session cookie, which makes Caddy skip the cached file and go to Rails. Built with: Session cookie lobster_trap · invitations · optional 2FA",
+  "code": [],
+  "j": "J62"
+ },
+ {
+  "src": "A",
+  "id": "flow:submit/8",
+  "kind": "flow step",
+  "text": "Flow \"A member submits a story\", step 8 of 10 (Story submission and votes -> Job queue): CreateStoryCardJob is queued now, SendWebmentionJob with a 5-minute wait, and the member is redirected to the new story.",
+  "code": [],
+  "j": "J63"
+ },
+ {
+  "src": "B",
+  "id": "node:ranking",
+  "kind": "component",
+  "text": "Votes and ranking (Models · Story, Comment, Vote). Vote.vote_thusly_on_story_or_comment_for_user_because records a vote, adjusts karma and has the story or comment recount its score from the votes table. Stories then get a new hotness , comments a new confidence . Why: Ranking lives in the models, so every entry point shares it. Site votes and flags end in the update_score_and_recalculate! recount, and so does a comment's own upvote, which Comment#record_initial_upvote creates directly. A new story's own upvote skips the recount and karma ( update_counters is false); its first hotness is set in assign_initial_attributes . Built with: app/models/vote.rb · app/models/story.rb · app/models/comment.rb",
+  "code": [],
+  "j": "J64"
+ },
+ {
+  "src": "AB",
+  "id": "files:script/",
+  "kind": "repository path",
+  "text": "script/: Cron entry points and the mail ingress. Implements: Cron scripts, Mail server.",
+  "code": [
+   "script/"
+  ],
+  "j": "J65"
+ }
+]

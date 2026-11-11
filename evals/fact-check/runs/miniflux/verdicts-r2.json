@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {"id": "node:router", "verdict": "confirmed", "evidence": "internal/http/server/routes.go:57-71", "quote": "// Root router: health probes at root, app routes under base path."},
+    {"id": "node:scheduler", "verdict": "confirmed", "evidence": "internal/cli/scheduler.go:18-30", "quote": "go feedScheduler(store, pool, config.Opts.PollingFrequency(), ... go cleanupScheduler(store, config.Opts.CleanupFrequency(),"},
+    {"id": "node:discovery", "verdict": "confirmed", "evidence": "internal/reader/subscription/finder.go:65-68", "quote": "// Step 1) Check if the website URL is already a feed. ... f.feedDownloaded = true"},
+    {"id": "node:idp", "verdict": "confirmed", "evidence": "internal/oauth2/manager.go:33-51", "quote": "// The provider argument must be \"oidc\" or \"google\"."},
+    {"id": "flow:poll/1", "verdict": "confirmed", "evidence": "internal/cli/scheduler.go:34-41", "quote": "for range time.Tick(frequency) { jobs, err := store.NewBatchBuilder().WithBatchSize(batchSize).WithErrorLimit(errorLimit).WithoutDisabledFeeds().WithNextCheckExpired().WithLimitPerHost(limitPerHost)"},
+    {"id": "flow:poll/2", "verdict": "confirmed", "evidence": "internal/storage/batch.go:76-108", "quote": "query := `SELECT id, user_id, feed_url FROM feeds` ... query += \" ORDER BY next_check_at ASC\" ... if b.limitPerHost > 0 {"},
+    {"id": "flow:poll/11", "verdict": "confirmed", "evidence": "internal/storage/entry.go:320-350", "quote": "tx, err := s.db.Begin() ... if entryExists { if updateExistingEntries { err = s.updateEntry(tx, entry) } } else { err = s.createEntry(tx, entry) ... case errors.Is(err, ErrEntryTombstoned):"},
+    {"id": "flow:signin/1", "verdict": "confirmed", "evidence": "internal/ui/routes.go:54-63", "quote": "func isSessionStartRoute(r *http.Request) bool { ... case path == \"/\": return true"},
+    {"id": "flow:signin/2", "verdict": "confirmed", "evidence": "internal/ui/web_session_middleware.go:48-62", "quote": "session, secret = model.NewWebSession(r.UserAgent(), request.ClientIP(r)) ... setSessionCookie(w, session, secret)"},
+    {"id": "flow:signin/3", "verdict": "confirmed", "evidence": "internal/storage/web_session.go:242-253", "quote": "const anonymousWebSessionLifetime = 24 * time.Hour ... (user_id IS NULL AND created_at < now() - $2::interval)"},
+    {"id": "flow:signin/4", "verdict": "confirmed", "evidence": "internal/ui/oauth2_callback.go:37-60", "quote": "subtle.ConstantTimeCompare([]byte(state), []byte(expectedState)) == 0 ... profile, err := authProvider.Profile(r.Context(), code, codeVerifier)"},
+    {"id": "flow:signin/5", "verdict": "confirmed", "evidence": "internal/ui/oauth2_callback.go:114-170; internal/ui/auth.go:28-36", "quote": "user, err := h.store.UserByField(profile.Key, profile.ID) ... if !config.Opts.IsOAuth2UserCreationAllowed() ... oldID, secret := session.Rotate()"},
+    {"id": "flow:signin/6", "verdict": "confirmed", "evidence": "internal/storage/web_session.go:144-154", "quote": "UPDATE web_sessions SET id=$2, secret_hash=$3, user_id=$4, state=$5, created_at=now() WHERE id=$1"},
+    {"id": "flow:signin/7", "verdict": "confirmed", "evidence": "internal/ui/auth.go:44-52; internal/ui/oauth2_callback.go:175", "quote": "Value: session.ID + \".\" + secret, ... HttpOnly: true, ... SameSite: http.SameSiteLaxMode ... response.HTMLRedirect(w, r, h.basePath+\"/\"+user.DefaultHomePage)"},
+    {"id": "inside:refresh/step12", "verdict": "confirmed", "evidence": "internal/reader/handler/handler.go:329-337", "quote": "updateExistingEntries := forceRefresh || (!originalFeed.Crawler && !originalFeed.IgnoreEntryUpdates)"},
+    {"id": "inside:processor/step6", "verdict": "confirmed", "evidence": "internal/reader/processor/processor.go:95-111; internal/reader/scraper/scraper.go:51-61", "quote": "if feed.Crawler && (entryIsNew || forceRefresh) { ... scraper.ScrapeWebsite(requestBuilder, entry.URL, feed.ScraperRules)"},
+    {"id": "inside:processor/step11", "verdict": "confirmed", "evidence": "internal/reader/processor/processor.go:172-174; internal/reader/processor/youtube.go:37-39,90-91", "quote": "if user.ShowReadingTime && shouldFetchYouTubeWatchTimeInBulk() { ... return config.Opts.FetchYouTubeWatchTime() && config.Opts.YouTubeAPIKey() != \"\""},
+    {"id": "files:internal/cli/refresh_feeds.go", "verdict": "confirmed", "evidence": "internal/cli/refresh_feeds.go:17-46", "quote": "func refreshFeeds(store *storage.Storage) { ... for i := range config.Opts.WorkerPoolSize() {"},
+    {"id": "files:internal/ui/auth.go", "verdict": "confirmed", "evidence": "internal/ui/auth.go:26-38", "quote": "// authenticateWebSession binds the current browser session to the given user, rotates its identifier and secret, and refreshes the client cookie."}
+  ],
+  "missing": []
+}

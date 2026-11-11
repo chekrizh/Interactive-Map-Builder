@@ -1,0 +1,798 @@
+{
+ "claims": [
+  {
+   "j": "J1",
+   "verdict": "correct",
+   "evidence": "src/load/mod.rs:727-748",
+   "quote": "NOT cleaning up source; investigate before re-running",
+   "note": "Gate precedes maybe_cleanup."
+  },
+  {
+   "j": "J2",
+   "verdict": "wrong",
+   "evidence": "src/pipeline/mod.rs:46-51; src/error/retry.rs",
+   "quote": "pub(crate) mod retry {\n    pub(crate) use crate::error::retry::is_transient;",
+   "note": "No file src/pipeline/retry.rs exists; pipeline::retry is an inline module in src/pipeline/mod.rs re-exporting src/error/retry.rs. Rest of the description (run_with_reconnect in single.rs:20, run_export dispatch single.rs:233-292) is accurate."
+  },
+  {
+   "j": "J3",
+   "verdict": "correct",
+   "evidence": "src/pipeline/run.rs:5,118; src/pipeline/job.rs:1421-1520; src/notify.rs",
+   "quote": "//! thread-parallel vs process-parallel, and produces the run aggregate at",
+   "note": "run_export_job_inner takes the CDC branch when dispatches_to_cdc_runner(export.mode); otherwise builds the plan."
+  },
+  {
+   "j": "J4",
+   "verdict": "correct",
+   "evidence": "src/load/mod.rs:144-147; src/load/orchestrate.rs:149-171",
+   "quote": "/// Append the CDC change Parquet into `<table>__changes` (created if absent),",
+   "note": ""
+  },
+  {
+   "j": "J5",
+   "verdict": "correct",
+   "evidence": "src/load/orchestrate.rs:49-130; src/load/plan.rs:630-646",
+   "quote": "Both warehouse loaders are GCS-only (Snowflake rewrites gs://→gcs://),\n        // so refuse anything else loudly at plan time.",
+   "note": "ClickHouse additionally reads S3 and Azure."
+  },
+  {
+   "j": "J6",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:326-360,431-447",
+   "quote": "The part is durable at the destination NOW — so the ledger learns\n        // about it NOW",
+   "note": ""
+  },
+  {
+   "j": "J7",
+   "verdict": "correct",
+   "evidence": "src/cli/args.rs:82; src/pipeline/job.rs:1335",
+   "quote": "Run(RunArgs),",
+   "note": ""
+  },
+  {
+   "j": "J8",
+   "verdict": "correct",
+   "evidence": "src/load/orchestrate.rs:804-940; src/load/reconcile.rs:124-149",
+   "quote": "run(s) {} declare parts that are no longer under {gcs_prefix} — refusing to load",
+   "note": "Foreign manifests produce a note and a shared prefix is refused by ensure_single_export; non-Success runs are skipped by select_runs rather than refused with an error."
+  },
+  {
+   "j": "J9",
+   "verdict": "correct",
+   "evidence": "src/cli/mod.rs:29-37; src/redact.rs:332-347",
+   "quote": "pub fn run_binary() {\n    crate::redact::install_logger(LOG_ROUTE);",
+   "note": ""
+  },
+  {
+   "j": "J10",
+   "verdict": "correct",
+   "evidence": "src/pipeline/single.rs:349-360,479; src/load/plan.rs; src/destination",
+   "quote": "let stamp = super::summary::run_scoped_stamp(&summary.run_id, &plan.export_name);",
+   "note": ""
+  },
+  {
+   "j": "J11",
+   "verdict": "correct",
+   "evidence": "src/load/orchestrate.rs:49-53",
+   "quote": "// One run id for the whole invocation, shared across every table — so warehouse\n    // cost slices per load run",
+   "note": ""
+  },
+  {
+   "j": "J12",
+   "verdict": "correct",
+   "evidence": "src/cli/args.rs:208",
+   "quote": "Load {",
+   "note": "Config filename is illustrative."
+  },
+  {
+   "j": "J13",
+   "verdict": "correct",
+   "evidence": "src/load/mod.rs:727-748",
+   "quote": "NOT cleaning up source; investigate before re-running",
+   "note": ""
+  },
+  {
+   "j": "J14",
+   "verdict": "correct",
+   "evidence": "src/load/staging.rs:223-250; src/load/mod.rs:727-731",
+   "quote": "/// The delete target for `cleanup_source`, or `None` when a run is writing here.",
+   "note": ""
+  },
+  {
+   "j": "J15",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:461-490",
+   "quote": "A `Success` run-unique manifest (no `_SUCCESS`\n        // marker yet — the prefix is not complete) is idempotently rewritten as a\n        // superset on each roll that gave the table a new part; the terminal write\n        // at clean end adds `_SUCCESS`.",
+   "note": ""
+  },
+  {
+   "j": "J16",
+   "verdict": "wrong",
+   "evidence": "src/source/postgres/cdc.rs:4,712,814; src/source/postgres/pgoutput.rs:23-28",
+   "quote": "SELECT pg_create_logical_replication_slot($1, 'test_decoding')",
+   "note": "The PostgreSQL stream uses a test_decoding slot polled with pg_logical_slot_peek_changes, not pgoutput; pgoutput.rs is an unwired decoder."
+  },
+  {
+   "j": "J17",
+   "verdict": "correct",
+   "evidence": "src/load/orchestrate.rs:615,1226-1228,850",
+   "quote": "// One load per table at a time: two concurrent loads both read the ledger",
+   "note": ""
+  },
+  {
+   "j": "J18",
+   "verdict": "correct",
+   "evidence": "src/pipeline/repair_cmd.rs:10-14",
+   "quote": "Output files are written with collision-proof naming — they are new\n//!    files alongside the originals; Rivet does not delete or overwrite the\n//!    old files.",
+   "note": "The manifest is rewritten to mark originals superseded, but no data file is deleted or overwritten."
+  },
+  {
+   "j": "J19",
+   "verdict": "correct",
+   "evidence": "src/state/migrations.rs:44-54; src/state/file_log.rs:5",
+   "quote": "/// One row from `file_log` (formerly `file_manifest`; renamed in schema v8).",
+   "note": "The cited lines create file_manifest, renamed file_log in v8; listed fields match (no declared FK to run_status)."
+  },
+  {
+   "j": "J20",
+   "verdict": "correct",
+   "evidence": "src/load/clickhouse.rs:1-3; src/load/plan.rs:636-646; src/load/snowflake.rs:415; docs/recipes/clickhouse-load.md:9-12",
+   "quote": "rivet reads each staged Parquet part and sends it\n//! as `INSERT … FORMAT Parquet` over the HTTP interface",
+   "note": "An optional named_collection lets ClickHouse read parts server-side."
+  },
+  {
+   "j": "J21",
+   "verdict": "correct",
+   "evidence": "src/load/mod.rs:144-207; docs/recipes/clickhouse-load.md:12",
+   "quote": "the ClickHouse\ndatabase must already exist.",
+   "note": ""
+  },
+  {
+   "j": "J22",
+   "verdict": "correct",
+   "evidence": "src/bin/rivet-mcp.rs:1-5",
+   "quote": "See the `rivet::mcp` module for the tool list\n//! and protocol details.",
+   "note": ""
+  },
+  {
+   "j": "J23",
+   "verdict": "correct",
+   "evidence": "src/pipeline/commit.rs:503-512",
+   "quote": "let parts = match sink.seal_parts() {",
+   "note": ""
+  },
+  {
+   "j": "J24",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:425-433",
+   "quote": "crate::workers::run_each(\n            &view,\n            |s| Ok(s.encode_and_upload(engine, format, run_token)),",
+   "note": ""
+  },
+  {
+   "j": "J25",
+   "verdict": "correct",
+   "evidence": "src/state/mod.rs:57,271-313; src/config/cdc.rs:94-96",
+   "quote": "const STATE_DB_NAME: &str = \".rivet_state.db\";",
+   "note": "Checkpoint path is resolved relative to the config dir (scaffolded ./cdc/<name>.ckpt); on PostgreSQL the slot holds the position."
+  },
+  {
+   "j": "J26",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:413-420,461-490,805-822",
+   "quote": "the terminal write\n        // at clean end adds `_SUCCESS`.",
+   "note": "In code the per-part DB record precedes the manifest rewrite within a roll; ordering here is loose."
+  },
+  {
+   "j": "J27",
+   "verdict": "correct",
+   "evidence": "src/cli/args.rs:256; src/load/compact.rs:1",
+   "quote": "//! `rivet compact`: merge each base-and-buffer table's buffer into its base and drop the buffer.",
+   "note": ""
+  },
+  {
+   "j": "J28",
+   "verdict": "wrong",
+   "evidence": "src/load/bigquery/mod.rs:658-661,781-797",
+   "quote": "// Other keys (hour/month/year, integer ranges): the range probe, then one\n        // MERGE per window of constant bounds, then the DROP — separate jobs.",
+   "note": "BigQuery does not always run one MERGE per table: for hour/month/year/range-partitioned bases it runs one MERGE per window; day/unpartitioned use one scripted job. Snowflake part is correct."
+  },
+  {
+   "j": "J29",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:572,730",
+   "quote": "let mut last_commit: Option<Position> = None;",
+   "note": ""
+  },
+  {
+   "j": "J30",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/mod.rs:92-126",
+   "quote": "RowImage::Partial { why } => {\n            return (\n                Vec::new(),\n                Err(crate::source::cdc::open_partial_image_refusal(engine, &why)),",
+   "note": ""
+  },
+  {
+   "j": "J31",
+   "verdict": "correct",
+   "evidence": "src/load/orchestrate.rs:615,1226-1228,850",
+   "quote": "let lease = take_table_lease(job.state, &target_fqtn)?;",
+   "note": ""
+  },
+  {
+   "j": "J32",
+   "verdict": "correct",
+   "evidence": "src/load/orchestrate.rs:49-53",
+   "quote": "let run_id = resolve_run_id(args.run_id.clone());",
+   "note": ""
+  },
+  {
+   "j": "J33",
+   "verdict": "correct",
+   "evidence": "src/bin/rivet-mcp.rs:1-5; src/mcp.rs:112-175",
+   "quote": "Speaks JSON-RPC 2.0 over stdin/stdout (one object per line).",
+   "note": "Also exposes pgbouncer_pools/pgbouncer_stats tools; the 'why' is intent and not checked."
+  },
+  {
+   "j": "J34",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:572,730",
+   "quote": "last_commit = Some(at);",
+   "note": ""
+  },
+  {
+   "j": "J35",
+   "verdict": "correct",
+   "evidence": "src/load/bq_rest.rs:1-11; src/load/snowflake_rest.rs:5-8; src/load/clickhouse.rs:306",
+   "quote": "let insert = format!(\"INSERT INTO {target} FORMAT Parquet\");",
+   "note": ""
+  },
+  {
+   "j": "J36",
+   "verdict": "correct",
+   "evidence": "src/load/bigquery/mod.rs:781-820; src/load/snowflake.rs:1854",
+   "quote": "MERGE per window of constant bounds, then the DROP",
+   "note": ""
+  },
+  {
+   "j": "J37",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:395-433; src/workers.rs:140-157",
+   "quote": "crate::workers::run_each(\n            &view,\n            |s| Ok(s.encode_and_upload(engine, format, run_token)),",
+   "note": "run_each uses the default pool width capped at the table count."
+  },
+  {
+   "j": "J38",
+   "verdict": "correct",
+   "evidence": "src/load/compact.rs:226",
+   "quote": "pub fn run_compacts(args: CompactArgs) -> Result<()> {",
+   "note": ""
+  },
+  {
+   "j": "J39",
+   "verdict": "correct",
+   "evidence": "src/load/plan.rs:630-646",
+   "quote": "a {} load \\\n                 reads GCS only (Snowflake via storage integration, BigQuery via LOAD DATA; \\\n                 ClickHouse also reads S3 and Azure)",
+   "note": ""
+  },
+  {
+   "j": "J40",
+   "verdict": "correct",
+   "evidence": "src/load/staging.rs:223-250; src/load/mod.rs:727-731",
+   "quote": "/// The delete target for `cleanup_source`, or `None` when a run is writing here.",
+   "note": ""
+  },
+  {
+   "j": "J41",
+   "verdict": "correct",
+   "evidence": "src/source/postgres/cdc.rs:712,814; src/source/postgres/pgoutput.rs:23-28; src/source/cdc/spill.rs",
+   "quote": "// ^ Nothing in the non-test build calls this YET",
+   "note": ""
+  },
+  {
+   "j": "J42",
+   "verdict": "correct",
+   "evidence": "src/config/mod.rs",
+   "quote": "Config::load",
+   "note": ""
+  },
+  {
+   "j": "J43",
+   "verdict": "correct",
+   "evidence": "src/load/orchestrate.rs:49-130,1226-1320",
+   "quote": "let lease = take_table_lease(job.state, &target_fqtn)?;",
+   "note": ""
+  },
+  {
+   "j": "J44",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:431-447",
+   "quote": "// Every part that reached the store is recorded, even when a sibling's upload\n    // failed: it is durable either way, and the error still stops the ack below.",
+   "note": ""
+  },
+  {
+   "j": "J45",
+   "verdict": "correct",
+   "evidence": "src/load/mod.rs:144-147; src/load/orchestrate.rs:149-171",
+   "quote": "// Incremental: APPEND the delta + a cursor-ordered current-state view.",
+   "note": ""
+  },
+  {
+   "j": "J46",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc_job.rs:701-752",
+   "quote": "let outputs = wired\n        .iter()\n        .map(|(t, d, u)| super::cdc::CaptureOutput {",
+   "note": "Done in run_cdc_inner, called from run_cdc_export."
+  },
+  {
+   "j": "J47",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/mod.rs:80-140; src/pipeline/cdc/sink.rs:395-500,856-860",
+   "quote": "Field::new(\"__op\", DataType::Utf8, false),",
+   "note": ""
+  },
+  {
+   "j": "J48",
+   "verdict": "correct",
+   "evidence": "src/source/postgres/cdc.rs:4,814",
+   "quote": "SELECT lsn::text, data FROM pg_logical_slot_peek_changes($1, NULL, $2)",
+   "note": ""
+  },
+  {
+   "j": "J49",
+   "verdict": "correct",
+   "evidence": "src/state/mod.rs:57,271-313; src/state/migrations.rs",
+   "quote": "const STATE_DB_NAME: &str = \".rivet_state.db\";",
+   "note": ""
+  },
+  {
+   "j": "J50",
+   "verdict": "correct",
+   "evidence": "src/pipeline/job.rs:1429-1439; src/source/cdc/checkpoint_identity.rs:95-100,183-197",
+   "quote": "name.push(\".owner\");",
+   "note": ""
+  },
+  {
+   "j": "J51",
+   "verdict": "correct",
+   "evidence": "src/cli/args.rs:256; src/load/compact.rs:1",
+   "quote": "//! `rivet compact`: merge each base-and-buffer table's buffer into its base and drop the buffer.",
+   "note": ""
+  },
+  {
+   "j": "J52",
+   "verdict": "correct",
+   "evidence": "src/source/mod.rs:223-225,398",
+   "quote": "fn on_batch(&mut self, batch: &RecordBatch) -> Result<()>;",
+   "note": ""
+  },
+  {
+   "j": "J53",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/mod.rs:92-126",
+   "quote": "RowImage::Partial { why } => {",
+   "note": ""
+  },
+  {
+   "j": "J54",
+   "verdict": "correct",
+   "evidence": "src/plan/mod.rs:1-14; src/plan/prioritization.rs:1-4",
+   "quote": "These types are **advisory only**: they classify and rank exports",
+   "note": ""
+  },
+  {
+   "j": "J55",
+   "verdict": "correct",
+   "evidence": "src/bin/rivet-mcp.rs:1-26",
+   "quote": "Integrates with\n//! Claude Desktop and Claude Code.",
+   "note": ""
+  },
+  {
+   "j": "J56",
+   "verdict": "correct",
+   "evidence": "src/load/compact.rs:1; src/load/bigquery/mod.rs:781-820; src/load/snowflake.rs:1854; src/load/clickhouse.rs:1-3",
+   "quote": "/// The buffer is renamed, replaced into the base inside one transaction, and dropped only after the COMMIT",
+   "note": "Windows apply to hour/month/year/integer-range partitions; day partitions use one scripted job."
+  },
+  {
+   "j": "J57",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:425-485",
+   "quote": "write_manifest_without_success_marker(*dest, manifest)",
+   "note": "Manifest rewrite happens only when a commit boundary is pending, after the parts are recorded."
+  },
+  {
+   "j": "J58",
+   "verdict": "correct",
+   "evidence": "src/load/ (orchestrate.rs, reconcile.rs, compact.rs, bigquery/, snowflake.rs, clickhouse.rs)",
+   "quote": "//! `rivet compact`: merge each base-and-buffer table's buffer into its base",
+   "note": ""
+  },
+  {
+   "j": "J59",
+   "verdict": "correct",
+   "evidence": "src/init/mod.rs; src/preflight/analysis.rs:1080; src/preflight/doctor.rs; src/preflight/type_report.rs; src/init/yaml_scaffold.rs",
+   "quote": "/// Scan-free row estimate (PG EXPLAIN `rows=`, MySQL EXPLAIN `rows`, MSSQL",
+   "note": ""
+  },
+  {
+   "j": "J60",
+   "verdict": "correct",
+   "evidence": "src/pipeline/reconcile_cmd.rs:3,182",
+   "quote": "\"SELECT COUNT(*) FROM ({chunk_query}) {}\",",
+   "note": ""
+  },
+  {
+   "j": "J61",
+   "verdict": "correct",
+   "evidence": "docs/architecture.md:11,44,141,250",
+   "quote": "## Data flow",
+   "note": ""
+  },
+  {
+   "j": "J62",
+   "verdict": "correct",
+   "evidence": "src/pipeline/single.rs:20-110",
+   "quote": "run `rivet doctor -c {config_path}` to diagnose",
+   "note": ""
+  },
+  {
+   "j": "J63",
+   "verdict": "correct",
+   "evidence": "src/load/plan.rs:636-643; src/load/clickhouse.rs:1-3",
+   "quote": "rivet reads each staged Parquet part and sends it",
+   "note": ""
+  },
+  {
+   "j": "J64",
+   "verdict": "correct",
+   "evidence": "src/cli/args.rs:208",
+   "quote": "Load {",
+   "note": "Config filename is illustrative."
+  },
+  {
+   "j": "J65",
+   "verdict": "wrong",
+   "evidence": "src/pipeline/job.rs:1279-1318",
+   "quote": "if let Err(e) = state.store_journal(&summary.journal) {",
+   "note": "The journal is stored BEFORE the cursor advance (job.rs:1279 vs 1303); only the metrics row follows the cursor."
+  },
+  {
+   "j": "J66",
+   "verdict": "wrong",
+   "evidence": "src/source/postgres/cdc.rs:4,712; src/source/postgres/pgoutput.rs:23-28",
+   "quote": "// ^ Nothing in the non-test build calls this YET",
+   "note": "The PostgreSQL change stream is test_decoding-based; pgoutput is not wired in."
+  },
+  {
+   "j": "J67",
+   "verdict": "correct",
+   "evidence": "src/load/bq_rest.rs:1-11; src/load/snowflake_rest.rs:5-8; src/load/clickhouse.rs:306",
+   "quote": "1. `POST /api/v2/statements?requestId=<uuid>` — the script as one multi-statement request",
+   "note": ""
+  },
+  {
+   "j": "J68",
+   "verdict": "correct",
+   "evidence": "src/config/ (mod.rs, source.rs, export.rs, destination.rs, load.rs, lints.rs, resolve.rs)",
+   "quote": "mod lints;",
+   "note": ""
+  },
+  {
+   "j": "J69",
+   "verdict": "wrong",
+   "evidence": "src/config/cdc.rs:79-93",
+   "quote": "Omitted ⇒ capture changes only, with no anchor step\n    /// (the default; the operator owns the initial load).",
+   "note": "A baseline snapshot is taken only when cdc.initial: snapshot (or backfill:) is set; by default the first run takes no baseline."
+  },
+  {
+   "j": "J70",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:491-498",
+   "quote": "stream.checkpoint_of(p).save(ck)?;\n...\n        stream.ack(p)?;",
+   "note": ""
+  },
+  {
+   "j": "J71",
+   "verdict": "correct",
+   "evidence": "src/load/mod.rs:728",
+   "quote": "check_loaded_rows(&loader.fqtn(table), rows_loaded, expected_rows)?;",
+   "note": ""
+  },
+  {
+   "j": "J72",
+   "verdict": "correct",
+   "evidence": "src/load/mod.rs:727",
+   "quote": "let rows_loaded = loader.materialize(table, specs, uris, expected_rows)?;",
+   "note": ""
+  },
+  {
+   "j": "J73",
+   "verdict": "correct",
+   "evidence": "src/pipeline/single.rs:20-120,233-292; src/pipeline/mod.rs:46-51",
+   "quote": "pub(crate) mod retry {\n    pub(crate) use crate::error::retry::is_transient;",
+   "note": "MongoDB keyset with parallel>1 goes to mongo_parallel (single.rs:254)."
+  },
+  {
+   "j": "J74",
+   "verdict": "correct",
+   "evidence": "src/pipeline/commit.rs:1-40,436-480",
+   "quote": "local MD5 differs from",
+   "note": ""
+  },
+  {
+   "j": "J75",
+   "verdict": "correct",
+   "evidence": "src/load/clickhouse.rs:1-3",
+   "quote": "as `INSERT … FORMAT Parquet` over the HTTP interface; a CDC change log is a\n//! `ReplacingMergeTree(__ver)`",
+   "note": ""
+  },
+  {
+   "j": "J76",
+   "verdict": "correct",
+   "evidence": "src/source/postgres/mod.rs:421-555",
+   "quote": "batch_execute(&format!(\"DECLARE _rivet NO SCROLL CURSOR FOR {built_sql}\"))",
+   "note": ""
+  },
+  {
+   "j": "J77",
+   "verdict": "correct",
+   "evidence": "src/pipeline/single.rs:451,479-484; src/pipeline/commit.rs:503-512",
+   "quote": "sink.finish_writer()?;",
+   "note": ""
+  },
+  {
+   "j": "J78",
+   "verdict": "correct",
+   "evidence": "src/pipeline/job.rs:1540",
+   "quote": "let plan = match crate::plan::build::build_plan_on(",
+   "note": ""
+  },
+  {
+   "j": "J79",
+   "verdict": "correct",
+   "evidence": "src/state/load_journal_store.rs:70,98",
+   "quote": "INSERT INTO loaded_source_run",
+   "note": ""
+  },
+  {
+   "j": "J80",
+   "verdict": "correct",
+   "evidence": "src/pipeline/single.rs:414-436",
+   "quote": "let export_result = src.export(&request, &mut sink);",
+   "note": ""
+  },
+  {
+   "j": "J81",
+   "verdict": "wrong",
+   "evidence": "src/source/postgres/cdc.rs:814; src/source/mssql/cdc.rs",
+   "quote": "SELECT lsn::text, data FROM pg_logical_slot_peek_changes($1, NULL, $2)",
+   "note": "Only MySQL reads over the replication (binlog) protocol; PostgreSQL polls a slot with SQL functions, SQL Server queries change tables, Oracle queries LogMiner."
+  },
+  {
+   "j": "J82",
+   "verdict": "wrong",
+   "evidence": "src/load/reconcile.rs:124-161",
+   "quote": "let missing = runs_with_missing_parts(new, &all_parquet);",
+   "note": "prepare_load/select_load_uris only checks that declared .parquet part keys are present in the listing; there is no size or MD5 comparison in the load path."
+  },
+  {
+   "j": "J83",
+   "verdict": "correct",
+   "evidence": "src/source/postgres/cdc.rs:4,814; src/source/postgres/pgoutput.rs:23-28",
+   "quote": "Consumes a `test_decoding` slot",
+   "note": ""
+  },
+  {
+   "j": "J84",
+   "verdict": "correct",
+   "evidence": "src/pipeline/job.rs:1279-1318",
+   "quote": "} else if let Err(e) = commit_incremental_cursor(state, plan, &summary) {",
+   "note": ""
+  },
+  {
+   "j": "J85",
+   "verdict": "correct",
+   "evidence": "src/source/cdc/mod.rs:546-566",
+   "quote": "fn next_change(&mut self) -> Option<Result<ChangeEvent>>;",
+   "note": ""
+  },
+  {
+   "j": "J86",
+   "verdict": "correct",
+   "evidence": "src/source/postgres/mod.rs:93-102",
+   "quote": "FETCH {n} FROM _rivet",
+   "note": "Literal FETCH is PostgreSQL (and SQL Server OFFSET/FETCH); MongoDB is not SQL."
+  },
+  {
+   "j": "J87",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:395-500; src/cli/dispatch.rs:403-470; src/init/yaml_scaffold.rs:1335",
+   "quote": "// --output: the typed file sink, via the same `run_capture` assembler the\n    // `mode: cdc` run uses.",
+   "note": "rivet cdc uses run_capture only with --output; otherwise it streams NDJSON."
+  },
+  {
+   "j": "J88",
+   "verdict": "correct",
+   "evidence": "src/load/compact.rs:226",
+   "quote": "pub fn run_compacts(args: CompactArgs) -> Result<()> {",
+   "note": ""
+  },
+  {
+   "j": "J89",
+   "verdict": "wrong",
+   "evidence": "src/config/cdc.rs:79-93",
+   "quote": "Omitted ⇒ capture changes only, with no anchor step",
+   "note": "Baseline only with cdc.initial: snapshot or backfill:."
+  },
+  {
+   "j": "J90",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:402-407",
+   "quote": "let pending: Vec<usize> = (0..sinks.len())\n        .filter(|&i| !sinks[i].buf.is_empty())",
+   "note": ""
+  },
+  {
+   "j": "J91",
+   "verdict": "wrong",
+   "evidence": "src/source/postgres/cdc.rs:712,814",
+   "quote": "SELECT pg_create_logical_replication_slot($1, 'test_decoding')",
+   "note": "PostgreSQL reads a test_decoding slot via SQL polling, not pgoutput."
+  },
+  {
+   "j": "J92",
+   "verdict": "correct",
+   "evidence": "src/state/load_journal_store.rs:70,98",
+   "quote": "INSERT INTO load_run",
+   "note": ""
+  },
+  {
+   "j": "J93",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc/sink.rs:491-498",
+   "quote": "stream.checkpoint_of(p).save(ck)?;",
+   "note": ""
+  },
+  {
+   "j": "J94",
+   "verdict": "wrong",
+   "evidence": "src/load/bigquery/mod.rs:781-797",
+   "quote": "one\n        // MERGE per window of constant bounds",
+   "note": "'one MERGE per table on BigQuery' is false for non-day partitioned bases (merges split into windows)."
+  },
+  {
+   "j": "J95",
+   "verdict": "wrong",
+   "evidence": "src/plan/prioritization.rs:1-4",
+   "quote": "they classify and rank exports for human review",
+   "note": "Prioritization ranks exports (advisory), not chunks."
+  },
+  {
+   "j": "J96",
+   "verdict": "correct",
+   "evidence": "src/pipeline/commit.rs:21-31,565-600",
+   "quote": "4. **ADR-0001 I7** — `state.record_file` (warn-on-fail; non-fatal)",
+   "note": ""
+  },
+  {
+   "j": "J97",
+   "verdict": "correct",
+   "evidence": "src/load/plan.rs:640-643; src/load/cdc.rs:3",
+   "quote": "BigQuery via LOAD DATA",
+   "note": "LOAD DATA is BigQuery's mechanism; Snowflake reads via a stage/storage integration."
+  },
+  {
+   "j": "J98",
+   "verdict": "correct",
+   "evidence": "src/cli/dispatch.rs:403-432",
+   "quote": "crate::pipeline::cdc::run_capture(",
+   "note": ""
+  },
+  {
+   "j": "J99",
+   "verdict": "correct",
+   "evidence": "src/pipeline/job.rs:1429-1439",
+   "quote": "let _run_lease = match cdc_run_lease(state, &export.name, &config.source.state_key()) {",
+   "note": ""
+  },
+  {
+   "j": "J100",
+   "verdict": "correct",
+   "evidence": "src/pipeline/job.rs:1421",
+   "quote": "if dispatches_to_cdc_runner(export.mode) {",
+   "note": ""
+  },
+  {
+   "j": "J101",
+   "verdict": "correct",
+   "evidence": "src/pipeline/job.rs:1421",
+   "quote": "if dispatches_to_cdc_runner(export.mode) {",
+   "note": ""
+  },
+  {
+   "j": "J102",
+   "verdict": "correct",
+   "evidence": "src/pipeline/cdc_job.rs:701-752",
+   "quote": "run_capture(\n        CdcCapture {",
+   "note": ""
+  },
+  {
+   "j": "J103",
+   "verdict": "correct",
+   "evidence": "src/source/cdc/mod.rs:1415-1500",
+   "quote": "create_change_stream",
+   "note": ""
+  },
+  {
+   "j": "J104",
+   "verdict": "correct",
+   "evidence": "src/load/orchestrate.rs:1226-1228,850",
+   "quote": "let lease = take_table_lease(job.state, &target_fqtn)?;",
+   "note": ""
+  }
+ ],
+ "missing": {
+  "X": [
+   {
+    "what": "CDC checkpoint file plus its .owner claim file on local disk: a second store, separate from the state DB, holding the resume position for MySQL/SQL Server/MongoDB/Oracle. It must be kept across runs.",
+    "evidence": "src/config/cdc.rs:94-96; src/source/cdc/checkpoint_identity.rs:95-100,183-197; src/init/yaml_scaffold.rs:1335",
+    "importance": "high"
+   },
+   {
+    "what": "Seal a plan and apply it (rivet plan -> rivet apply): a main user path with no flow; the Run plan component appears only inside the batch export.",
+    "evidence": "src/cli/args.rs:537-539; src/pipeline/plan_cmd.rs:87; src/pipeline/apply_cmd.rs:25,145",
+    "importance": "medium"
+   },
+   {
+    "what": "Google Cloud auth and Secret Manager: rivet calls the OAuth token endpoint and the GCE metadata server for GCS/BigQuery credentials, and Secret Manager to resolve secrets in the config",
+    "evidence": "src/gcp_auth.rs:48; src/config/gcp_secret.rs:14; src/error/retry.rs:225",
+    "importance": "medium"
+   },
+   {
+    "what": "CDC spill directory on local disk: large transactions are spilled to files beside the checkpoint, and orphaned spills are swept on open",
+    "evidence": "src/source/cdc/spill.rs; src/source/cdc/mod.rs:1426-1431",
+    "importance": "medium"
+   },
+   {
+    "what": "Bootstrap path rivet init / check / doctor has a component but no flow (it reads the source catalog and writes the YAML)",
+    "evidence": "src/cli/args.rs:85,109,302; src/init/mod.rs; src/init/yaml_scaffold.rs",
+    "importance": "medium"
+   },
+   {
+    "what": "rivet state operator commands (reset, finish-run, copy SQLite->PostgreSQL, runs, loads): the recovery path that refusals point users to, with no flow",
+    "evidence": "src/cli/args.rs:289,710,804,813; src/state/copy.rs; src/cli/dispatch.rs:1164-1171",
+    "importance": "medium"
+   }
+  ],
+  "Y": [
+   {
+    "what": "CDC checkpoint file plus its .owner claim file on local disk: a second store, separate from the state DB, holding the resume position for MySQL/SQL Server/MongoDB/Oracle. It must be kept across runs.",
+    "evidence": "src/config/cdc.rs:94-96; src/source/cdc/checkpoint_identity.rs:95-100,183-197; src/init/yaml_scaffold.rs:1335",
+    "importance": "high"
+   },
+   {
+    "what": "Seal a plan and apply it (rivet plan -> rivet apply): a main user path with no flow; the Run plan component appears only inside the batch export.",
+    "evidence": "src/cli/args.rs:537-539; src/pipeline/plan_cmd.rs:87; src/pipeline/apply_cmd.rs:25,145",
+    "importance": "medium"
+   },
+   {
+    "what": "Google Cloud auth and Secret Manager: rivet calls the OAuth token endpoint and the GCE metadata server for GCS/BigQuery credentials, and Secret Manager to resolve secrets in the config",
+    "evidence": "src/gcp_auth.rs:48; src/config/gcp_secret.rs:14; src/error/retry.rs:225",
+    "importance": "medium"
+   },
+   {
+    "what": "CDC spill directory on local disk: large transactions are spilled to files beside the checkpoint, and orphaned spills are swept on open",
+    "evidence": "src/source/cdc/spill.rs; src/source/cdc/mod.rs:1426-1431",
+    "importance": "medium"
+   },
+   {
+    "what": "Bootstrap path rivet init / check / doctor has a component but no flow (it reads the source catalog and writes the YAML)",
+    "evidence": "src/cli/args.rs:85,109,302; src/init/mod.rs; src/init/yaml_scaffold.rs",
+    "importance": "medium"
+   },
+   {
+    "what": "rivet state operator commands (reset, finish-run, copy SQLite->PostgreSQL, runs, loads): the recovery path that refusals point users to, with no flow",
+    "evidence": "src/cli/args.rs:289,710,804,813; src/state/copy.rs; src/cli/dispatch.rs:1164-1171",
+    "importance": "medium"
+   }
+  ]
+ }
+}

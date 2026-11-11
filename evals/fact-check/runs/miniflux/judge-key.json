@@ -1,0 +1,512 @@
+[
+ {
+  "src": "A",
+  "id": "inside:processor/step11",
+  "kind": "code step",
+  "text": "Inside the entry processor, step 11: YouTube durations in bulk. When the user shows reading time and a YouTube API key is set.",
+  "code": [
+   "internal/reader/processor/processor.go:172-174"
+  ],
+  "j": "J1"
+ },
+ {
+  "src": "B",
+  "id": "node:router",
+  "kind": "component",
+  "text": "HTTP server and router (Component · internal/http/server). Starts the listeners (TCP, Unix socket, systemd socket, TLS from files or Let's Encrypt) and builds the router: health probes at the root, then the Fever, Google Reader and REST APIs, /metrics , and the web UI as the catch-all, all under an optional base path. When METRICS_COLLECTOR is on, the daemon also runs a collector goroutine that reads counts from storage on a timer for Prometheus to scrape. Why: A shared middleware finds the real client IP behind trusted proxies and sets HSTS once, so no handler has to. Built with: internal/http/server/routes.go · server.go · middleware.go · golang.org/x/crypto/acme/autocert",
+  "code": [],
+  "j": "J2"
+ },
+ {
+  "src": "AB",
+  "id": "flow:subscribe/2",
+  "kind": "flow step",
+  "text": "Flow \"Subscribe to a website\", step 2 of 11 (HTTP server and router -> Web UI): The web-session middleware loads the session from its cookie and the CSRF middleware checks the form token before submitSubscription runs.",
+  "code": [],
+  "j": "J3"
+ },
+ {
+  "src": "A",
+  "id": "node:scheduler",
+  "kind": "component",
+  "text": "Scheduler (Goroutines · internal/cli/scheduler.go). Two tickers started by the daemon. The feed ticker (every POLLING_FREQUENCY , 60 minutes by default) asks storage for a batch of due feeds and pushes it to the pool. The cleanup ticker (every 24 hours) removes old sessions, archives old entries and deletes orphan icons. Why: Feeds have no way to notify a reader; polling on a schedule is the only way news arrives. Built with: internal/cli/scheduler.go · cleanup_tasks.go · daemon.go",
+  "code": [],
+  "j": "J4"
+ },
+ {
+  "src": "A",
+  "id": "node:router",
+  "kind": "component",
+  "text": "HTTP server and router (Component · internal/http/server). Starts the listeners (TCP, Unix socket, systemd socket, TLS from files or Let's Encrypt) and builds the router: health probes at the root, then the Fever, Google Reader and REST APIs, /metrics , and the web UI as the catch-all, all under an optional base path. Why: A shared middleware finds the real client IP behind trusted proxies and sets HSTS once, so no handler has to. Built with: internal/http/server/routes.go · server.go · middleware.go · golang.org/x/crypto/acme/autocert",
+  "code": [],
+  "j": "J5"
+ },
+ {
+  "src": "B",
+  "id": "node:idp",
+  "kind": "component",
+  "text": "OAuth2 or OIDC provider (External system). Optional sign-in through Google or any OpenID Connect provider, set with OAUTH2_PROVIDER . The redirect stores a state and a PKCE verifier in the web session; the callback checks the state, fetches the profile and finds (or, if allowed, creates) the user. Users can also sign in with a password, a passkey (WebAuthn) or a trusted reverse-proxy header. Why: Lets a household or a team reuse the identity they already have instead of another password. Built with: internal/oauth2/ · coreos/go-oidc · golang.org/x/oauth2",
+  "code": [],
+  "j": "J6"
+ },
+ {
+  "src": "B",
+  "id": "flow:poll/2",
+  "kind": "flow step",
+  "text": "Flow \"Scheduled refresh\", step 2 of 14 (Storage layer -> PostgreSQL): One SELECT id, user_id, feed_url FROM feeds … ORDER BY next_check_at . A per-host cap, when configured, is applied in Go while reading the rows.",
+  "code": [],
+  "j": "J7"
+ },
+ {
+  "src": "B",
+  "id": "inside:processor/step11",
+  "kind": "code step",
+  "text": "Inside the entry processor, step 11: YouTube durations in bulk. When the user shows reading time, FETCH_YOUTUBE_WATCH_TIME is on and a YOUTUBE_API_KEY is set; calls the YouTube Data API.",
+  "code": [
+   "internal/reader/processor/processor.go:172-174"
+  ],
+  "j": "J8"
+ },
+ {
+  "src": "AB",
+  "id": "edge:ui_st",
+  "kind": "connection",
+  "text": "Web UI -> Storage layer: sessions, entries",
+  "code": [],
+  "j": "J9"
+ },
+ {
+  "src": "AB",
+  "id": "flow:subscribe/5",
+  "kind": "flow step",
+  "text": "Flow \"Subscribe to a website\", step 5 of 11 (Fetcher -> Feeds and websites): The site answers with HTML or, if the URL was a feed, with the feed itself.",
+  "code": [],
+  "j": "J10"
+ },
+ {
+  "src": "AB",
+  "id": "inside:processor/step2",
+  "kind": "code step",
+  "text": "Inside the entry processor, step 2: One request builder for scraping.",
+  "code": [
+   "internal/reader/processor/processor.go:53-62"
+  ],
+  "j": "J11"
+ },
+ {
+  "src": "AB",
+  "id": "inside:processor/exit8",
+  "kind": "code exit",
+  "text": "Inside the entry processor, step 8: when blocked, Dropped from the feed",
+  "code": [
+   "internal/reader/processor/processor.go:146-158"
+  ],
+  "j": "J12"
+ },
+ {
+  "src": "B",
+  "id": "files:internal/ui/auth.go",
+  "kind": "repository path",
+  "text": "internal/ui/auth.go: Attaches the user to the web session at sign-in, rotates it and sets the cookie. Implements: Web UI.",
+  "code": [
+   "internal/ui/auth.go"
+  ],
+  "j": "J13"
+ },
+ {
+  "src": "B",
+  "id": "flow:signin/3",
+  "kind": "flow step",
+  "text": "Flow \"Sign in with OIDC\", step 3 of 7 (Web UI -> Storage layer): The anonymous session is stored in web_sessions with no user, so the next request finds its CSRF token and OAuth2 state. Unused ones are deleted after 24 hours.",
+  "code": [],
+  "j": "J14"
+ },
+ {
+  "src": "B",
+  "id": "flow:signin/1",
+  "kind": "flow step",
+  "text": "Flow \"Sign in with OIDC\", step 1 of 7 (Reader -> HTTP server and router): The reader opens / without a session cookie. It is a public route that starts a session, so it is answered with the login page.",
+  "code": [],
+  "j": "J15"
+ },
+ {
+  "src": "AB",
+  "id": "files:internal/reader/fetcher/",
+  "kind": "repository path",
+  "text": "internal/reader/fetcher/: Request builder and response handler. Implements: Fetcher.",
+  "code": [
+   "internal/reader/fetcher/"
+  ],
+  "j": "J16"
+ },
+ {
+  "src": "AB",
+  "id": "files:packaging/",
+  "kind": "repository path",
+  "text": "packaging/: Dockerfiles, Debian and RPM packages, the systemd unit.",
+  "code": [
+   "packaging/"
+  ],
+  "j": "J17"
+ },
+ {
+  "src": "B",
+  "id": "inside:processor/step6",
+  "kind": "code step",
+  "text": "Inside the entry processor, step 6: Scrape the article. Only when the crawler is on and the entry is new or the refresh is forced: custom CSS rules or the readability extractor.",
+  "code": [
+   "internal/reader/processor/processor.go:95-142"
+  ],
+  "j": "J18"
+ },
+ {
+  "src": "AB",
+  "id": "files:internal/integration/",
+  "kind": "repository path",
+  "text": "internal/integration/: One folder per third-party service, called from integration.go. Implements: Integrations.",
+  "code": [
+   "internal/integration/"
+  ],
+  "j": "J19"
+ },
+ {
+  "src": "AB",
+  "id": "flow:read/3",
+  "kind": "flow step",
+  "text": "Flow \"Read an entry\", step 3 of 9 (Web UI -> Storage layer): The handler loads the entry, finds the previous and next unread entries for the arrows, and marks it read if the user's settings say so.",
+  "code": [],
+  "j": "J20"
+ },
+ {
+  "src": "AB",
+  "id": "node:apps",
+  "kind": "component",
+  "text": "Apps and scripts (External systems). Native feed reader apps that speak the Fever or Google Reader API, and scripts that use the REST API (for example through the Go client in client/ ). Why: Miniflux has no mobile app of its own; speaking existing protocols lets readers keep the app they like. Built with: Fever and Google Reader clients · client/ Go library · curl with X-Auth-Token",
+  "code": [],
+  "j": "J21"
+ },
+ {
+  "src": "AB",
+  "id": "flow:read/2",
+  "kind": "flow step",
+  "text": "Flow \"Read an entry\", step 2 of 9 (HTTP server and router -> Web UI): No valid session: redirect to the login page with the address to come back to. Otherwise the request carries the user ID into the handler.",
+  "code": [],
+  "j": "J22"
+ },
+ {
+  "src": "B",
+  "id": "node:scheduler",
+  "kind": "component",
+  "text": "Scheduler (Goroutines · internal/cli/scheduler.go). Two tickers started by the daemon. The feed ticker (every POLLING_FREQUENCY , 60 minutes by default) asks storage for a batch of due feeds and pushes it to the pool. The cleanup ticker (every 24 hours) removes old sessions, archives old entries and deletes orphan icons. With DISABLE_SCHEDULER_SERVICE set, an outside cron can run the same work as one-off commands: miniflux -refresh-feeds (its own short-lived workers, not the pool) and miniflux -run-cleanup-tasks . Why: Feeds have no way to notify a reader; polling on a schedule is the only way news arrives. Built with: internal/cli/scheduler.go · cleanup_tasks.go · refresh_feeds.go · daemon.go",
+  "code": [],
+  "j": "J23"
+ },
+ {
+  "src": "B",
+  "id": "flow:signin/4",
+  "kind": "flow step",
+  "text": "Flow \"Sign in with OIDC\", step 4 of 7 (Web UI -> OAuth2 or OIDC provider): /oauth2/oidc/redirect stores a random state and a PKCE code verifier in the session and sends the browser to the provider. On return, /oauth2/oidc/callback compares the state in constant time and exchanges the code for the user's profile.",
+  "code": [],
+  "j": "J24"
+ },
+ {
+  "src": "AB",
+  "id": "flow:poll/14",
+  "kind": "flow step",
+  "text": "Flow \"Scheduled refresh\", step 14 of 14 (Integrations -> Third-party services): Each enabled notification service gets the new entries: a signed webhook, a Slack or Discord message, an ntfy push, one Telegram message per entry.",
+  "code": [],
+  "j": "J25"
+ },
+ {
+  "src": "A",
+  "id": "inside:processor/step6",
+  "kind": "code step",
+  "text": "Inside the entry processor, step 6: Scrape the article. Only when the crawler is on and the entry is new: custom CSS rules or the readability extractor.",
+  "code": [
+   "internal/reader/processor/processor.go:95-142"
+  ],
+  "j": "J26"
+ },
+ {
+  "src": "AB",
+  "id": "edge:ui_id",
+  "kind": "connection",
+  "text": "Web UI -> OAuth2 or OIDC provider: OAuth2 redirect",
+  "code": [],
+  "j": "J27"
+ },
+ {
+  "src": "A",
+  "id": "node:idp",
+  "kind": "component",
+  "text": "OAuth2 or OIDC provider (External system). Optional sign-in through Google or any OpenID Connect provider, set with OAUTH2_PROVIDER . Users can also sign in with a password, a passkey (WebAuthn) or a trusted reverse-proxy header. Why: Lets a household or a team reuse the identity they already have instead of another password. Built with: internal/oauth2/ · coreos/go-oidc · golang.org/x/oauth2",
+  "code": [],
+  "j": "J28"
+ },
+ {
+  "src": "AB",
+  "id": "node:pool",
+  "kind": "component",
+  "text": "Worker pool (Goroutines · internal/worker). WORKER_POOL_SIZE goroutines (16 by default) reading jobs from one unbuffered channel. Each job is one feed; the worker calls RefreshFeed and records how long it took. Why: Feeds are slow and independent, so many are fetched at once while the channel keeps the scheduler from running ahead of the workers. Built with: internal/worker/pool.go · worker.go",
+  "code": [],
+  "j": "J29"
+ },
+ {
+  "src": "AB",
+  "id": "files:internal/config/options.go",
+  "kind": "repository path",
+  "text": "internal/config/options.go: Every option with its default, read from environment variables or a config file.",
+  "code": [
+   "internal/config/options.go"
+  ],
+  "j": "J30"
+ },
+ {
+  "src": "B",
+  "id": "files:internal/cli/refresh_feeds.go",
+  "kind": "repository path",
+  "text": "internal/cli/refresh_feeds.go: The -refresh-feeds command: one batch refreshed by its own workers, for installs that poll from cron. Implements: Scheduler.",
+  "code": [
+   "internal/cli/refresh_feeds.go"
+  ],
+  "j": "J31"
+ },
+ {
+  "src": "AB",
+  "id": "flow:poll/12",
+  "kind": "flow step",
+  "text": "Flow \"Scheduled refresh\", step 12 of 14 (Storage layer -> PostgreSQL): The insert computes the document_vectors search column from the title (weight A) and the content (weight B).",
+  "code": [],
+  "j": "J32"
+ },
+ {
+  "src": "AB",
+  "id": "node:refresh",
+  "kind": "component",
+  "text": "Feed handler (Component · internal/reader/handler). CreateFeed and RefreshFeed : load the feed, schedule its next check, fetch it, parse it, process its entries, store them, then hand new entries to integrations and update the icon. Why: The scheduler, the UI and the API all refresh feeds through these two functions, so every path gets the same rules. Built with: internal/reader/handler/handler.go · internal/model/feed.go",
+  "code": [],
+  "j": "J33"
+ },
+ {
+  "src": "B",
+  "id": "flow:poll/1",
+  "kind": "flow step",
+  "text": "Flow \"Scheduled refresh\", step 1 of 14 (Scheduler -> Storage layer): Every POLLING_FREQUENCY (60 minutes by default) the feed ticker builds a batch: feeds that are not disabled, have fewer than 3 parsing errors and whose next_check_at has passed, oldest first, at most BATCH_SIZE (100). POLLING_LIMIT_PER_HOST can cap feeds per host; it is 0 (no cap) by default.",
+  "code": [],
+  "j": "J34"
+ },
+ {
+  "src": "AB",
+  "id": "inside:db/table6",
+  "kind": "data",
+  "text": "Inside PostgreSQL: the main tables: integrations One wide row per user with every service's settings. Fields: user_id fk -> users; *_enabled · *_url · *_token mixed a column set per service, added by migrations; fever_* · googlereader_* text credentials for the compatibility APIs",
+  "code": [
+   "internal/database/migrations.go:153-167"
+  ],
+  "j": "J35"
+ },
+ {
+  "src": "A",
+  "id": "flow:poll/1",
+  "kind": "flow step",
+  "text": "Flow \"Scheduled refresh\", step 1 of 14 (Scheduler -> Storage layer): Every POLLING_FREQUENCY (60 minutes by default) the feed ticker builds a batch: feeds that are not disabled, have fewer than 3 parsing errors and whose next_check_at has passed, oldest first, at most BATCH_SIZE (100), and only so many per host.",
+  "code": [],
+  "j": "J36"
+ },
+ {
+  "src": "B",
+  "id": "node:discovery",
+  "kind": "component",
+  "text": "Subscription finder (Component · internal/reader/subscription). Turns a website address into feed URLs: is it already a feed, a YouTube channel or a GitHub page, does the HTML link to feeds, can the user's own RSS-Bridge server make one, or does a well-known path like /feed answer. Why: Readers paste a website, not a feed URL. When the address is a feed, the body is kept so the feed is not downloaded twice. Built with: internal/reader/subscription/finder.go · goquery",
+  "code": [],
+  "j": "J37"
+ },
+ {
+  "src": "AB",
+  "id": "files:internal/worker/",
+  "kind": "repository path",
+  "text": "internal/worker/: The worker pool. Implements: Worker pool.",
+  "code": [
+   "internal/worker/"
+  ],
+  "j": "J38"
+ },
+ {
+  "src": "B",
+  "id": "flow:signin/7",
+  "kind": "flow step",
+  "text": "Flow \"Sign in with OIDC\", step 7 of 7 (HTTP server and router -> Reader): The new cookie ( id.secret , HttpOnly, SameSite=Lax) is set and the browser is redirected to the user's home page.",
+  "code": [],
+  "j": "J39"
+ },
+ {
+  "src": "AB",
+  "id": "node:fetcher",
+  "kind": "component",
+  "text": "Fetcher (Component · internal/reader/fetcher). A request builder over Go's HTTP client: per-feed user agent, cookie, credentials and proxy, a rotating proxy list, ETag and Last-Modified, timeouts, and a check after DNS resolution that refuses private network addresses unless allowed. Why: Users can make the server fetch any URL; checking the resolved IP at dial time stops a feed from probing the internal network. Built with: internal/reader/fetcher/request_builder.go · response_handler.go · internal/proxyrotator/",
+  "code": [],
+  "j": "J40"
+ },
+ {
+  "src": "B",
+  "id": "flow:signin/2",
+  "kind": "flow step",
+  "text": "Flow \"Sign in with OIDC\", step 2 of 7 (HTTP server and router -> Web UI): The web-session middleware makes an anonymous session with its own CSRF token and sets its cookie.",
+  "code": [],
+  "j": "J41"
+ },
+ {
+  "src": "AB",
+  "id": "edge:ui_di",
+  "kind": "connection",
+  "text": "Web UI -> Subscription finder: find feeds",
+  "code": [],
+  "j": "J42"
+ },
+ {
+  "src": "AB",
+  "id": "files:internal/template/templates/",
+  "kind": "repository path",
+  "text": "internal/template/templates/: Go HTML templates, embedded in the binary. Implements: Web UI.",
+  "code": [
+   "internal/template/templates/"
+  ],
+  "j": "J43"
+ },
+ {
+  "src": "AB",
+  "id": "inside:refresh/step1",
+  "kind": "code step",
+  "text": "Inside the feed handler: RefreshFeed, step 1: Load the feed.",
+  "code": [
+   "internal/reader/handler/handler.go:211-218"
+  ],
+  "j": "J44"
+ },
+ {
+  "src": "A",
+  "id": "inside:refresh/step12",
+  "kind": "code step",
+  "text": "Inside the feed handler: RefreshFeed, step 12: Store the entries. Existing entries are updated only if the feed neither uses the crawler nor ignores updates.",
+  "code": [
+   "internal/reader/handler/handler.go:329-337"
+  ],
+  "j": "J45"
+ },
+ {
+  "src": "AB",
+  "id": "edge:rf_fe",
+  "kind": "connection",
+  "text": "Feed handler -> Fetcher: conditional GET",
+  "code": [],
+  "j": "J46"
+ },
+ {
+  "src": "AB",
+  "id": "edge:api_rf",
+  "kind": "connection",
+  "text": "REST API v1 -> Feed handler: CreateFeed, RefreshFeed",
+  "code": [],
+  "j": "J47"
+ },
+ {
+  "src": "AB",
+  "id": "flow:poll/6",
+  "kind": "flow step",
+  "text": "Flow \"Scheduled refresh\", step 6 of 14 (Feed handler -> Fetcher): The request carries the feed's own user agent, cookie, credentials and proxy, plus If-None-Match and If-Modified-Since from the last response.",
+  "code": [],
+  "j": "J48"
+ },
+ {
+  "src": "A",
+  "id": "node:discovery",
+  "kind": "component",
+  "text": "Subscription finder (Component · internal/reader/subscription). Turns a website address into feed URLs: is it already a feed, a YouTube channel or a GitHub page, does the HTML link to feeds, can RSS-Bridge make one, or does a well-known path like /feed answer. Why: Readers paste a website, not a feed URL. When the address is a feed, the body is kept so the feed is not downloaded twice. Built with: internal/reader/subscription/finder.go · goquery",
+  "code": [],
+  "j": "J49"
+ },
+ {
+  "src": "B",
+  "id": "flow:poll/11",
+  "kind": "flow step",
+  "text": "Flow \"Scheduled refresh\", step 11 of 14 (Feed handler -> Storage layer): RefreshFeedEntries runs one transaction per entry: an existing entry is updated when the refresh is forced, or when the feed neither uses the crawler nor ignores updates; a new one is inserted unless a tombstone says it was deleted.",
+  "code": [],
+  "j": "J50"
+ },
+ {
+  "src": "AB",
+  "id": "inside:processor/step3",
+  "kind": "code step",
+  "text": "Inside the entry processor, step 3: Walk the entries oldest first. So older entries get lower creation times.",
+  "code": [
+   "internal/reader/processor/processor.go:64-65"
+  ],
+  "j": "J51"
+ },
+ {
+  "src": "AB",
+  "id": "edge:rf_pa",
+  "kind": "connection",
+  "text": "Feed handler -> Feed parsers: ParseFeed",
+  "code": [],
+  "j": "J52"
+ },
+ {
+  "src": "B",
+  "id": "flow:signin/6",
+  "kind": "flow step",
+  "text": "Flow \"Sign in with OIDC\", step 6 of 7 (Storage layer -> PostgreSQL): The rotated row in web_sessions now carries the user_id .",
+  "code": [],
+  "j": "J53"
+ },
+ {
+  "src": "AB",
+  "id": "edge:fe_ws",
+  "kind": "connection",
+  "text": "Fetcher -> Feeds and websites: HTTP GET",
+  "code": [],
+  "j": "J54"
+ },
+ {
+  "src": "B",
+  "id": "inside:refresh/step12",
+  "kind": "code step",
+  "text": "Inside the feed handler: RefreshFeed, step 12: Store the entries. Existing entries are updated when the refresh is forced, or when the feed neither uses the crawler nor ignores updates.",
+  "code": [
+   "internal/reader/handler/handler.go:329-337"
+  ],
+  "j": "J55"
+ },
+ {
+  "src": "A",
+  "id": "flow:poll/2",
+  "kind": "flow step",
+  "text": "Flow \"Scheduled refresh\", step 2 of 14 (Storage layer -> PostgreSQL): One SELECT id, user_id, feed_url FROM feeds … ORDER BY next_check_at . The per-host limit is applied in Go while reading the rows.",
+  "code": [],
+  "j": "J56"
+ },
+ {
+  "src": "A",
+  "id": "flow:poll/11",
+  "kind": "flow step",
+  "text": "Flow \"Scheduled refresh\", step 11 of 14 (Feed handler -> Storage layer): RefreshFeedEntries runs one transaction per entry: update it if it exists (unless the feed ignores updates or uses the crawler), insert it if not, unless a tombstone says it was deleted.",
+  "code": [],
+  "j": "J57"
+ },
+ {
+  "src": "B",
+  "id": "flow:signin/5",
+  "kind": "flow step",
+  "text": "Flow \"Sign in with OIDC\", step 5 of 7 (Web UI -> Storage layer): The user is found by the profile ID, or created when OAUTH2_USER_CREATION allows it. The session gets the user and is rotated: new ID, new secret, old row replaced. The password form ( POST /login , bcrypt check) ends in the same rotation.",
+  "code": [],
+  "j": "J58"
+ },
+ {
+  "src": "AB",
+  "id": "flow:poll/13",
+  "kind": "flow step",
+  "text": "Flow \"Scheduled refresh\", step 13 of 14 (Feed handler -> Integrations): If the insert produced new entries, PushEntries starts in its own goroutine. The refresh does not wait for it.",
+  "code": [],
+  "j": "J59"
+ }
+]

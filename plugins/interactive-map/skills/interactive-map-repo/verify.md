@@ -12,6 +12,8 @@ For each claim, find the place in the repository that settles it. Start from the
 - `wrong`: the code says something else. Say in `fix` what is true, with evidence. A claim that is partly wrong is wrong: a wrong technology, number, direction, order or owner is enough.
 - `not_found`: you looked and found nothing for or against it. Say where you looked.
 
+When you confirm a claim that is only loosely right (a missing condition, an "every" with an exception, a default that depends on config), say so in `note`. The author reads only this file, not your reply.
+
 How to read each kind:
 
 - **component**: it exists as a separate part (process, store, module or outside system) and does what `what` says; the technology in `Built with` and the files named are right. A `why` that follows from what you verified is fine; a claim about intent or history with no trace in the code, docs or comments is `not_found`.
@@ -19,7 +21,7 @@ How to read each kind:
 - **flow step**: this hop happens in this flow, after the previous step and before the next. Check the order, not just that both ends exist.
 - **code step / code exit**: the referenced lines do what the step says, and the exit happens under that condition.
 - **data**: the table or key exists with those fields and types, lifetime and references.
-- **repository path**: the path holds what the line says and implements the components it names.
+- **repository path**: the path holds what the line says and belongs to the components it is tied to (their code lives there, or the files feed them).
 
 Be strict about details a reader would remember: numbers (TTLs, limits, counts of workers), names of libraries and services, HTTP methods and routes, and which component owns a piece of logic.
 
@@ -41,6 +43,7 @@ Write one JSON file, the path you were given, and reply with its path and the co
 {
   "claims": [
     {"id": "edge:re_qu", "verdict": "confirmed", "evidence": "server/handlers/links.handler.js:473-478", "quote": "const link = await query.link.find({ address, domain_id })"},
+    {"id": "flow:follow/5", "verdict": "confirmed", "evidence": "server/handlers/links.handler.js:520-530", "quote": "...", "note": "Loose: the job is skipped for bots too, which the step does not say."},
     {"id": "node:queries", "verdict": "wrong", "evidence": "server/redis.js:12", "quote": "...", "fix": "Cached for 5 minutes, not 15."},
     {"id": "flow:follow/7", "verdict": "not_found", "fix": "Looked in server/queues/ and server/cron.js; no sign of six workers."}
   ],

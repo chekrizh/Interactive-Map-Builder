@@ -1,0 +1,536 @@
+[
+ {
+  "src": "AB",
+  "id": "flow:prepare/2",
+  "kind": "flow step",
+  "text": "Flow \"Prepare a dataset\", step 2 of 4 (Character-level prep -> Tiny Shakespeare text): If input.txt is not there yet, it is downloaded once from the char-rnn repository and saved beside the script.",
+  "code": [],
+  "j": "J1"
+ },
+ {
+  "src": "AB",
+  "id": "inside:loop/step3",
+  "kind": "code step",
+  "text": "Inside the training loop, step 3: Gradient sync only on the last micro-step. Under DDP, toggles require_backward_grad_sync instead of using no_sync() .",
+  "code": [
+   "train.py:292-298"
+  ],
+  "j": "J2"
+ },
+ {
+  "src": "AB",
+  "id": "edge:cfg_sample",
+  "kind": "connection",
+  "text": "Configurator -> Sampling script: override globals",
+  "code": [],
+  "j": "J3"
+ },
+ {
+  "src": "B",
+  "id": "flow:step/5",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 5 of 7 (Training loop -> Batch loader): While the GPU still works on that forward pass, the next batch is fetched and copied over asynchronously (pinned memory, non-blocking).",
+  "code": [],
+  "j": "J4"
+ },
+ {
+  "src": "AB",
+  "id": "files:model.py",
+  "kind": "repository path",
+  "text": "model.py: The GPT: attention, MLP, blocks, the model, GPT-2 weight import, optimizer setup, MFU and generation. Kept free of training logic so train.py, sample.py and bench.py all import the same model. Implements: GPT model, Transformer block, GPT-2 weight import, Autoregressive sampler.",
+  "code": [
+   "model.py"
+  ],
+  "j": "J5"
+ },
+ {
+  "src": "B",
+  "id": "flow:start/5",
+  "kind": "flow step",
+  "text": "Flow \"Start a training run from scratch\", step 5 of 5 (Run setup and model init -> Training loop): AdamW is created with weight decay only on 2-D tensors, the model is compiled (unless --compile=False ), and wrapped in DDP if RANK is set. The loop starts at iteration 0 (or at the saved iteration on resume).",
+  "code": [],
+  "j": "J6"
+ },
+ {
+  "src": "B",
+  "id": "flow:step/6",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 6 of 7 (Training loop -> GPT model): scaler.scale(loss).backward() accumulates gradients over the micro-steps.",
+  "code": [],
+  "j": "J7"
+ },
+ {
+  "src": "B",
+  "id": "node:sample",
+  "kind": "component",
+  "text": "Sampling script (Script · sample.py). Loads a model from out_dir/ckpt.pt or a GPT-2 variant, picks the character codec from meta.pkl or falls back to GPT-2 BPE, encodes the prompt and prints num_samples generations. Why: The way to see what a run learned. It has to find the right tokenizer on its own, because the checkpoint stores the dataset name but not the vocabulary. Built with: sample.py · tiktoken (downloads the GPT-2 BPE files on first use, outside this repo's code) · prompt from --start or FILE:",
+  "code": [],
+  "j": "J8"
+ },
+ {
+  "src": "AB",
+  "id": "files:config/train_gpt2.py",
+  "kind": "repository path",
+  "text": "config/train_gpt2.py: GPT-2 124M on OpenWebText across 8 GPUs, with W&B logging.",
+  "code": [
+   "config/train_gpt2.py"
+  ],
+  "j": "J9"
+ },
+ {
+  "src": "B",
+  "id": "flow:step/1",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 1 of 7 (Training loop -> Batch loader): The first batch was fetched before the loop began. Each micro-step uses the current X, Y .",
+  "code": [],
+  "j": "J10"
+ },
+ {
+  "src": "A",
+  "id": "flow:finetune/2",
+  "kind": "flow step",
+  "text": "Flow \"Start a finetune from GPT-2\", step 2 of 7 (Configurator -> Run setup and model init): configurator.py is exec 'd into train.py's globals: the config file sets init_from='gpt2-xl' , dataset='shakespeare' , batch size 1 with 32 accumulation steps, and a constant learning rate of 3e-5.",
+  "code": [],
+  "j": "J11"
+ },
+ {
+  "src": "AB",
+  "id": "flow:sample/4",
+  "kind": "flow step",
+  "text": "Flow \"Sample text from a trained model\", step 4 of 7 (Sampling script -> Token files): The checkpoint's config names the dataset; if data/<dataset>/meta.pkl exists, its stoi / itos become the codec. Otherwise tiktoken's GPT-2 BPE is used.",
+  "code": [],
+  "j": "J12"
+ },
+ {
+  "src": "B",
+  "id": "edge:loop_ddp",
+  "kind": "connection",
+  "text": "Training loop -> DDP peer processes: all-reduce grads (NCCL)",
+  "code": [],
+  "j": "J13"
+ },
+ {
+  "src": "AB",
+  "id": "files:bench.py",
+  "kind": "repository path",
+  "text": "bench.py: A stripped-down training loop for timing and profiling. Implements: Benchmark script.",
+  "code": [
+   "bench.py"
+  ],
+  "j": "J14"
+ },
+ {
+  "src": "A",
+  "id": "flow:step/6",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 6 of 6 (Training loop -> GPT model): scaler.scale(loss).backward() . Under DDP, gradients are all-reduced only on the last micro-step.",
+  "code": [],
+  "j": "J15"
+ },
+ {
+  "src": "AB",
+  "id": "inside:gpt/exit1",
+  "kind": "code exit",
+  "text": "Inside the GPT forward pass, step 1: when longer than block_size, Assertion error",
+  "code": [
+   "model.py:173"
+  ],
+  "j": "J16"
+ },
+ {
+  "src": "A",
+  "id": "flow:step/2",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 2 of 6 (Batch loader -> Token files): get_batch opens train.bin as a fresh np.memmap , draws batch_size random start offsets and slices block_size tokens from each; targets are the same slices one token later.",
+  "code": [],
+  "j": "J17"
+ },
+ {
+  "src": "A",
+  "id": "flow:step/5",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 5 of 6 (Training loop -> Batch loader): While the GPU still works on that forward pass, the next batch is fetched and copied over asynchronously (pinned memory, non-blocking).",
+  "code": [],
+  "j": "J18"
+ },
+ {
+  "src": "A",
+  "id": "flow:finetune/6",
+  "kind": "flow step",
+  "text": "Flow \"Start a finetune from GPT-2\", step 6 of 7 (GPT-2 weight import -> Run setup and model init): The real shape (layers, heads, width, block size, bias, vocab 50257) is read back into model_args so the checkpoint can rebuild it. A smaller block_size would crop the position table here.",
+  "code": [],
+  "j": "J19"
+ },
+ {
+  "src": "A",
+  "id": "flow:step/3",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 3 of 6 (Training loop -> GPT model): Under autocast (bfloat16 or float16 on GPU), model(X, Y) returns logits and the cross-entropy loss, which is divided by the number of accumulation steps.",
+  "code": [],
+  "j": "J20"
+ },
+ {
+  "src": "A",
+  "id": "flow:finetune/1",
+  "kind": "flow step",
+  "text": "Flow \"Start a finetune from GPT-2\", step 1 of 7 (ML practitioner -> Configurator): python train.py config/finetune_shakespeare.py . Any --key=value after it wins over the file.",
+  "code": [],
+  "j": "J21"
+ },
+ {
+  "src": "AB",
+  "id": "inside:ckpt/table2",
+  "kind": "data",
+  "text": "Inside ckpt.pt: model_args The model's shape, so GPTConfig can be rebuilt. Fields: n_layer, n_head, n_embd int; block_size int after any crop; vocab_size int 50304 by default from scratch, 50257 from GPT-2, 65 for characters; bias bool; dropout float the only one resume lets the command line change",
+  "code": [
+   "train.py:147-148"
+  ],
+  "j": "J22"
+ },
+ {
+  "src": "AB",
+  "id": "edge:cfg_init",
+  "kind": "connection",
+  "text": "Configurator -> Run setup and model init: override globals",
+  "code": [],
+  "j": "J23"
+ },
+ {
+  "src": "AB",
+  "id": "node:charprep",
+  "kind": "component",
+  "text": "Character-level prep (Script · data/shakespeare_char/prepare.py). Downloads tiny Shakespeare, builds a 65-symbol vocabulary from the characters it contains, encodes a 90/10 split, and saves the mapping in meta.pkl . Why: The quick-start dataset: tiny vocabulary, tiny model, a run of minutes. meta.pkl is how training and sampling learn that this dataset is not GPT-2 BPE. Built with: requests · numpy · pickle",
+  "code": [],
+  "j": "J24"
+ },
+ {
+  "src": "AB",
+  "id": "node:wandb",
+  "kind": "component",
+  "text": "Weights & Biases (External · optional). Receives train and val loss, learning rate and MFU at every evaluation when wandb_log=True . Why: Multi-day runs need curves you can watch from elsewhere. It is off by default and only the master process logs. Built with: wandb client, imported only when enabled · on in config/train_gpt2.py",
+  "code": [],
+  "j": "J25"
+ },
+ {
+  "src": "AB",
+  "id": "inside:loop/step7",
+  "kind": "code step",
+  "text": "Inside the training loop, step 7: Clip the gradient norm.",
+  "code": [
+   "train.py:307-309"
+  ],
+  "j": "J26"
+ },
+ {
+  "src": "A",
+  "id": "node:shkprep",
+  "kind": "component",
+  "text": "Shakespeare BPE prep (Script · data/shakespeare/prepare.py). Downloads tiny Shakespeare, takes the first 90% as train and the rest as val, and encodes both with the GPT-2 BPE. Why: Finetuning a pretrained GPT-2 needs the same 50257-token vocabulary it was trained with, so this dataset uses BPE, not characters. Built with: requests · tiktoken · numpy.tofile",
+  "code": [],
+  "j": "J27"
+ },
+ {
+  "src": "AB",
+  "id": "edge:r_char",
+  "kind": "connection",
+  "text": "ML practitioner -> Character-level prep: python prepare.py",
+  "code": [],
+  "j": "J28"
+ },
+ {
+  "src": "AB",
+  "id": "files:sample.py",
+  "kind": "repository path",
+  "text": "sample.py: Load a checkpoint or GPT-2, pick the tokenizer, generate samples. Implements: Sampling script.",
+  "code": [
+   "sample.py"
+  ],
+  "j": "J29"
+ },
+ {
+  "src": "AB",
+  "id": "inside:gpt/step6",
+  "kind": "code step",
+  "text": "Inside the GPT forward pass, step 6: Final LayerNorm.",
+  "code": [
+   "model.py:182"
+  ],
+  "j": "J30"
+ },
+ {
+  "src": "B",
+  "id": "flow:step/7",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 7 of 7 (Training loop -> DDP peer processes): Under DDP only: on the last micro-step the backward pass also all-reduces gradients with the other ranks over NCCL, so every rank holds the same averaged gradient.",
+  "code": [],
+  "j": "J31"
+ },
+ {
+  "src": "B",
+  "id": "flow:start/3",
+  "kind": "flow step",
+  "text": "Flow \"Start a training run from scratch\", step 3 of 5 (Run setup and model init -> Token files): train.py finds data/shakespeare_char/meta.pkl and reads vocab_size = 65 . Without a meta.pkl (the BPE datasets) a from-scratch model gets 50304, GPT-2's 50257 rounded up for efficiency.",
+  "code": [],
+  "j": "J32"
+ },
+ {
+  "src": "B",
+  "id": "node:ddp",
+  "kind": "component",
+  "text": "DDP peer processes (Worker pool · torchrun ranks). Under torchrun , N copies of train.py run, one per GPU, possibly across nodes. Each reads RANK , LOCAL_RANK and WORLD_SIZE , joins an NCCL process group, divides gradient_accumulation_steps by the world size, and all-reduces gradients on the last micro-step. Only rank 0 evaluates, logs and checkpoints. Why: This is how the GPT-2 124M run uses 8 GPUs for one ~0.5M-token batch. Without RANK set, train.py runs as a single process and none of this happens. Built with: torch.distributed · DistributedDataParallel · NCCL by default ( backend ) · train.py lines 82-100, 211-212, 293-298, 335-336",
+  "code": [],
+  "j": "J33"
+ },
+ {
+  "src": "AB",
+  "id": "inside:loop/step2",
+  "kind": "code step",
+  "text": "Inside the training loop, step 2: Evaluate and maybe checkpoint. Every eval_interval iterations on the master process.",
+  "code": [
+   "train.py:262-286"
+  ],
+  "j": "J34"
+ },
+ {
+  "src": "AB",
+  "id": "edge:cfg_bench",
+  "kind": "connection",
+  "text": "Configurator -> Benchmark script: override globals",
+  "code": [],
+  "j": "J35"
+ },
+ {
+  "src": "A",
+  "id": "flow:finetune/5",
+  "kind": "flow step",
+  "text": "Flow \"Start a finetune from GPT-2\", step 5 of 7 (GPT-2 weight import -> Hugging Face Hub): A GPT with 48 layers, 25 heads and 1600 channels is built; Hugging Face's GPT2LMHeadModel is loaded and its tensors are copied in, the Conv1D weights transposed.",
+  "code": [],
+  "j": "J36"
+ },
+ {
+  "src": "AB",
+  "id": "node:pretrained",
+  "kind": "component",
+  "text": "GPT-2 weight import (Component · GPT.from_pretrained). Builds a GPT with the shape of gpt2, -medium, -large or -xl, loads Hugging Face's GPT-2 and copies every tensor across, transposing the four Conv1D weight matrices. Why: Lets nanoGPT evaluate, finetune and sample from OpenAI's checkpoints without adopting the transformers model code. Built with: model.py from_pretrained · transformers.GPT2LMHeadModel",
+  "code": [],
+  "j": "J37"
+ },
+ {
+  "src": "B",
+  "id": "flow:step/4",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 4 of 7 (GPT model -> Transformer block): Inside, token and position embeddings pass through n_layer blocks of causal attention and MLP before the tied output head.",
+  "code": [],
+  "j": "J38"
+ },
+ {
+  "src": "A",
+  "id": "node:sample",
+  "kind": "component",
+  "text": "Sampling script (Script · sample.py). Loads a model from out_dir/ckpt.pt or a GPT-2 variant, picks the character codec from meta.pkl or falls back to GPT-2 BPE, encodes the prompt and prints num_samples generations. Why: The way to see what a run learned. It has to find the right tokenizer on its own, because the checkpoint stores the dataset name but not the vocabulary. Built with: sample.py · tiktoken · prompt from --start or FILE:",
+  "code": [],
+  "j": "J39"
+ },
+ {
+  "src": "B",
+  "id": "node:owtprep",
+  "kind": "component",
+  "text": "OpenWebText prep (Script · data/openwebtext/prepare.py). Downloads OpenWebText, splits off 0.05% as validation, encodes every document with the GPT-2 BPE in 8 processes, appends an end-of-text token and writes each split as one flat uint16 array. Why: Training reads random windows straight from disk, so all tokenisation happens once, ahead of time. The ~17 GB train.bin is the price. Built with: datasets · tiktoken gpt2 encoding · np.memmap · tqdm . Not visible in this repo: tiktoken downloads its GPT-2 BPE files from OpenAI on first use and caches them.",
+  "code": [],
+  "j": "J40"
+ },
+ {
+  "src": "AB",
+  "id": "edge:init_gpt",
+  "kind": "connection",
+  "text": "Run setup and model init -> GPT model: GPT(GPTConfig)",
+  "code": [],
+  "j": "J41"
+ },
+ {
+  "src": "AB",
+  "id": "node:block",
+  "kind": "component",
+  "text": "Transformer block (Component · model.py Block). Pre-norm residual block: causal self-attention then a 4x-wide GELU MLP, each added back to the input. Why: Repeated n_layer times; the attention uses PyTorch's fused scaled_dot_product_attention when available and an explicit masked softmax otherwise. Built with: model.py Block, CausalSelfAttention, MLP, LayerNorm (optional bias)",
+  "code": [],
+  "j": "J42"
+ },
+ {
+  "src": "B",
+  "id": "flow:start/2",
+  "kind": "flow step",
+  "text": "Flow \"Start a training run from scratch\", step 2 of 5 (Configurator -> Run setup and model init): configurator.py is exec 'd into train.py's globals: the config sets dataset='shakespeare_char' , a 6-layer, 6-head, 384-wide model with a 256-token context, batch 64, dropout 0.2, 5000 iterations and out_dir='out-shakespeare-char' . init_from keeps its default, 'scratch' .",
+  "code": [],
+  "j": "J43"
+ },
+ {
+  "src": "AB",
+  "id": "node:evalckpt",
+  "kind": "component",
+  "text": "Evaluate and checkpoint (Component · estimate_loss + save). Every eval_interval iterations, on the master process only, averages the loss over eval_iters batches of each split, logs it, and writes ckpt.pt if val improved or always_save_checkpoint is on. Why: The one place a run reports progress and leaves something usable behind. eval_only=True turns a training run into a pure evaluation (the GPT-2 baseline configs). Built with: train.py estimate_loss and lines 262-288 · torch.save",
+  "code": [],
+  "j": "J44"
+ },
+ {
+  "src": "B",
+  "id": "flow:start/4",
+  "kind": "flow step",
+  "text": "Flow \"Start a training run from scratch\", step 4 of 5 (Run setup and model init -> GPT model): GPT(GPTConfig(**model_args)) : weights drawn from N(0, 0.02), the residual projections scaled down by the depth, token embedding tied to the output head.",
+  "code": [],
+  "j": "J45"
+ },
+ {
+  "src": "A",
+  "id": "flow:finetune/3",
+  "kind": "flow step",
+  "text": "Flow \"Start a finetune from GPT-2\", step 3 of 7 (Run setup and model init -> Token files): train.py looks for data/shakespeare/meta.pkl . There is none for a BPE dataset, so meta_vocab_size stays empty; with gpt2* it is not needed anyway.",
+  "code": [],
+  "j": "J46"
+ },
+ {
+  "src": "A",
+  "id": "flow:finetune/4",
+  "kind": "flow step",
+  "text": "Flow \"Start a finetune from GPT-2\", step 4 of 7 (Run setup and model init -> GPT-2 weight import): Because init_from starts with gpt2 , train.py calls GPT.from_pretrained('gpt2-xl', {dropout}) . Only dropout may be overridden.",
+  "code": [],
+  "j": "J47"
+ },
+ {
+  "src": "AB",
+  "id": "edge:shk_tok",
+  "kind": "connection",
+  "text": "Shakespeare BPE prep -> Token files: write .bin",
+  "code": [],
+  "j": "J48"
+ },
+ {
+  "src": "A",
+  "id": "flow:step/4",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 4 of 6 (GPT model -> Transformer block): Inside, token and position embeddings pass through n_layer blocks of causal attention and MLP before the tied output head.",
+  "code": [],
+  "j": "J49"
+ },
+ {
+  "src": "A",
+  "id": "flow:finetune/7",
+  "kind": "flow step",
+  "text": "Flow \"Start a finetune from GPT-2\", step 7 of 7 (Run setup and model init -> Training loop): AdamW is created with weight decay only on 2-D tensors, the model is compiled (unless --compile=False ), and wrapped in DDP if RANK is set. The loop starts at iteration 0.",
+  "code": [],
+  "j": "J50"
+ },
+ {
+  "src": "AB",
+  "id": "files:data/openwebtext/prepare.py",
+  "kind": "repository path",
+  "text": "data/openwebtext/prepare.py: OpenWebText from Hugging Face in GPT-2 BPE, for reproducing GPT-2. Implements: OpenWebText prep, Token files.",
+  "code": [
+   "data/openwebtext/prepare.py"
+  ],
+  "j": "J51"
+ },
+ {
+  "src": "B",
+  "id": "flow:start/1",
+  "kind": "flow step",
+  "text": "Flow \"Start a training run from scratch\", step 1 of 5 (ML practitioner -> Configurator): python train.py config/train_shakespeare_char.py . Any --key=value after it wins over the file, e.g. --device=cpu --compile=False on a laptop.",
+  "code": [],
+  "j": "J52"
+ },
+ {
+  "src": "B",
+  "id": "flow:step/2",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 2 of 7 (Batch loader -> Token files): get_batch opens train.bin as a fresh np.memmap , draws batch_size random start offsets and slices block_size tokens from each; targets are the same slices one token later.",
+  "code": [],
+  "j": "J53"
+ },
+ {
+  "src": "AB",
+  "id": "files:config/",
+  "kind": "repository path",
+  "text": "config/: Presets: Python files that reassign train.py globals. Implements: Configurator.",
+  "code": [
+   "config/"
+  ],
+  "j": "J54"
+ },
+ {
+  "src": "A",
+  "id": "flow:step/1",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 1 of 6 (Training loop -> Batch loader): The first batch was fetched before the loop began. Each micro-step uses the current X, Y .",
+  "code": [],
+  "j": "J55"
+ },
+ {
+  "src": "AB",
+  "id": "inside:gpt/step3",
+  "kind": "code step",
+  "text": "Inside the GPT forward pass, step 3: Run the n_layer blocks. Each: x + attn(ln_1(x)) , then x + mlp(ln_2(x)) .",
+  "code": [
+   "model.py:180-181"
+  ],
+  "j": "J56"
+ },
+ {
+  "src": "AB",
+  "id": "flow:prepare/3",
+  "kind": "flow step",
+  "text": "Flow \"Prepare a dataset\", step 3 of 4 (Tiny Shakespeare text -> Character-level prep): About 1.1 million characters. Every distinct character becomes a token: 65 of them, sorted, so ids are stable between runs.",
+  "code": [],
+  "j": "J57"
+ },
+ {
+  "src": "A",
+  "id": "node:owtprep",
+  "kind": "component",
+  "text": "OpenWebText prep (Script · data/openwebtext/prepare.py). Downloads OpenWebText, splits off 0.05% as validation, encodes every document with the GPT-2 BPE in 8 processes, appends an end-of-text token and writes each split as one flat uint16 array. Why: Training reads random windows straight from disk, so all tokenisation happens once, ahead of time. The ~17 GB train.bin is the price. Built with: datasets · tiktoken gpt2 encoding · np.memmap · tqdm",
+  "code": [],
+  "j": "J58"
+ },
+ {
+  "src": "AB",
+  "id": "inside:loop/step9",
+  "kind": "code step",
+  "text": "Inside the training loop, step 9: Log loss, time and MFU. MFU is a running average, started after 5 iterations.",
+  "code": [
+   "train.py:316-327"
+  ],
+  "j": "J59"
+ },
+ {
+  "src": "AB",
+  "id": "files:data/shakespeare/prepare.py",
+  "kind": "repository path",
+  "text": "data/shakespeare/prepare.py: Tiny Shakespeare in GPT-2 BPE, for finetuning. Implements: Shakespeare BPE prep, Token files.",
+  "code": [
+   "data/shakespeare/prepare.py"
+  ],
+  "j": "J60"
+ },
+ {
+  "src": "B",
+  "id": "node:shkprep",
+  "kind": "component",
+  "text": "Shakespeare BPE prep (Script · data/shakespeare/prepare.py). Downloads tiny Shakespeare, takes the first 90% as train and the rest as val, and encodes both with the GPT-2 BPE. Why: Finetuning a pretrained GPT-2 needs the same 50257-token vocabulary it was trained with, so this dataset uses BPE, not characters. Built with: requests · tiktoken (fetches its GPT-2 BPE files on first use; not visible in this repo) · numpy.tofile",
+  "code": [],
+  "j": "J61"
+ },
+ {
+  "src": "AB",
+  "id": "edge:pre_hf",
+  "kind": "connection",
+  "text": "GPT-2 weight import -> Hugging Face Hub: GPT-2 weights (HTTPS)",
+  "code": [],
+  "j": "J62"
+ },
+ {
+  "src": "B",
+  "id": "flow:step/3",
+  "kind": "flow step",
+  "text": "Flow \"One training iteration\", step 3 of 7 (Training loop -> GPT model): Under autocast (bfloat16 or float16 on GPU), model(X, Y) returns logits and the cross-entropy loss, which is divided by the number of accumulation steps.",
+  "code": [],
+  "j": "J63"
+ }
+]

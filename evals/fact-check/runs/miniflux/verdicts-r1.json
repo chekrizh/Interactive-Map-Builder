@@ -1,0 +1,1031 @@
+{
+ "claims": [
+  {
+   "id": "node:reader",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/static/js/app.js:568-570",
+   "quote": "function showKeyboardShortcutsAction() {"
+  },
+  {
+   "id": "node:apps",
+   "verdict": "confirmed",
+   "evidence": "internal/http/server/routes.go:27-37",
+   "quote": "appMux.Handle(\"/fever/\", feverHandler) ... appMux.Handle(\"/reader/api/0/\", googleReaderHandler) ... appMux.Handle(\"/v1/\", api.NewHandler(store, pool))"
+  },
+  {
+   "id": "node:router",
+   "verdict": "confirmed",
+   "evidence": "internal/http/server/routes.go:58-71",
+   "quote": "rootMux.HandleFunc(\"/liveness\", livenessProbe) ... rootMux.Handle(basePath+\"/\", http.StripPrefix(basePath, appHandler))"
+  },
+  {
+   "id": "node:webui",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/ui.go:185-186",
+   "quote": "// Apply middleware chain: web session -> CSRF validation -> handlers.\n\treturn webSessionMiddleware.handle(csrfMiddleware.handle(mux))"
+  },
+  {
+   "id": "node:restapi",
+   "verdict": "confirmed",
+   "evidence": "internal/api/api.go:77",
+   "quote": "return middleware.withCORSHeaders(middleware.validateAPIKeyAuth(middleware.validateBasicAuth(mux)))"
+  },
+  {
+   "id": "node:compat",
+   "verdict": "confirmed",
+   "evidence": "internal/storage/integration.go:67",
+   "quote": "integrations.googlereader_enabled='t' AND integrations.googlereader_username=$1 AND integrations.googlereader_password <> ''"
+  },
+  {
+   "id": "node:mediaproxy",
+   "verdict": "confirmed",
+   "evidence": "internal/config/options.go:375-378",
+   "quote": "\"MEDIA_PROXY_MODE\": { parsedStringValue: \"http-only\","
+  },
+  {
+   "id": "node:scheduler",
+   "verdict": "confirmed",
+   "evidence": "internal/cli/scheduler.go:18-30",
+   "quote": "go feedScheduler(... config.Opts.PollingFrequency() ...) go cleanupScheduler(store, config.Opts.CleanupFrequency())"
+  },
+  {
+   "id": "node:pool",
+   "verdict": "confirmed",
+   "evidence": "internal/worker/pool.go:44 ; internal/config/options.go:620-621",
+   "quote": "queue:    make(chan model.Job), ... \"WORKER_POOL_SIZE\": { parsedIntValue: 16,"
+  },
+  {
+   "id": "node:refresh",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:211-358",
+   "quote": "originalFeed, storeErr := store.FeedByID(userID, feedID) ... originalFeed.ScheduleNextCheck(...) ... go integration.PushEntries(originalFeed, newEntries, userIntegrations)"
+  },
+  {
+   "id": "node:discovery",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/subscription/finder.go:65-124",
+   "quote": "// Step 1) Check if the website URL is already a feed. ... // Step 6) Check if the website URL can use RSS-Bridge. ... // Step 7) Check if the website has a known feed URL."
+  },
+  {
+   "id": "node:fetcher",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/fetcher/request_builder.go:216-230",
+   "quote": "Perform the private-network check inside the dialer's Control callback, which fires after DNS resolution but before the TCP connection is made."
+  },
+  {
+   "id": "node:parser",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/parser/parser.go",
+   "quote": "switch format { case FormatAtom: return atom.Parse(...) case FormatRSS: ... case FormatJSON: ... case FormatRDF:"
+  },
+  {
+   "id": "node:processor",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:164-165",
+   "quote": "// The sanitizer should always run at the end of the process to make sure unsafe HTML is filtered out."
+  },
+  {
+   "id": "node:integrations",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:347 ; internal/ui/entry_save.go:36",
+   "quote": "go integration.PushEntries(originalFeed, newEntries, userIntegrations) ... go integration.SendEntry(entry, userIntegrations)"
+  },
+  {
+   "id": "node:storage",
+   "verdict": "confirmed",
+   "evidence": "internal/storage/batch.go:25 ; internal/storage/certificate_cache.go",
+   "quote": "func (s *Storage) NewBatchBuilder() *batchBuilder {"
+  },
+  {
+   "id": "node:db",
+   "verdict": "confirmed",
+   "evidence": "internal/database/database.go:25-45 ; internal/database/postgresql.go:10",
+   "quote": "tx, err := db.Begin() ... INSERT INTO schema_version (version) VALUES ($1) ... _ \"github.com/lib/pq\""
+  },
+  {
+   "id": "node:websites",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:304-309",
+   "quote": "// Use the RSS TTL value, or the Cache-Control or Expires HTTP headers if available."
+  },
+  {
+   "id": "node:services",
+   "verdict": "confirmed",
+   "evidence": "internal/integration/webhook/webhook.go:125",
+   "quote": "WithHeader(\"X-Miniflux-Signature\", crypto.GenerateSHA256Hmac(c.webhookSecret, requestBody))"
+  },
+  {
+   "id": "node:idp",
+   "verdict": "confirmed",
+   "evidence": "internal/config/options.go:489-495 ; internal/oauth2/oidc.go:16",
+   "quote": "validateChoices(rawValue, []string{\"oidc\", \"google\"}) ... \"github.com/coreos/go-oidc/v3/oidc\""
+  },
+  {
+   "id": "edge:re_ro",
+   "verdict": "confirmed",
+   "evidence": "internal/http/server/server.go:62-77",
+   "quote": "srv := newHTTPServer(t.address, newRouter(store, pool))"
+  },
+  {
+   "id": "edge:ap_ro",
+   "verdict": "confirmed",
+   "evidence": "internal/api/middleware.go:41",
+   "quote": "token := r.Header.Get(\"X-Auth-Token\")"
+  },
+  {
+   "id": "edge:ro_ui",
+   "verdict": "confirmed",
+   "evidence": "internal/http/server/routes.go:45-46",
+   "quote": "// UI routing (catch-all).\n\tappMux.Handle(\"/\", ui.Serve(store, pool))"
+  },
+  {
+   "id": "edge:ro_api",
+   "verdict": "confirmed",
+   "evidence": "internal/http/server/routes.go:36-38",
+   "quote": "appMux.Handle(\"/v1/\", api.NewHandler(store, pool))"
+  },
+  {
+   "id": "edge:ro_co",
+   "verdict": "confirmed",
+   "evidence": "internal/http/server/routes.go:28-33",
+   "quote": "appMux.Handle(\"/fever/\", feverHandler) ... appMux.Handle(\"/reader/api/0/\", googleReaderHandler)"
+  },
+  {
+   "id": "edge:ui_mp",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/ui.go:109",
+   "quote": "mux.HandleFunc(\"GET /proxy/{encodedDigest}/{encodedURL}\", handler.mediaProxy)"
+  },
+  {
+   "id": "edge:ui_id",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/ui.go:153-157",
+   "quote": "mux.HandleFunc(\"GET /oauth2/{provider}/redirect\", handler.oauth2Redirect)"
+  },
+  {
+   "id": "edge:ui_st",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/web_session_middleware.go:98 ; internal/ui/entry_unread.go:24-26",
+   "quote": "session, err := m.store.WebSessionByID(sessionID) ... entry, err := h.store.NewEntryQueryBuilder(user.ID)."
+  },
+  {
+   "id": "edge:api_st",
+   "verdict": "confirmed",
+   "evidence": "internal/api/api.go:20-21",
+   "quote": "handler := &handler{store: store, pool: pool}"
+  },
+  {
+   "id": "edge:co_st",
+   "verdict": "confirmed",
+   "evidence": "internal/googlereader/handler.go:270-276",
+   "quote": "err = h.store.SetEntriesStatus(userID, readEntryIDs, model.EntryStatusRead)"
+  },
+  {
+   "id": "edge:ui_di",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/subscription_submit.go:72-77",
+   "quote": "subscriptionFinder := subscription.NewSubscriptionFinder(requestBuilder)\n\tsubscriptions, localizedError := subscriptionFinder.FindSubscriptions("
+  },
+  {
+   "id": "edge:ui_rf",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/subscription_submit.go:127",
+   "quote": "feed, localizedError := feedHandler.CreateFeed(h.store, user.ID, &model.FeedCreationRequest{"
+  },
+  {
+   "id": "edge:api_rf",
+   "verdict": "confirmed",
+   "evidence": "internal/api/feed_handlers.go:55-85",
+   "quote": "feedHandler.CreateFeed(h.store, userID, &feedCreationRequest) ... feedHandler.RefreshFeed(h.store, userID, feedID, forceRefresh)"
+  },
+  {
+   "id": "edge:ui_po",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/feed_refresh.go:61",
+   "quote": "go h.pool.Push(jobs)"
+  },
+  {
+   "id": "edge:ui_in",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/entry_save.go:36",
+   "quote": "go integration.SendEntry(entry, userIntegrations)"
+  },
+  {
+   "id": "edge:co_in",
+   "verdict": "confirmed",
+   "evidence": "internal/googlereader/handler.go:313-318 ; internal/fever/handler.go:463-465",
+   "quote": "go func() {\n\t\t\t\tintegration.SendEntry(e, settings)\n\t\t\t}()"
+  },
+  {
+   "id": "edge:sc_st",
+   "verdict": "confirmed",
+   "evidence": "internal/cli/scheduler.go:36-42 ; internal/cli/cleanup_tasks.go:26",
+   "quote": "jobs, err := store.NewBatchBuilder(). ... store.ArchiveEntries(model.EntryStatusRead, ...)"
+  },
+  {
+   "id": "edge:sc_po",
+   "verdict": "confirmed",
+   "evidence": "internal/cli/scheduler.go:48",
+   "quote": "pool.Push(jobs)"
+  },
+  {
+   "id": "edge:po_rf",
+   "verdict": "confirmed",
+   "evidence": "internal/worker/worker.go:47",
+   "quote": "localizedError := feedHandler.RefreshFeed(w.store, job.UserID, job.FeedID, false)"
+  },
+  {
+   "id": "edge:rf_fe",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:244-251",
+   "quote": "WithETag(originalFeed.EtagHeader).\n\t\t\tWithLastModified(originalFeed.LastModifiedHeader) ... requestBuilder.ExecuteRequest(originalFeed.FeedURL)"
+  },
+  {
+   "id": "edge:di_fe",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/subscription/finder.go:30",
+   "quote": "func NewSubscriptionFinder(requestBuilder *fetcher.RequestBuilder) *subscriptionFinder {"
+  },
+  {
+   "id": "edge:pr_fe",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:111-115",
+   "quote": "scraper.ScrapeWebsite(\n\t\t\t\trequestBuilder,\n\t\t\t\tentry.URL,"
+  },
+  {
+   "id": "edge:mp_fe",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/proxy.go:89-104",
+   "quote": "requestBuilder := fetcher.NewRequestBuilder(). ... resp, err := requestBuilder.ExecuteRequest(mediaURL)"
+  },
+  {
+   "id": "edge:fe_ws",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/fetcher/request_builder.go:175",
+   "quote": "func (r *RequestBuilder) ExecuteRequest(requestURL string) (*http.Response, error) {"
+  },
+  {
+   "id": "edge:rf_pa",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:295",
+   "quote": "updatedFeed, parseErr := parser.ParseFeed(responseHandler.EffectiveURL(), bytes.NewReader(responseBody))"
+  },
+  {
+   "id": "edge:rf_pr",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:327",
+   "quote": "processor.ProcessFeedEntries(store, originalFeed, userID, forceRefresh)"
+  },
+  {
+   "id": "edge:pr_st",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:95",
+   "quote": "entryIsNew := store.IsNewEntry(feed.ID, entry.Hash)"
+  },
+  {
+   "id": "edge:rf_st",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:333 ; 375",
+   "quote": "store.RefreshFeedEntries(originalFeed.UserID, originalFeed.ID, originalFeed.Entries, updateExistingEntries) ... store.UpdateFeed(originalFeed)"
+  },
+  {
+   "id": "edge:rf_in",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:346-347",
+   "quote": "} else if userIntegrations != nil && len(newEntries) > 0 {\n\t\t\tgo integration.PushEntries(originalFeed, newEntries, userIntegrations)"
+  },
+  {
+   "id": "edge:in_sv",
+   "verdict": "confirmed",
+   "evidence": "internal/integration/integration.go:629-640",
+   "quote": "client := slack.NewClient(userIntegrations.SlackWebhookLink) ... client.SendSlackMsg(feed, entries)"
+  },
+  {
+   "id": "edge:st_db",
+   "verdict": "confirmed",
+   "evidence": "internal/database/postgresql.go:15",
+   "quote": "db, err := sql.Open(\"postgres\", dsn)"
+  },
+  {
+   "id": "flow:poll/1",
+   "verdict": "wrong",
+   "evidence": "internal/storage/batch.go:66-71 ; internal/config/options.go:515-518",
+   "quote": "func (b *batchBuilder) WithLimitPerHost(limit int) *batchBuilder {\n\tif limit > 0 { ... \"POLLING_LIMIT_PER_HOST\": { parsedIntValue: 0,",
+   "fix": "The per-host cap is off by default: POLLING_LIMIT_PER_HOST defaults to 0, which means no limit. The rest is right: not disabled, parsing_error_count < 3 (POLLING_PARSING_ERROR_LIMIT), next_check_at < now(), ORDER BY next_check_at ASC, LIMIT BATCH_SIZE (100), every POLLING_FREQUENCY (60 min)."
+  },
+  {
+   "id": "flow:poll/2",
+   "verdict": "confirmed",
+   "evidence": "internal/storage/batch.go:76-122",
+   "quote": "query := `SELECT id, user_id, feed_url FROM feeds` ... query += \" ORDER BY next_check_at ASC\" ... if hosts[feedHostname] >= b.limitPerHost {"
+  },
+  {
+   "id": "flow:poll/3",
+   "verdict": "confirmed",
+   "evidence": "internal/worker/pool.go:23-31,44",
+   "quote": "for _, job := range jobs { select { case p.queue <- job: ... queue:    make(chan model.Job),"
+  },
+  {
+   "id": "flow:poll/4",
+   "verdict": "confirmed",
+   "evidence": "internal/worker/worker.go:47",
+   "quote": "localizedError := feedHandler.RefreshFeed(w.store, job.UserID, job.FeedID, false)"
+  },
+  {
+   "id": "flow:poll/5",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:211-230",
+   "quote": "originalFeed, storeErr := store.FeedByID(userID, feedID) ... originalFeed.CheckedNow()\n\toriginalFeed.ScheduleNextCheck(weeklyEntryCount, time.Duration(0))"
+  },
+  {
+   "id": "flow:poll/6",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:232-249 ; internal/reader/fetcher/request_builder.go:86-95",
+   "quote": "WithUsernameAndPassword(...).WithUserAgent(...).WithCookie(...) ... r.headers.Set(\"If-None-Match\", etag) ... r.headers.Set(\"If-Modified-Since\", lastModified)"
+  },
+  {
+   "id": "flow:poll/7",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:281,360-378 ; internal/reader/fetcher/response_handler.go:102-109",
+   "quote": "if r.httpResponse.StatusCode == http.StatusNotModified { return false } ... originalFeed.ResetErrorCounter() ... store.UpdateFeed(originalFeed)"
+  },
+  {
+   "id": "flow:poll/8",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:289-312 ; internal/model/feed.go:137-138",
+   "quote": "responseHandler.ReadBody(config.Opts.HTTPClientMaxBodySize()) ... refreshDelay := max(feedTTLValue, cacheControlMaxAgeValue, expiresValue) ... interval = max(interval, refreshDelay)"
+  },
+  {
+   "id": "flow:poll/9",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:75-165",
+   "quote": "filter.IsBlockedEntry(...) ... urlcleaner.RemoveTrackingParameters(...) ... scraper.ScrapeWebsite(...) ... rewrite.ApplyContentRewriteRules(...) ... sanitizer.SanitizeHTML(...)"
+  },
+  {
+   "id": "flow:poll/10",
+   "verdict": "confirmed",
+   "evidence": "internal/storage/entry.go:283-297 ; internal/reader/processor/processor.go:95-97",
+   "quote": "SELECT 1 FROM entries WHERE feed_id=$1 AND hash=$2 ) OR EXISTS ( SELECT 1 FROM entry_tombstones WHERE feed_id=$1 AND hash=$2 ... if feed.Crawler && (entryIsNew || forceRefresh) {"
+  },
+  {
+   "id": "flow:poll/11",
+   "verdict": "confirmed",
+   "evidence": "internal/storage/entry.go:320-361 ; internal/reader/handler/handler.go:332",
+   "quote": "tx, err := s.db.Begin() ... if entryExists { if updateExistingEntries { err = s.updateEntry(tx, entry) } } else { err = s.createEntry(tx, entry); switch { case errors.Is(err, ErrEntryTombstoned):"
+  },
+  {
+   "id": "flow:poll/12",
+   "verdict": "confirmed",
+   "evidence": "internal/storage/entry.go:116",
+   "quote": "setweight(to_tsvector($11), 'A') || setweight(to_tsvector($12), 'B'),"
+  },
+  {
+   "id": "flow:poll/13",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:346-347",
+   "quote": "go integration.PushEntries(originalFeed, newEntries, userIntegrations)"
+  },
+  {
+   "id": "flow:poll/14",
+   "verdict": "confirmed",
+   "evidence": "internal/integration/integration.go:537-548,564,614,630,684-700",
+   "quote": "webhookClient := webhook.NewClient(webhookURL, userIntegrations.WebhookSecret) ... // Integrations that only support sending individual entries\n\tif userIntegrations.TelegramBotEnabled { for _, entry := range entries {"
+  },
+  {
+   "id": "flow:subscribe/1",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/ui.go:39",
+   "quote": "mux.HandleFunc(\"POST /subscribe\", handler.submitSubscription)"
+  },
+  {
+   "id": "flow:subscribe/2",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/ui.go:185-186 ; internal/ui/csrf_middleware.go:29-35",
+   "quote": "return webSessionMiddleware.handle(csrfMiddleware.handle(mux)) ... default: if !m.validate(w, r) {"
+  },
+  {
+   "id": "flow:subscribe/3",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/subscription/finder.go:65-124",
+   "quote": "// Step 1) Check if the website URL is already a feed. ... // Step 3) ... YouTube ... // Step 4) ... GitHub ... // Step 5) ... HTML meta tags ... // Step 6) ... RSS-Bridge ... // Step 7) ... known feed URL."
+  },
+  {
+   "id": "flow:subscribe/4",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/subscription_submit.go:60-70",
+   "quote": "WithCustomFeedProxyURL(subscriptionForm.ProxyURL). ... WithUserAgent(subscriptionForm.UserAgent, ...). WithCookie(subscriptionForm.Cookie, subscriptionForm.URL). ... IgnoreTLSErrors(subscriptionForm.AllowSelfSignedCertificates)."
+  },
+  {
+   "id": "flow:subscribe/5",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/subscription/finder.go:65-68",
+   "quote": "if feedFormat, _ := parser.DetectFeedFormat(f.feedResponseInfo.Content); feedFormat != parser.FormatUnknown { f.feedDownloaded = true"
+  },
+  {
+   "id": "flow:subscribe/6",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/subscription_submit.go:91-151",
+   "quote": "case n == 1 && subscriptionFinder.IsFeedAlreadyDownloaded(): feed, localizedError := feedHandler.CreateFeedFromSubscriptionDiscovery( ... case n == 1 && !subscriptionFinder.IsFeedAlreadyDownloaded(): feed, localizedError := feedHandler.CreateFeed( ... case n > 1: ... view.Render(\"choose_subscription\")"
+  },
+  {
+   "id": "flow:subscribe/7",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:47-62",
+   "quote": "if !categoryExists { return nil, locale.NewLocalizedErrorWrapper(ErrCategoryNotFound, ...) } if store.FeedURLExists(...) { return nil, locale.NewLocalizedErrorWrapper(ErrDuplicatedFeed, ...) } subscription, parseErr := parser.ParseFeed("
+  },
+  {
+   "id": "flow:subscribe/8",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:90 ; internal/reader/processor/processor.go:97",
+   "quote": "processor.ProcessFeedEntries(store, subscription, userID, true) ... if feed.Crawler && (entryIsNew || forceRefresh) {"
+  },
+  {
+   "id": "flow:subscribe/9",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:92-102",
+   "quote": "if storeErr := store.CreateFeed(subscription); ... icon.NewIconChecker(store, subscription).UpdateOrCreateFeedIcon()"
+  },
+  {
+   "id": "flow:subscribe/10",
+   "verdict": "confirmed",
+   "evidence": "internal/storage/feed.go:305-328 ; internal/storage/entry.go:154-157",
+   "quote": "for _, entry := range feed.Entries { ... s.createEntry(tx, entry) ... for _, enclosure := range entry.Enclosures { ... s.createEnclosure(tx, enclosure)"
+  },
+  {
+   "id": "flow:subscribe/11",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/subscription_submit.go:123",
+   "quote": "response.HTMLRedirect(w, r, h.routePath(\"/feed/%d/entries\", feed.ID))"
+  },
+  {
+   "id": "flow:read/1",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/ui.go:46",
+   "quote": "mux.HandleFunc(\"GET /unread/entry/{entryID}\", handler.showUnreadEntryPage)"
+  },
+  {
+   "id": "flow:read/2",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/web_session_middleware.go:69-71 ; internal/ui/routes.go:75-80",
+   "quote": "if !request.IsAuthenticated(r) && !isPublicRoute(r) { response.HTMLRedirect(w, r, loginRedirectURL(m.basePath, r.RequestURI)) ... values.Set(\"redirect_url\", requestURI)"
+  },
+  {
+   "id": "flow:read/3",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/entry_unread.go:24-76",
+   "quote": "prevEntry, nextEntry, err := h.store.NewEntryPaginationBuilder(...).WithStatus(model.EntryStatusUnread) ... if entry.ShouldMarkAsReadOnView(user) { entry.Status = model.EntryStatusRead }"
+  },
+  {
+   "id": "flow:read/4",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/entry_unread.go:91-92 ; internal/storage/nav_metadata.go:20-79",
+   "quote": "// Fetching the counters here avoids being off by one.\n\tnavMetadata, _ := h.store.GetNavMetadata(user.ID)"
+  },
+  {
+   "id": "flow:read/5",
+   "verdict": "confirmed",
+   "evidence": "internal/template/templates/views/entry.html:285 ; internal/mediaproxy/url.go:32",
+   "quote": "{{ safeHTML (proxyFilter .entry.Content) }} ... fmt.Sprintf(\"%s/proxy/%s/%s\", config.Opts.BasePath(), ..."
+  },
+  {
+   "id": "flow:read/6",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/web_session_middleware.go:29-32 ; internal/ui/routes.go:24-28",
+   "quote": "if isStaticAssetRoute(r) { next.ServeHTTP(w, r); return } ... strings.HasPrefix(path, \"/proxy/\")"
+  },
+  {
+   "id": "flow:read/7",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/proxy.go:47-60",
+   "quote": "mac := hmac.New(sha256.New, config.Opts.MediaProxyPrivateKey()) ... if !hmac.Equal(decodedDigest, expectedMAC) { response.HTMLForbidden(w, r)"
+  },
+  {
+   "id": "flow:read/8",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/proxy.go:93-102",
+   "quote": "if referer := rewrite.GetRefererForURL(mediaURL); referer != \"\" { ... forwardedRequestHeader := [...]string{\"Range\", \"Accept\", \"Accept-Encoding\", \"User-Agent\"}"
+  },
+  {
+   "id": "flow:read/9",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/proxy.go:145-147",
+   "quote": "response.NewBuilder(w, r).WithCaching(etag, 72*time.Hour, func(b *response.Builder) { ... b.WithHeader(\"Content-Security-Policy\", response.ContentSecurityPolicyForUntrustedContent)"
+  },
+  {
+   "id": "flow:sync/1",
+   "verdict": "confirmed",
+   "evidence": "internal/http/server/routes.go:32 ; internal/googlereader/handler.go:106-133",
+   "quote": "appMux.HandleFunc(\"POST /accounts/ClientLogin\", ...) ... h.store.GoogleReaderUserCheckPassword(username, password) ... token := getAuthToken(integration.GoogleReaderUsername, integration.GoogleReaderPassword)"
+  },
+  {
+   "id": "flow:sync/2",
+   "verdict": "confirmed",
+   "evidence": "internal/googlereader/middleware.go:83-125",
+   "quote": "if fields[0] != \"GoogleLogin\" { ... integration, err = m.store.GoogleReaderUserGetIntegration(parts[0])"
+  },
+  {
+   "id": "flow:sync/3",
+   "verdict": "confirmed",
+   "evidence": "internal/googlereader/handler.go:59-60,666,1028",
+   "quote": "mux.Handle(\"GET /reader/api/0/stream/items/ids\", ...) ... entries, err := h.store.NewEntryQueryBuilder(userID)."
+  },
+  {
+   "id": "flow:sync/4",
+   "verdict": "confirmed",
+   "evidence": "internal/googlereader/item.go:15-19",
+   "quote": "ItemIDFormat = \"tag:google.com,2005:reader/item/%016x\""
+  },
+  {
+   "id": "flow:sync/5",
+   "verdict": "confirmed",
+   "evidence": "internal/googlereader/handler.go:270-306",
+   "quote": "err = h.store.SetEntriesStatus(userID, readEntryIDs, model.EntryStatusRead) ... err = h.store.SetEntriesStarredState(userID, starredEntryIDs, true)"
+  },
+  {
+   "id": "flow:sync/6",
+   "verdict": "confirmed",
+   "evidence": "internal/googlereader/handler.go:308-320",
+   "quote": "for _, entry := range entries { e := entry\n\t\t\tgo func() {\n\t\t\t\tintegration.SendEntry(e, settings)"
+  },
+  {
+   "id": "flow:sync/7",
+   "verdict": "confirmed",
+   "evidence": "internal/integration/integration.go:67-110 ; internal/googlereader/handler.go:322",
+   "quote": "if userIntegrations.PinboardEnabled { ... slog.Error(...) ... response.Text(w, r, \"OK\")"
+  },
+  {
+   "id": "flow:cleanup/1",
+   "verdict": "confirmed",
+   "evidence": "internal/cli/cleanup_tasks.go:17-56 ; internal/storage/web_session.go:242-252 ; internal/config/options.go:134-155",
+   "quote": "created_at < now() - $1::interval OR (user_id IS NULL AND created_at < now() - $2::interval) ... const anonymousWebSessionLifetime = 24 * time.Hour ... CLEANUP_ARCHIVE_READ_DAYS 60 ... CLEANUP_ARCHIVE_UNREAD_DAYS 180 ... CLEANUP_REMOVE_SESSIONS_DAYS 30"
+  },
+  {
+   "id": "flow:cleanup/2",
+   "verdict": "confirmed",
+   "evidence": "internal/storage/entry.go:368-394",
+   "quote": "status=$1 AND starred is false AND share_code='' AND created_at < now() - $2::interval ... DELETE FROM entries ... INSERT INTO entry_tombstones (feed_id, hash)"
+  },
+  {
+   "id": "inside:refresh/step1",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:211",
+   "quote": "originalFeed, storeErr := store.FeedByID(userID, feedID)"
+  },
+  {
+   "id": "inside:refresh/exit1",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:216-218",
+   "quote": "if originalFeed == nil {\n\t\treturn locale.NewLocalizedErrorWrapper(ErrFeedNotFound, \"error.feed_not_found\")"
+  },
+  {
+   "id": "inside:refresh/step2",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:220-230",
+   "quote": "if config.Opts.PollingScheduler() == model.SchedulerEntryFrequency { ... store.WeeklyFeedEntryCount(userID, feedID) ... originalFeed.CheckedNow()"
+  },
+  {
+   "id": "inside:refresh/step3",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:232-242",
+   "quote": "WithUsernameAndPassword(originalFeed.Username, originalFeed.Password). ... IgnoreTLSErrors(originalFeed.AllowSelfSignedCertificates)."
+  },
+  {
+   "id": "inside:refresh/step4",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:244-249",
+   "quote": "ignoreHTTPCache := originalFeed.IgnoreHTTPCache || forceRefresh"
+  },
+  {
+   "id": "inside:refresh/step5",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:251-256 ; internal/reader/fetcher/response_handler.go:98-99",
+   "quote": "if responseHandler.IsRateLimited() { retryDelay := responseHandler.ParseRetryDelay() ... StatusCode == http.StatusTooManyRequests"
+  },
+  {
+   "id": "inside:refresh/step6",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:266-274",
+   "quote": "if localizedError := responseHandler.LocalizedError(); localizedError != nil {"
+  },
+  {
+   "id": "inside:refresh/exit6",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:30-38",
+   "quote": "originalFeed.WithTranslatedErrorMessage(localizedError.Translate(user.Language))\n\tstore.UpdateFeedError(originalFeed)"
+  },
+  {
+   "id": "inside:refresh/step7",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:276",
+   "quote": "if store.AnotherFeedURLExists(userID, originalFeed.ID, responseHandler.EffectiveURL()) {"
+  },
+  {
+   "id": "inside:refresh/exit7",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:277-278",
+   "quote": "localizedError := locale.NewLocalizedErrorWrapper(ErrDuplicatedFeed, \"error.duplicated_feed\")"
+  },
+  {
+   "id": "inside:refresh/step8",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:281",
+   "quote": "if ignoreHTTPCache || responseHandler.IsModified(originalFeed.EtagHeader, originalFeed.LastModifiedHeader) {"
+  },
+  {
+   "id": "inside:refresh/exit8",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:366-370",
+   "quote": "if responseHandler.LastModified() != \"\" {\n\t\t\toriginalFeed.LastModifiedHeader = responseHandler.LastModified()"
+  },
+  {
+   "id": "inside:refresh/step9",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:289-295",
+   "quote": "responseBody, localizedError := responseHandler.ReadBody(config.Opts.HTTPClientMaxBodySize()) ... parser.ParseFeed("
+  },
+  {
+   "id": "inside:refresh/exit9",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:296-301",
+   "quote": "if errors.Is(parseErr, parser.ErrFeedFormatNotDetected) { ... return getTranslatedLocalizedError(store, userID, originalFeed, localizedError)"
+  },
+  {
+   "id": "inside:refresh/step10",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:306-312",
+   "quote": "refreshDelay := max(feedTTLValue, cacheControlMaxAgeValue, expiresValue)"
+  },
+  {
+   "id": "inside:refresh/step11",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:326-327",
+   "quote": "processor.ProcessFeedEntries(store, originalFeed, userID, forceRefresh)"
+  },
+  {
+   "id": "inside:refresh/step12",
+   "verdict": "wrong",
+   "evidence": "internal/reader/handler/handler.go:329-332",
+   "quote": "// Unless it is forced to refresh.\n\t\tupdateExistingEntries := forceRefresh || (!originalFeed.Crawler && !originalFeed.IgnoreEntryUpdates)",
+   "fix": "A forced refresh always updates existing entries. Existing entries are updated when the refresh is forced OR when the feed neither uses the crawler nor ignores entry updates."
+  },
+  {
+   "id": "inside:refresh/step13",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:339-348",
+   "quote": "go integration.PushEntries(originalFeed, newEntries, userIntegrations)"
+  },
+  {
+   "id": "inside:refresh/step14",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:350-359",
+   "quote": "originalFeed.EtagHeader = responseHandler.ETag() ... iconChecker.CreateFeedIconIfMissing()"
+  },
+  {
+   "id": "inside:refresh/step15",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:373-375",
+   "quote": "originalFeed.ResetErrorCounter()\n\n\tif storeErr := store.UpdateFeed(originalFeed); storeErr != nil {"
+  },
+  {
+   "id": "inside:processor/step1",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:30-41",
+   "quote": "blockRules := filter.ParseRules(user.BlockFilterEntryRules, feed.BlockFilterEntryRules)"
+  },
+  {
+   "id": "inside:processor/step2",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:53-62",
+   "quote": "requestBuilder := fetcher.NewRequestBuilder()."
+  },
+  {
+   "id": "inside:processor/step3",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:64-65",
+   "quote": "// Processing older entries first ensures that their creation timestamp is lower than newer entries.\n\tfor _, entry := range slices.Backward(feed.Entries) {"
+  },
+  {
+   "id": "inside:processor/step4",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:75",
+   "quote": "if filter.IsBlockedEntry(blockRules, allowRules, feed, entry) {"
+  },
+  {
+   "id": "inside:processor/exit4",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:83-85",
+   "quote": "slog.String(\"filter_stage\", \"before_scrape\"),\n\t\t\t)\n\t\t\tcontinue"
+  },
+  {
+   "id": "inside:processor/step5",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:88-94",
+   "quote": "urlcleaner.RemoveTrackingParameters(parsedFeedURL, parsedSiteURL, parsedInputUrl) ... entry.URL = rewrite.RewriteEntryURL(feed, entry)"
+  },
+  {
+   "id": "inside:processor/step6",
+   "verdict": "wrong",
+   "evidence": "internal/reader/processor/processor.go:97",
+   "quote": "if feed.Crawler && (entryIsNew || forceRefresh) {",
+   "fix": "Scraping runs when the crawler is on and the entry is new OR the refresh is forced (forced UI/API refresh and feed creation scrape every entry)."
+  },
+  {
+   "id": "inside:processor/step7",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:144",
+   "quote": "rewrite.ApplyContentRewriteRules(entry, feed.RewriteRules)"
+  },
+  {
+   "id": "inside:processor/step8",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:146-147",
+   "quote": "// Re-run filters only when extracted content replaced entry.Content.\n\t\tif contentExtractedSuccessfully && filter.IsBlockedEntry("
+  },
+  {
+   "id": "inside:processor/exit8",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:155-157",
+   "quote": "slog.String(\"filter_stage\", \"after_scrape\"),\n\t\t\t)\n\t\t\tcontinue"
+  },
+  {
+   "id": "inside:processor/step9",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:160-165",
+   "quote": "entry.Content = sanitizer.SanitizeHTML(webpageBaseURL, entry.Content, &sanitizer.SanitizerOptions{"
+  },
+  {
+   "id": "inside:processor/step10",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/processor.go:167",
+   "quote": "updateEntryReadingTime(store, feed, entry, entryIsNew, user)"
+  },
+  {
+   "id": "inside:processor/step11",
+   "verdict": "wrong",
+   "evidence": "internal/reader/processor/processor.go:172-174 ; internal/reader/processor/youtube.go:37-38",
+   "quote": "if user.ShowReadingTime && shouldFetchYouTubeWatchTimeInBulk() { ... return config.Opts.FetchYouTubeWatchTime() && config.Opts.YouTubeAPIKey() != \"\"",
+   "fix": "Bulk fetching also needs the FETCH_YOUTUBE_WATCH_TIME option turned on; the condition is: user shows reading time AND FetchYouTubeWatchTime AND a YOUTUBE_API_KEY is set."
+  },
+  {
+   "id": "inside:db/table1",
+   "verdict": "confirmed",
+   "evidence": "internal/database/migrations.go:23-33 ; 960-961 ; internal/crypto/crypto.go:44",
+   "quote": "username text not null unique, password text, is_admin bool default 'f', ... ADD COLUMN block_filter_entry_rules ... bcrypt.GenerateFromPassword"
+  },
+  {
+   "id": "inside:db/table2",
+   "verdict": "confirmed",
+   "evidence": "internal/database/migrations.go:56-72 ; 183 ; 308 ; 366",
+   "quote": "feed_url text not null, ... etag_header ... parsing_error_count int default 0, unique (user_id, feed_url) ... ADD COLUMN next_check_at timestamp with time zone default now()"
+  },
+  {
+   "id": "inside:db/table3",
+   "verdict": "confirmed",
+   "evidence": "internal/database/migrations.go:76-91 ; 280-282 ; 349 ; 1497-1500",
+   "quote": "hash text not null, ... unique (feed_id, hash) ... ADD COLUMN document_vectors tsvector ... ADD COLUMN share_code text ... USING gin(document_vectors)"
+  },
+  {
+   "id": "inside:db/table4",
+   "verdict": "confirmed",
+   "evidence": "internal/database/migrations.go:1472-1477",
+   "quote": "CREATE TABLE entry_tombstones ( feed_id bigint not null references feeds(id) on delete cascade, hash text not null check (hash <> ''), deleted_at timestamp with time zone"
+  },
+  {
+   "id": "inside:db/table5",
+   "verdict": "confirmed",
+   "evidence": "internal/database/migrations.go:1449-1458 ; internal/model/web_session.go:38-41",
+   "quote": "id text not null, secret_hash bytea not null, user_id int references users(id) ... state jsonb ... CSRF string `json:\"csrf,omitempty\"` ... OAuth2 *WebSessionOAuth2"
+  },
+  {
+   "id": "inside:db/table6",
+   "verdict": "confirmed",
+   "evidence": "internal/database/migrations.go:153-167 ; 595-597",
+   "quote": "CREATE TABLE integrations ( user_id int not null, pinboard_enabled bool ... fever_username text ... ADD COLUMN googlereader_enabled bool"
+  },
+  {
+   "id": "files:main.go",
+   "verdict": "confirmed",
+   "evidence": "main.go:10-12",
+   "quote": "func main() {\n\tcli.Parse()\n}"
+  },
+  {
+   "id": "files:internal/cli/",
+   "verdict": "confirmed",
+   "evidence": "internal/cli/cli.go:39-40 ; internal/cli/daemon.go:23",
+   "quote": "func Parse() { ... func startDaemon(store *storage.Storage) {"
+  },
+  {
+   "id": "files:internal/cli/cli.go",
+   "verdict": "confirmed",
+   "evidence": "internal/cli/cli.go:89,157,215-249",
+   "quote": "config.Opts, err = cfg.ParseEnvironmentVariables() ... database.NewConnectionPool( ... if config.Opts.RunMigrations() { database.Migrate(db) ... startDaemon(store)"
+  },
+  {
+   "id": "files:internal/cli/daemon.go",
+   "verdict": "confirmed",
+   "evidence": "internal/cli/daemon.go:27-42,89-104",
+   "quote": "signal.Notify(stop, syscall.SIGTERM) ... signal.Notify(reload, syscall.SIGHUP) ... pool := worker.NewPool(...) ... runScheduler(store, pool) ... server.StartWebServer(store, pool) ... pool.Shutdown()"
+  },
+  {
+   "id": "files:internal/cli/scheduler.go",
+   "verdict": "confirmed",
+   "evidence": "internal/cli/scheduler.go:33-56",
+   "quote": "func feedScheduler(...) { for range time.Tick(frequency) { ... func cleanupScheduler(store *storage.Storage, frequency time.Duration) {"
+  },
+  {
+   "id": "files:internal/cli/cleanup_tasks.go",
+   "verdict": "confirmed",
+   "evidence": "internal/cli/cleanup_tasks.go:17,26,52",
+   "quote": "store.CleanOldWebSessions(...) ... store.ArchiveEntries(...) ... store.CleanupOrphanIcons()"
+  },
+  {
+   "id": "files:internal/config/options.go",
+   "verdict": "confirmed",
+   "evidence": "internal/config/options.go:507-510 ; internal/cli/cli.go:83-89",
+   "quote": "\"POLLING_FREQUENCY\": { parsedDuration: 60 * time.Minute, ... cfg.ParseFile(flagConfigFile) ... cfg.ParseEnvironmentVariables()"
+  },
+  {
+   "id": "files:internal/http/server/",
+   "verdict": "confirmed",
+   "evidence": "internal/http/server/server.go:20-21 ; middleware.go:16",
+   "quote": "\"golang.org/x/crypto/acme/autocert\" ... func middleware(next http.Handler) http.Handler {"
+  },
+  {
+   "id": "files:internal/ui/",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/ui.go:17",
+   "quote": "func Serve(store *storage.Storage, pool *worker.Pool) http.Handler {"
+  },
+  {
+   "id": "files:internal/ui/ui.go",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/ui.go:185-186",
+   "quote": "// Apply middleware chain: web session -> CSRF validation -> handlers."
+  },
+  {
+   "id": "files:internal/ui/proxy.go",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/proxy.go:27",
+   "quote": "func (h *handler) mediaProxy(w http.ResponseWriter, r *http.Request) {"
+  },
+  {
+   "id": "files:internal/template/templates/",
+   "verdict": "confirmed",
+   "evidence": "internal/template/engine.go:15-19",
+   "quote": "//go:embed templates/common/*.html ... //go:embed templates/views/*.html"
+  },
+  {
+   "id": "files:internal/ui/static/js/",
+   "verdict": "confirmed",
+   "evidence": "internal/ui/static/js/ (app.js, keyboard_handler.js, touch_handler.js)",
+   "quote": "function showKeyboardShortcutsAction() {"
+  },
+  {
+   "id": "files:internal/api/",
+   "verdict": "confirmed",
+   "evidence": "internal/api/middleware.go:38-41,91-101",
+   "quote": "token := r.Header.Get(\"X-Auth-Token\") ... username, password, authOK := r.BasicAuth()"
+  },
+  {
+   "id": "files:internal/fever/",
+   "verdict": "confirmed",
+   "evidence": "internal/http/server/routes.go:27",
+   "quote": "feverHandler := fever.Middleware(store)(fever.NewHandler(store))"
+  },
+  {
+   "id": "files:internal/googlereader/",
+   "verdict": "confirmed",
+   "evidence": "internal/http/server/routes.go:31",
+   "quote": "googleReaderHandler := googlereader.NewHandler(store)"
+  },
+  {
+   "id": "files:internal/worker/",
+   "verdict": "confirmed",
+   "evidence": "internal/worker/pool.go:41-42",
+   "quote": "// NewPool creates a pool of background workers."
+  },
+  {
+   "id": "files:internal/reader/",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/ (atom, rss, json, rdf, fetcher, parser, processor, scraper, sanitizer, subscription, icon ...)",
+   "quote": "package dirs: atom fetcher handler parser processor rdf rss scraper sanitizer subscription"
+  },
+  {
+   "id": "files:internal/reader/handler/handler.go",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/handler/handler.go:17-20",
+   "quote": "\"miniflux.app/v2/internal/reader/fetcher\" ... \"miniflux.app/v2/internal/reader/parser\" ... \"miniflux.app/v2/internal/reader/processor\""
+  },
+  {
+   "id": "files:internal/reader/fetcher/",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/fetcher/request_builder.go:65 ; response_handler.go",
+   "quote": "func NewRequestBuilder() *RequestBuilder {"
+  },
+  {
+   "id": "files:internal/reader/parser/",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/parser/format.go:28",
+   "quote": "func DetectFeedFormat(r io.ReadSeeker) (string, string) {"
+  },
+  {
+   "id": "files:internal/reader/processor/",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/processor/ (bilibili.go, nebula.go, odysee.go, youtube.go, processor.go)",
+   "quote": "func ProcessFeedEntries(store *storage.Storage, feed *model.Feed, userID int64, forceRefresh bool) {"
+  },
+  {
+   "id": "files:internal/reader/subscription/",
+   "verdict": "confirmed",
+   "evidence": "internal/reader/subscription/finder.go:44",
+   "quote": "func (f *subscriptionFinder) FindSubscriptions(websiteURL, rssBridgeURL string, rssBridgeToken string) (Subscriptions, *locale.LocalizedErrorWrapper) {"
+  },
+  {
+   "id": "files:internal/integration/",
+   "verdict": "confirmed",
+   "evidence": "internal/integration/integration.go:42,512",
+   "quote": "func SendEntry(entry *model.Entry, userIntegrations *model.Integration) { ... func PushEntries(feed *model.Feed, entries model.Entries, userIntegrations *model.Integration) {"
+  },
+  {
+   "id": "files:internal/mediaproxy/",
+   "verdict": "confirmed",
+   "evidence": "internal/mediaproxy/url.go:27-32",
+   "quote": "mac := hmac.New(sha256.New, config.Opts.MediaProxyPrivateKey()) ... return fmt.Sprintf(\"%s/proxy/%s/%s\""
+  },
+  {
+   "id": "files:internal/oauth2/",
+   "verdict": "confirmed",
+   "evidence": "internal/oauth2/ (google.go, oidc.go)",
+   "quote": "\"github.com/coreos/go-oidc/v3/oidc\""
+  },
+  {
+   "id": "files:internal/storage/",
+   "verdict": "confirmed",
+   "evidence": "internal/storage/ (entry.go, feed.go, user.go, web_session.go, integration.go, icon.go ...)",
+   "quote": "func (s *Storage) CleanOldWebSessions(interval time.Duration) (int64, error) {"
+  },
+  {
+   "id": "files:internal/storage/batch.go",
+   "verdict": "confirmed",
+   "evidence": "internal/storage/batch.go:75-76",
+   "quote": "func (b *batchBuilder) FetchJobs() (model.JobList, error) {\n\tquery := `SELECT id, user_id, feed_url FROM feeds`"
+  },
+  {
+   "id": "files:internal/database/migrations.go",
+   "verdict": "confirmed",
+   "evidence": "internal/database/migrations.go:13-16 ; internal/database/database.go:54-59 ; internal/cli/cli.go:222-223",
+   "quote": "var schemaVersion = len(migrations) ... if currentVersion < schemaVersion { return fmt.Errorf(`the database schema is not up to date ... if err := database.IsSchemaUpToDate(db); err != nil { printErrorAndExit(err)"
+  },
+  {
+   "id": "files:internal/model/",
+   "verdict": "confirmed",
+   "evidence": "internal/model/feed.go:123",
+   "quote": "func (f *Feed) ScheduleNextCheck(weeklyCount int, refreshDelay time.Duration) time.Duration {"
+  },
+  {
+   "id": "files:client/",
+   "verdict": "confirmed",
+   "evidence": "client/client.go ; README.md:79",
+   "quote": "REST API with client libraries available in [Go](https://github.com/miniflux/v2/tree/main/client)"
+  },
+  {
+   "id": "files:packaging/",
+   "verdict": "confirmed",
+   "evidence": "packaging/docker/alpine/Dockerfile ; packaging/debian/ ; packaging/rpm/miniflux.spec ; packaging/systemd/miniflux.service",
+   "quote": "packaging/systemd/miniflux.service"
+  },
+  {
+   "id": "files:contrib/docker-compose/basic.yml",
+   "verdict": "confirmed",
+   "evidence": "contrib/docker-compose/basic.yml:2-24",
+   "quote": "miniflux:\n    image: ${MINIFLUX_IMAGE:-miniflux/miniflux:latest} ... db:\n    image: postgres:18"
+  }
+ ],
+ "missing": [
+  {
+   "what": "Sign-in flow (password, passkey/WebAuthn, OAuth2 callback, auth-proxy header)",
+   "evidence": "internal/ui/ui.go:153-176 ; internal/ui/login_check.go:20 ; internal/ui/auth_proxy_middleware.go",
+   "why": "Login is the first main path every reader hits and creates the web_sessions row; no flow covers it (the OAuth2 provider has only a redirect edge)."
+  },
+  {
+   "what": "One-off CLI entry points used from cron: -refresh-feeds and -run-cleanup-tasks (with DISABLE_SCHEDULER_SERVICE)",
+   "evidence": "internal/cli/cli.go:75-76,238-246 ; internal/cli/refresh_feeds.go:17-55 ; internal/config/options.go:218",
+   "why": "An install can turn the in-process scheduler off and run refresh/cleanup from an external cron; refresh_feeds.go runs its own goroutine workers outside the pool. The map shows only the daemon scheduler."
+  },
+  {
+   "what": "Prometheus metrics collector goroutine and /metrics scraper",
+   "evidence": "internal/cli/daemon.go:45-49 ; internal/http/server/routes.go:41-43 ; internal/metric/",
+   "why": "With METRICS_COLLECTOR on, a third background loop queries storage on a ticker and an outside Prometheus scrapes /metrics; the map names /metrics but has no collector or metrics consumer."
+  },
+  {
+   "what": "RSS-Bridge and YouTube Data API as outside systems",
+   "evidence": "internal/reader/subscription/finder.go:113-122 ; internal/reader/processor/youtube.go:37-38,90",
+   "why": "Subscription discovery calls a user-configured RSS-Bridge server and the processor calls www.googleapis.com with YOUTUBE_API_KEY; neither appears as an external system or edge."
+  },
+  {
+   "what": "Let's Encrypt ACME (autocert) as an outside system",
+   "evidence": "internal/http/server/server.go:20-30 ; internal/storage/certificate_cache.go",
+   "why": "With CERT_DOMAIN set the server talks to Let's Encrypt and runs an HTTP challenge server, caching certificates in PostgreSQL; only mentioned as a library, not as an outside system."
+  }
+ ]
+}

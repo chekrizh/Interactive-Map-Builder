@@ -1,0 +1,91 @@
+{
+  "claims": [
+    {
+      "id": "node:collect",
+      "verdict": "confirmed",
+      "evidence": "src/app/api/send/route.ts:112-167",
+      "quote": "const cacheHeader = request.headers.get('x-umami-cache'); ... if (!process.env.DISABLE_BOT_CHECK && isbot(userAgent)) ... if (hasBlockedIp(ip)) { return forbidden(); } ... if ((!clickhouse.enabled && !cache?.sessionId) || shouldEnsureSession) { await createSession({"
+    },
+    {
+      "id": "node:queries",
+      "verdict": "confirmed",
+      "evidence": "src/lib/db.ts:26-40",
+      "quote": "if (process.env.CLICKHOUSE_URL) { if (queries[KAFKA]) { return queries[KAFKA](); } return queries[CLICKHOUSE](); } ... if (db === POSTGRESQL) { return queries[PRISMA](); }"
+    },
+    {
+      "id": "node:kafka",
+      "verdict": "confirmed",
+      "evidence": "src/lib/kafka.ts:10-15",
+      "quote": "const ACKS = 1; const DEFAULT_MAX_MESSAGE_BYTES = 900_000; ... const enabled = Boolean(process.env.KAFKA_URL && process.env.KAFKA_BROKER);"
+    },
+    {
+      "id": "node:redis",
+      "verdict": "wrong",
+      "evidence": "src/app/api/teams/route.ts:78-91",
+      "quote": "if (process.env.CLOUD_MODE && redis.enabled && account) { await redis.client.set( `team:${teamId}`, { teamOwnerId, isPro: ... }, 60 * 60 * 24 * 90,",
+      "fix": "The repository does write team:{id}: in cloud mode, POST /api/teams sets team:{teamId} (plan flags) with a 90-day TTL. Only account:{id} and white-label:{id} are read without any writer here. Also, in cloud mode resetting a website (src/queries/prisma/website.ts:229) writes website:{id} with the default 1-hour TTL (src/lib/redis.ts:7), not 24 hours."
+    },
+    {
+      "id": "node:umamiis",
+      "verdict": "wrong",
+      "evidence": "scripts/postbuild.js:4-8",
+      "quote": "if (!process.env.DISABLE_TELEMETRY) { await sendTelemetry('build'); }",
+      "fix": "PRIVATE_MODE turns off only the i.umami.is pixel script (src/app/api/scripts/telemetry/route.ts:4-8). The build-time POST to api.umami.is/v1/telemetry is turned off only by DISABLE_TELEMETRY. The update check, src/store/version.ts and the URLs in src/lib/constants.ts:19-20 are correct."
+    },
+    {
+      "id": "node:shareviewer",
+      "verdict": "confirmed",
+      "evidence": "src/app/api/share/[slug]/route.ts:133-178",
+      "quote": "const share = await getShareByCode(slug); ... data.token = createToken({ ...data, type: SHARE_TOKEN_TYPE }, secret());"
+    },
+    {
+      "id": "edge:da_ui",
+      "verdict": "confirmed",
+      "evidence": "src/store/version.ts:17-20",
+      "quote": "export async function checkVersion() { const { current } = store.getState(); const data = await fetch(`${UPDATES_URL}?v=${current}`, {"
+    },
+    {
+      "id": "edge:sv_da",
+      "verdict": "confirmed",
+      "evidence": "src/app/share/[slug]/[[...path]]/page.tsx:1-4",
+      "quote": "import { SharePage } from './SharePage'; export default function () { return <SharePage />; }"
+    },
+    {
+      "id": "flow:track/7",
+      "verdict": "confirmed",
+      "evidence": "src/app/api/send/route.ts:156-198",
+      "quote": "const saltRotation = process.env.SALT_ROTATION || 'month'; ... const sessionId = uuid(sourceId, ip, userAgent, sessionSalt, distinctId ?? ''); ... // Expire visit after 30 minutes if (!timestamp && now - iat > 1800) {"
+    },
+    {
+      "id": "inside:collect/step8",
+      "verdict": "confirmed",
+      "evidence": "src/app/api/send/route.ts:185-198",
+      "quote": "let visitId = cache?.visitId || uuid(sessionId, visitSalt); let iat = cache?.iat || now; ... if (!timestamp && now - iat > 1800) { visitId = uuid(sessionId, visitSalt); iat = now; }"
+    },
+    {
+      "id": "inside:clickhouse/table2",
+      "verdict": "confirmed",
+      "evidence": "db/clickhouse/schema.sql:113-162",
+      "quote": "entry_url AggregateFunction(argMin, String, DateTime('UTC')), exit_url AggregateFunction(argMax, String, DateTime('UTC')), ... views SimpleAggregateFunction(sum, UInt64), min_time SimpleAggregateFunction(min, DateTime('UTC')), ... ENGINE = AggregatingMergeTree"
+    },
+    {
+      "id": "files:src/components/hooks/queries/",
+      "verdict": "confirmed",
+      "evidence": "src/components/hooks/queries/useUpdateQuery.ts:6-10",
+      "quote": "export function useUpdateQuery(path: string, params?: Record<string, any>) { const { post, useMutation } = useApi();"
+    },
+    {
+      "id": "files:src/app/share/",
+      "verdict": "confirmed",
+      "evidence": "src/app/share/[slug]/[[...path]]/page.tsx:1-4",
+      "quote": "export default function () { return <SharePage />; }"
+    },
+    {
+      "id": "files:src/app/api/batch/route.ts",
+      "verdict": "confirmed",
+      "evidence": "src/app/api/batch/route.ts:7-36",
+      "quote": "const schema = z.array(anyObjectParam).max(500); ... const response = await send.POST(newRequest);"
+    }
+  ],
+  "missing": []
+}

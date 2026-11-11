@@ -93,7 +93,7 @@ def claims(d):
             tied = ', '.join(name(x) for x in entry.get('nodes', []) or [])
             add(f"files:{entry['path']}", 'repository path',
                 join(f"{entry['path']}:", entry.get('t'), entry.get('why'))
-                + (f" Implements: {tied}." if tied else ''), [entry['path']])
+                + (f" Tied on the map to: {tied}." if tied else ''), [entry['path']])
     return out
 
 

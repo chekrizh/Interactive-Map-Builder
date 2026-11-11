@@ -1,0 +1,943 @@
+{
+ "claims": [
+  {
+   "id": "node:visitor",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:156-162",
+   "quote": "const saltRotation = process.env.SALT_ROTATION || 'month'; ... const sessionId = uuid(sourceId, ip, userAgent, sessionSalt, distinctId ?? '');"
+  },
+  {
+   "id": "node:analyst",
+   "verdict": "confirmed",
+   "evidence": "prisma/migrations/01_init/migration.sql:199",
+   "quote": "INSERT INTO \"user\" (user_id, username, role, password) VALUES ('41e2b680-...' , 'admin', 'admin', ..."
+  },
+  {
+   "id": "node:mcpclient",
+   "verdict": "confirmed",
+   "evidence": "packages/mcp/README.md:5",
+   "quote": "website traffic using read-only tools that call the Umami API through `@umami/api-client`."
+  },
+  {
+   "id": "node:tracker",
+   "verdict": "confirmed",
+   "evidence": "src/tracker/index.ts:377-382",
+   "quote": "localStorage?.getItem('umami.disabled') || (domain && !domains.includes(hostname)) || (dnt && hasDoNotTrack());"
+  },
+  {
+   "id": "node:recorder",
+   "verdict": "confirmed",
+   "evidence": "rollup.recorder.config.js:7-10",
+   "quote": "input: 'src/recorder/index.js', output: { file: 'public/recorder.js',"
+  },
+  {
+   "id": "node:dashboard",
+   "verdict": "confirmed",
+   "evidence": "src/components/hooks/useApi.ts:27-29",
+   "quote": "authorization: `Bearer ${getClientAuthToken()}`,"
+  },
+  {
+   "id": "node:collect",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:112-130",
+   "quote": "const cacheHeader = request.headers.get('x-umami-cache'); ... if (!cache?.websiteId) { const website = await fetchWebsite(websiteId);"
+  },
+  {
+   "id": "node:record",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/record/route.ts:23-30",
+   "quote": "const MAX_RECORD_REQUEST_BYTES = 1_000_000; ... events: z.array(z.any()).max(200),"
+  },
+  {
+   "id": "node:redirects",
+   "verdict": "confirmed",
+   "evidence": "src/app/(collect)/q/[slug]/route.ts:54-62",
+   "quote": "const req = new Request(request.url, { method: 'POST', ... await POST(req); return NextResponse.redirect(link.url);"
+  },
+  {
+   "id": "node:detect",
+   "verdict": "confirmed",
+   "evidence": "src/lib/detect.ts:95-121",
+   "quote": "for (const provider of PROVIDER_HEADERS) { ... globalThis[MAXMIND] = await maxmind.open("
+  },
+  {
+   "id": "node:auth",
+   "verdict": "confirmed",
+   "evidence": "src/lib/auth.ts:71-101",
+   "quote": "const token = getBearerToken(request); if (isApiKeyEnabled() && isApiKey(token)) { ... if (user && payload.pwd && hash(user.password) !== payload.pwd) {"
+  },
+  {
+   "id": "node:analyticsApi",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/websites/[websiteId]/stats/route.ts:16-30",
+   "quote": "const { auth, query, error } = await parseRequest(request, schema); ... canViewWebsiteSection(auth, websiteId, ['overview', 'compare']) ... const data = await getWebsiteStats(websiteId, filters);"
+  },
+  {
+   "id": "node:manageApi",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/teams/route.ts:38-44",
+   "quote": "const { auth, body, error } = await parseRequest(request, schema); ... if (!(await canCreateTeam(auth))) {"
+  },
+  {
+   "id": "node:mcp",
+   "verdict": "confirmed",
+   "evidence": "src/app/mcp/route.ts:32-42",
+   "quote": "fetch: createInProcessFetch(), ... if (process.env.MCP_ENABLED !== '1') { return new Response(null, { status: 404 });"
+  },
+  {
+   "id": "node:queries",
+   "verdict": "wrong",
+   "evidence": "src/app/(collect)/q/[slug]/route.ts:15-27",
+   "quote": "if (redis.enabled) { link = await redis.client.fetch( `link:${slug}`, async () => { return findLink({",
+   "fix": "The Redis loaders in src/lib/load.ts cover websites and sessions (plus account/team reads) only; the link:{slug} and pixel:{slug} caching is done directly in the /q and /p route handlers, not in the query layer. The rest (one function per question, runQuery picks PRISMA or CLICKHOUSE in src/lib/db.ts:26-40) is right."
+  },
+  {
+   "id": "node:postgres",
+   "verdict": "confirmed",
+   "evidence": "scripts/check-db.js:72-80",
+   "quote": "execSync('prisma migrate deploy', { env: { ...process.env, DATABASE_URL: directUrl },"
+  },
+  {
+   "id": "node:clickhouse",
+   "verdict": "confirmed",
+   "evidence": "db/clickhouse/schema.sql:164-166",
+   "quote": "CREATE MATERIALIZED VIEW umami.website_event_stats_hourly_mv TO umami.website_event_stats_hourly"
+  },
+  {
+   "id": "node:kafka",
+   "verdict": "wrong",
+   "evidence": "src/queries/sql/replays/saveRecording.ts:78-80",
+   "quote": "if (kafka.enabled) { return sendMessage('session_replay', message);",
+   "fix": "Not only events, event data and session links: with Kafka on, six writers produce to topics: event, event_data, session_link, session_data (saveSessionData.ts:145-146), session_replay (saveRecording.ts:78-79) and heatmap_event (saveHeatmapEvents.ts:105-106). Batch size 900 KB and acks=1 are right (src/lib/kafka.ts:10-11)."
+  },
+  {
+   "id": "node:redis",
+   "verdict": "confirmed",
+   "evidence": "src/lib/load.ts:9-10",
+   "quote": "if (redis.enabled) { website = await redis.client.fetch(`website:${websiteId}`, () => getWebsite(websiteId), 86400);"
+  },
+  {
+   "id": "node:geoip",
+   "verdict": "confirmed",
+   "evidence": "scripts/build-geo.js:19-35",
+   "quote": "const db = 'GeoLite2-City'; ... let url = process.env.GEO_DATABASE_URL; ... if (process.env.MAXMIND_LICENSE_KEY) { ... const dest = path.resolve(process.cwd(), 'geo');"
+  },
+  {
+   "id": "edge:vi_tr",
+   "verdict": "confirmed",
+   "evidence": "src/tracker/index.ts:652-657",
+   "quote": "if (document.readyState === 'complete') { init(); } else { document.addEventListener('readystatechange', init, true);"
+  },
+  {
+   "id": "edge:vi_rc",
+   "verdict": "confirmed",
+   "evidence": "src/recorder/index.js:610-611",
+   "quote": "window.addEventListener('scroll', onScroll, { passive: true }); document.addEventListener('click', onClick, { capture: true, passive: true });"
+  },
+  {
+   "id": "edge:vi_rd",
+   "verdict": "confirmed",
+   "evidence": "src/app/(collect)/q/[slug]/route.ts:10",
+   "quote": "export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {"
+  },
+  {
+   "id": "edge:tr_co",
+   "verdict": "confirmed",
+   "evidence": "rollup.tracker.config.js:16",
+   "quote": "__COLLECT_API_ENDPOINT__: process.env.COLLECT_API_ENDPOINT || '/api/send',"
+  },
+  {
+   "id": "edge:rc_re",
+   "verdict": "confirmed",
+   "evidence": "src/recorder/index.js:21",
+   "quote": "const endpoint = `${hostBase}/api/record`;"
+  },
+  {
+   "id": "edge:rd_co",
+   "verdict": "confirmed",
+   "evidence": "src/app/(collect)/p/[slug]/route.ts:56-62",
+   "quote": "const req = new Request(request.url, { method: 'POST', headers: request.headers, body: JSON.stringify(payload), }); await POST(req);"
+  },
+  {
+   "id": "edge:co_de",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:137-140",
+   "quote": "const { ip, userAgent, device, browser, os, country, region, city } = await getClientInfo( request, payload, );"
+  },
+  {
+   "id": "edge:re_de",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/record/route.ts:175-183",
+   "quote": "const { ip, userAgent } = await getClientInfo(request, {}); ... if (hasBlockedIp(ip)) {"
+  },
+  {
+   "id": "edge:de_ge",
+   "verdict": "confirmed",
+   "evidence": "src/lib/detect.ts:116-121",
+   "quote": "globalThis[MAXMIND] = await maxmind.open( process.env.GEOLITE_DB_PATH || path.resolve(dir, 'GeoLite2-City.mmdb'), ... const result = globalThis[MAXMIND]?.get(cleanIp);"
+  },
+  {
+   "id": "edge:co_qu",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:167-168",
+   "quote": "if ((!clickhouse.enabled && !cache?.sessionId) || shouldEnsureSession) { await createSession({"
+  },
+  {
+   "id": "edge:re_qu",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/record/route.ts:202",
+   "quote": "await saveRecording({"
+  },
+  {
+   "id": "edge:rd_qu",
+   "verdict": "confirmed",
+   "evidence": "src/app/(collect)/q/[slug]/route.ts:33-38",
+   "quote": "link = await findLink({ where: { slug, deletedAt: null, }, });"
+  },
+  {
+   "id": "edge:an_da",
+   "verdict": "confirmed",
+   "evidence": "src/app/(main)/App.tsx:1",
+   "quote": "'use client';"
+  },
+  {
+   "id": "edge:da_au",
+   "verdict": "confirmed",
+   "evidence": "src/app/login/LoginForm.tsx:22",
+   "quote": "const { mutateAsync, error } = useUpdateQuery('/auth/login');"
+  },
+  {
+   "id": "edge:da_aa",
+   "verdict": "confirmed",
+   "evidence": "src/components/hooks/queries/useWebsiteStatsQuery.ts:31",
+   "quote": "queryFn: () => get(`/websites/${websiteId}/stats`, { compare, startAt, endAt, ...filters }),"
+  },
+  {
+   "id": "edge:da_ma",
+   "verdict": "confirmed",
+   "evidence": "src/app/(main)/boards/BoardProvider.tsx:96-98",
+   "quote": "return post(`/boards/${boardData.id}`, boardData); ... return post('/boards', {"
+  },
+  {
+   "id": "edge:aa_au",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/websites/[websiteId]/stats/route.ts:16-26",
+   "quote": "const { auth, query, error } = await parseRequest(request, schema); ... if (!(await canViewWebsiteSection(auth, websiteId, ['overview', 'compare']))) {"
+  },
+  {
+   "id": "edge:ma_au",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/links/route.ts:38-46",
+   "quote": "const { auth, body, error } = await parseRequest(request, schema); ... !(await canCreateWebsite(auth))"
+  },
+  {
+   "id": "edge:aa_qu",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/websites/[websiteId]/stats/route.ts:30",
+   "quote": "const data = await getWebsiteStats(websiteId, filters);"
+  },
+  {
+   "id": "edge:ma_qu",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/teams/route.ts:11",
+   "quote": "import { createTeam, getUserOwnedTeamCount, getUserTeams } from '@/queries/prisma';"
+  },
+  {
+   "id": "edge:au_qu",
+   "verdict": "confirmed",
+   "evidence": "src/lib/auth.ts:40-47",
+   "quote": "const apiKey = await getApiKeyByHash(hashApiKey(token)); ... const user: any = await getUser(apiKey.userId);"
+  },
+  {
+   "id": "edge:au_rd",
+   "verdict": "confirmed",
+   "evidence": "src/lib/auth.ts:149-153",
+   "quote": "const authKey = `auth:${createAuthKey()}`; if (redis.enabled) { await redis.client.set(authKey, data);"
+  },
+  {
+   "id": "edge:mc_mc",
+   "verdict": "confirmed",
+   "evidence": "src/app/mcp/route.ts:73-75",
+   "quote": "export async function POST(request: Request) { return handle(request); }"
+  },
+  {
+   "id": "edge:mc_au",
+   "verdict": "confirmed",
+   "evidence": "src/lib/mcp/auth.ts:22-26",
+   "quote": "if (!isApiKeyEnabled() || !isApiKey(token)) { ... const auth = await checkApiKeyAuth(request, token);"
+  },
+  {
+   "id": "edge:mc_aa",
+   "verdict": "confirmed",
+   "evidence": "src/lib/mcp/dispatch.ts:280-308",
+   "quote": "const matched = matchDispatchRoute(method, url.pathname); ... return await handler(request, { params: Promise.resolve(matched.params) });"
+  },
+  {
+   "id": "edge:qu_pg",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/events/saveEvent.ts:108",
+   "quote": "await prisma.client.websiteEvent.create({"
+  },
+  {
+   "id": "edge:qu_ch",
+   "verdict": "confirmed",
+   "evidence": "src/lib/clickhouse.ts:1",
+   "quote": "import { type ClickHouseClient, createClient } from '@clickhouse/client';"
+  },
+  {
+   "id": "edge:qu_ka",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/events/saveEvent.ts:263-264",
+   "quote": "if (kafka.enabled) { await sendMessage('event', message);"
+  },
+  {
+   "id": "edge:ka_ch",
+   "verdict": "confirmed",
+   "evidence": "src/lib/kafka.ts:77-79",
+   "quote": "const producer = kafka.producer(); await producer.connect(); (the repo only produces; no consumer exists in the code)"
+  },
+  {
+   "id": "edge:qu_rd",
+   "verdict": "confirmed",
+   "evidence": "src/lib/load.ts:25-30",
+   "quote": "session = await redis.client.fetch( `session:${sessionId}`, () => getWebsiteSession(websiteId, sessionId), 86400,"
+  },
+  {
+   "id": "flow:track/1",
+   "verdict": "confirmed",
+   "evidence": "src/tracker/index.ts:422-429, 330-332",
+   "quote": "if (autoPageview) track(); handlePathChanges(); ... history.pushState = hook(history, 'pushState', handlePush); history.replaceState = hook(history, 'replaceState', handlePush);"
+  },
+  {
+   "id": "flow:track/2",
+   "verdict": "confirmed",
+   "evidence": "src/tracker/index.ts:400-406",
+   "quote": "body: JSON.stringify({ type, payload }), headers: { ... ...(typeof cache !== 'undefined' && { 'x-umami-cache': cache }),"
+  },
+  {
+   "id": "flow:track/3",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:124-129",
+   "quote": "if (!cache?.websiteId) { const website = await fetchWebsite(websiteId); if (!website) { return badRequest({ message: 'Website not found.' });"
+  },
+  {
+   "id": "flow:track/4",
+   "verdict": "confirmed",
+   "evidence": "src/lib/load.ts:9-10",
+   "quote": "website = await redis.client.fetch(`website:${websiteId}`, () => getWebsite(websiteId), 86400);"
+  },
+  {
+   "id": "flow:track/5",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:143-150",
+   "quote": "if (!process.env.DISABLE_BOT_CHECK && isbot(userAgent)) { return json({ beep: 'boop' }); } ... if (hasBlockedIp(ip)) { return forbidden();"
+  },
+  {
+   "id": "flow:track/6",
+   "verdict": "confirmed",
+   "evidence": "src/lib/detect.ts:112-132",
+   "quote": "// Database lookup ... const country = result.country?.iso_code ... const region = result.subdivisions?.[0]?.iso_code; const city = result.city?.names?.en;"
+  },
+  {
+   "id": "flow:track/7",
+   "verdict": "wrong",
+   "evidence": "src/app/api/send/route.ts:185-198",
+   "quote": "let iat = cache?.iat || now; ... // Expire visit after 30 minutes if (!timestamp && now - iat > 1800) {",
+   "fix": "The 30 minutes are counted from iat, the time the visit started (carried unchanged in the cache token), not from the last beacon, so a visit is cut 30 minutes after it began however active it is; without a cache token the visit id is simply uuid(sessionId, start-of-hour). The session-id derivation and the insert with on conflict do nothing are right (createSession.ts:53)."
+  },
+  {
+   "id": "flow:track/8",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/events/saveEvent.ts:144-158",
+   "quote": "if (eventData) { await saveEventData({ ... const { revenue, currency } = eventData; if (revenue > 0 && currency) { await saveRevenue({"
+  },
+  {
+   "id": "flow:track/9",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:378-383",
+   "quote": "const token = createToken( { websiteId, sessionId, visitId, iat, sessionLinkId, type: CACHE_TOKEN_TYPE }, secret(), ); return json({ cache: token, sessionId, visitId });"
+  },
+  {
+   "id": "flow:scale/1",
+   "verdict": "confirmed",
+   "evidence": "src/tracker/index.ts:398-402",
+   "quote": "const res = await fetch(endpoint, { keepalive: true, method: 'POST', body: JSON.stringify({ type, payload }),"
+  },
+  {
+   "id": "flow:scale/2",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/events/saveEvent.ts:247-255",
+   "quote": "distinct_id: ..., browser: truncateString(browser, FIELD_LENGTH.browser), os: ..., device: ..., country: truncateString(country, FIELD_LENGTH.country),"
+  },
+  {
+   "id": "flow:scale/3",
+   "verdict": "confirmed",
+   "evidence": "src/lib/kafka.ts:15",
+   "quote": "const enabled = Boolean(process.env.KAFKA_URL && process.env.KAFKA_BROKER);"
+  },
+  {
+   "id": "flow:scale/4",
+   "verdict": "confirmed",
+   "evidence": "src/lib/kafka.ts:77-79",
+   "quote": "const producer = kafka.producer(); await producer.connect(); (no Kafka consumer anywhere in the repo)"
+  },
+  {
+   "id": "flow:scale/5",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/events/saveEvent.ts:265-266",
+   "quote": "} else { await insert('website_event', [message]);"
+  },
+  {
+   "id": "flow:read/1",
+   "verdict": "confirmed",
+   "evidence": "src/app/(main)/App.tsx:1",
+   "quote": "'use client';"
+  },
+  {
+   "id": "flow:read/2",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/auth/login/route.ts:25-49",
+   "quote": "if (!user || !checkPassword(password, user.password)) { ... const partialToken = createSecureToken( { userId: id, type: PARTIAL_AUTH_TOKEN_TYPE }, secret(), { expiresIn: '5m',"
+  },
+  {
+   "id": "flow:read/3",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/auth/login/route.ts:52-60",
+   "quote": "const pwd = hash(user.password); ... if (redis.enabled) { token = await saveAuth({ userId: id, role, pwd }); } else { token = createSecureToken({ userId: user.id, role, pwd }, secret());"
+  },
+  {
+   "id": "flow:read/4",
+   "verdict": "confirmed",
+   "evidence": "src/components/hooks/queries/useWebsiteStatsQuery.ts:31",
+   "quote": "queryFn: () => get(`/websites/${websiteId}/stats`, { compare, startAt, endAt, ...filters }),"
+  },
+  {
+   "id": "flow:read/5",
+   "verdict": "confirmed",
+   "evidence": "src/permissions/website.ts:8-38",
+   "quote": "if (user?.isAdmin) { return true; } if ( shareToken?.websiteId === websiteId || ... if (entity.userId) { return user.id === entity.userId; } ... const teamUser = await getTeamUser(entity.teamId, user.id);"
+  },
+  {
+   "id": "flow:read/6",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/websites/[websiteId]/stats/route.ts:28-42",
+   "quote": "const filters = await getQueryFilters(query, websiteId); const data = await getWebsiteStats(websiteId, filters); ... const comparison = await getWebsiteStats(websiteId, {"
+  },
+  {
+   "id": "flow:read/7",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/getWebsiteStats.ts:45-67, 193",
+   "quote": "count(distinct t.session_id) as \"visitors\", count(distinct t.visit_id) as \"visits\" ... group by 1, 2 ... from website_event_stats_hourly \"website_event\""
+  },
+  {
+   "id": "flow:read/8",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/websites/[websiteId]/stats/route.ts:44",
+   "quote": "return json({ ...data, comparison });"
+  },
+  {
+   "id": "flow:replay/1",
+   "verdict": "confirmed",
+   "evidence": "src/recorder/index.js:1",
+   "quote": "import { addCustomEvent, record } from 'rrweb';"
+  },
+  {
+   "id": "flow:replay/2",
+   "verdict": "confirmed",
+   "evidence": "src/recorder/index.js:53, 110-124",
+   "quote": "const getSessionCache = () => window.umami?.getSession?.()?.cache; ... if (!cache) return; ... 'x-umami-cache': cache,"
+  },
+  {
+   "id": "flow:replay/3",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/record/route.ts:108-183",
+   "quote": "if (requestBodySize && requestBodySize > MAX_RECORD_REQUEST_BYTES) { ... if (!website.recorderEnabled) { ... if (process.env.CLOUD_MODE) { ... 'Business subscription required.' ... isbot(userAgent)"
+  },
+  {
+   "id": "flow:replay/4",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/record/route.ts:200-235",
+   "quote": "const chunkIndex = timestamp || Math.floor(Date.now() / 1000); await saveRecording({ websiteId, sessionId, visitId, chunkIndex, ... pageX: ..., scrollPct: event.type === 'scroll' ? (event.scrollPct ?? null) : null,"
+  },
+  {
+   "id": "flow:replay/5",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/replays/saveRecording.ts:36-45",
+   "quote": "const compressed = gzipSync(Buffer.from(JSON.stringify(events), 'utf-8')); return prisma.client.sessionReplay.create({ ... events: compressed as any,"
+  },
+  {
+   "id": "flow:mcp/1",
+   "verdict": "confirmed",
+   "evidence": "src/app/mcp/route.ts:41-49",
+   "quote": "if (process.env.MCP_ENABLED !== '1') { return new Response(null, { status: 404 }); } const auth = await authenticateMcpRequest(request);"
+  },
+  {
+   "id": "flow:mcp/2",
+   "verdict": "confirmed",
+   "evidence": "src/lib/auth.ts:40-47",
+   "quote": "const apiKey = await getApiKeyByHash(hashApiKey(token)); ... const user: any = await getUser(apiKey.userId);"
+  },
+  {
+   "id": "flow:mcp/3",
+   "verdict": "confirmed",
+   "evidence": "src/app/mcp/route.ts:32-36",
+   "quote": "return new UmamiClient({ baseUrl: `${baseUrl}${basePath}/api`, token: authInfo.token, fetch: createInProcessFetch(),"
+  },
+  {
+   "id": "flow:mcp/4",
+   "verdict": "confirmed",
+   "evidence": "src/lib/auth.ts:74-75",
+   "quote": "if (isApiKeyEnabled() && isApiKey(token)) { return checkApiKeyAuth(request, token);"
+  },
+  {
+   "id": "flow:mcp/5",
+   "verdict": "confirmed",
+   "evidence": "src/lib/db.ts:26-40",
+   "quote": "export async function runQuery(queries: any) { if (process.env.CLICKHOUSE_URL) { ... return queries[PRISMA]();"
+  },
+  {
+   "id": "flow:mcp/6",
+   "verdict": "confirmed",
+   "evidence": "src/app/mcp/route.ts:54",
+   "quote": "return handler.fetch(request, { authInfo });"
+  },
+  {
+   "id": "inside:collect/step1",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:33-72",
+   "quote": "type: z.enum(['event', 'identify', 'performance']), ... message: 'Exactly one of website, link, or pixel must be provided',"
+  },
+  {
+   "id": "inside:collect/exit1",
+   "verdict": "confirmed",
+   "evidence": "src/lib/request.ts:30-33",
+   "quote": "const result = schema.safeParse(isGet ? query : body); if (!result.success) { error = () => badRequest(z.treeifyError(result.error));"
+  },
+  {
+   "id": "inside:collect/step2",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:112-121",
+   "quote": "const cacheHeader = request.headers.get('x-umami-cache'); if (cacheHeader) { const result = await parseToken(cacheHeader, secret()); if (result?.type === CACHE_TOKEN_TYPE) {"
+  },
+  {
+   "id": "inside:collect/step3",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:124-130",
+   "quote": "if (!cache?.websiteId) { const website = await fetchWebsite(websiteId);"
+  },
+  {
+   "id": "inside:collect/exit3",
+   "verdict": "confirmed",
+   "evidence": "src/lib/load.ts:15-17",
+   "quote": "if (!website || website.deletedAt) { return null; }  (the 400 'Website not found.' itself is at src/app/api/send/route.ts:128)"
+  },
+  {
+   "id": "inside:collect/step4",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:137-140",
+   "quote": "await getClientInfo( request, payload, );"
+  },
+  {
+   "id": "inside:collect/step5",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:143-150",
+   "quote": "if (!process.env.DISABLE_BOT_CHECK && isbot(userAgent)) { ... if (hasBlockedIp(ip)) {"
+  },
+  {
+   "id": "inside:collect/exit5",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:143-150",
+   "quote": "return json({ beep: 'boop' }); ... return forbidden();"
+  },
+  {
+   "id": "inside:collect/step6",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:156-162",
+   "quote": "const sessionSalt = getSalt(saltRotation, createdAt); ... const sessionId = uuid(sourceId, ip, userAgent, sessionSalt, distinctId ?? '');"
+  },
+  {
+   "id": "inside:collect/step7",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:163-168",
+   "quote": "const shouldEnsureSession = !clickhouse.enabled && sessionDrift; if ((!clickhouse.enabled && !cache?.sessionId) || shouldEnsureSession) {"
+  },
+  {
+   "id": "inside:collect/step8",
+   "verdict": "wrong",
+   "evidence": "src/app/api/send/route.ts:185-198",
+   "quote": "let iat = cache?.iat || now; ... if (!timestamp && now - iat > 1800) { visitId = uuid(sessionId, visitSalt); iat = now;",
+   "fix": "iat is the visit's start time carried in the cache token and is not refreshed on each beacon, so a new visit starts 30 minutes after the visit began, not after 30 minutes without a beacon. Without a token the visit id is uuid(sessionId, start of the hour)."
+  },
+  {
+   "id": "inside:collect/step9",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:200-265",
+   "quote": "const utmSource = currentUrl.searchParams.get('utm_source'); ... const gclid = ... const eventType = linkId ? EVENT_TYPE.linkEvent : ... await saveEvent({"
+  },
+  {
+   "id": "inside:collect/step10",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:312-347",
+   "quote": "} else if (type === COLLECTION_TYPE.identify) { ... saveSessionLink({ ... updateSession({ ... await saveSessionData({"
+  },
+  {
+   "id": "inside:collect/step11",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:349-375",
+   "quote": "} else if (type === COLLECTION_TYPE.performance) { ... eventType: EVENT_TYPE.performance, ... lcp, inp, cls, fcp, ttfb,"
+  },
+  {
+   "id": "inside:collect/step12",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:378-383",
+   "quote": "const token = createToken( ... return json({ cache: token, sessionId, visitId });"
+  },
+  {
+   "id": "inside:queries/step1",
+   "verdict": "confirmed",
+   "evidence": "src/lib/db.ts:26-40",
+   "quote": "if (process.env.CLICKHOUSE_URL) { ... const db = getDatabaseType(); if (db === POSTGRESQL) { return queries[PRISMA]();"
+  },
+  {
+   "id": "inside:queries/step2",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/events/saveEvent.ts:108-115",
+   "quote": "await prisma.client.websiteEvent.create({ data: { ... urlPath: truncateString(urlPath, FIELD_LENGTH.url),"
+  },
+  {
+   "id": "inside:queries/step3",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/events/saveEvent.ts:144-145",
+   "quote": "if (eventData) { await saveEventData({"
+  },
+  {
+   "id": "inside:queries/step4",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/events/saveEvent.ts:155-158",
+   "quote": "const { revenue, currency } = eventData; if (revenue > 0 && currency) { await saveRevenue({"
+  },
+  {
+   "id": "inside:queries/step5",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/events/saveEvent.ts:217-255",
+   "quote": "const message = { website_id: websiteId, ... browser: truncateString(browser, FIELD_LENGTH.browser), ... country: truncateString(country, FIELD_LENGTH.country),"
+  },
+  {
+   "id": "inside:queries/step6",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/events/saveEvent.ts:263-267",
+   "quote": "if (kafka.enabled) { await sendMessage('event', message); } else { await insert('website_event', [message]); }"
+  },
+  {
+   "id": "inside:queries/step7",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/events/saveEvent.ts:269-270",
+   "quote": "if (eventData) { await saveEventData({"
+  },
+  {
+   "id": "inside:postgres/table1",
+   "verdict": "confirmed",
+   "evidence": "prisma/schema.prisma:13-16",
+   "quote": "id String @id() @map(\"user_id\") @db.Uuid; username String @unique @db.VarChar(255); password String @db.VarChar(60); role String @map(\"role\") @db.VarChar(50)"
+  },
+  {
+   "id": "inside:postgres/table2",
+   "verdict": "confirmed",
+   "evidence": "prisma/schema.prisma:99-115",
+   "quote": "resetAt DateTime? @map(\"reset_at\") ... userId String? @map(\"user_id\") ... recorderEnabled Boolean @default(false) @map(\"recorder_enabled\") ... user User? @relation(\"user\", fields: [userId], references: [id])"
+  },
+  {
+   "id": "inside:postgres/table3",
+   "verdict": "confirmed",
+   "evidence": "prisma/schema.prisma:56-66",
+   "quote": "id String @id() @map(\"session_id\") @db.Uuid ... browser String? @db.VarChar(20) ... distinctId String? @map(\"distinct_id\") @db.VarChar(50)"
+  },
+  {
+   "id": "inside:postgres/table4",
+   "verdict": "confirmed",
+   "evidence": "prisma/schema.prisma:134-167",
+   "quote": "visitId String @map(\"visit_id\") @db.Uuid ... eventType Int @default(1) @map(\"event_type\") @db.Integer ... lcp Decimal? @db.Decimal(10, 1) ... session Session @relation(fields: [sessionId], references: [id])"
+  },
+  {
+   "id": "inside:postgres/table5",
+   "verdict": "confirmed",
+   "evidence": "prisma/schema.prisma:189-198",
+   "quote": "websiteEventId String @map(\"website_event_id\") ... dataKey String @map(\"data_key\") ... dataType Int @map(\"data_type\") ... websiteEvent WebsiteEvent @relation(fields: [websiteEventId], references: [id])"
+  },
+  {
+   "id": "inside:postgres/table6",
+   "verdict": "confirmed",
+   "evidence": "prisma/schema.prisma:418-421",
+   "quote": "sessionId String @map(\"session_id\") @db.Uuid; ... chunkIndex Int @map(\"chunk_index\") @db.Integer; events Bytes @map(\"events\")"
+  },
+  {
+   "id": "inside:clickhouse/table1",
+   "verdict": "confirmed",
+   "evidence": "db/clickhouse/schema.sql:51-54",
+   "quote": "ENGINE = MergeTree PARTITION BY toYYYYMM(created_at) ORDER BY (toStartOfHour(created_at), website_id, session_id, visit_id, created_at)"
+  },
+  {
+   "id": "inside:clickhouse/table2",
+   "verdict": "wrong",
+   "evidence": "db/clickhouse/schema.sql:153-161",
+   "quote": "ENGINE = AggregatingMergeTree PARTITION BY toYYYYMM(created_at) ORDER BY ( website_id, event_type, toStartOfHour(created_at), cityHash64(visit_id), visit_id )",
+   "fix": "The rollup key includes event_type: one row per website, event type, hour and visit, not per session, visit and hour. The fields (views sum UInt64, min_time/max_time, entry_url argMin, exit_url argMax) are right."
+  },
+  {
+   "id": "inside:clickhouse/table3",
+   "verdict": "confirmed",
+   "evidence": "db/clickhouse/schema.sql:57-67",
+   "quote": "CREATE TABLE umami.event_data ( ... event_id UUID, ... data_key String, string_value Nullable(String), number_value Nullable(Decimal(22, 4)), date_value Nullable(DateTime('UTC')),"
+  },
+  {
+   "id": "inside:clickhouse/table4",
+   "verdict": "confirmed",
+   "evidence": "db/clickhouse/schema.sql:315-318",
+   "quote": "session_id UUID, visit_id UUID, chunk_index UInt32, events String CODEC(ZSTD(3)),"
+  },
+  {
+   "id": "files:README.md",
+   "verdict": "confirmed",
+   "evidence": "README.md:46-57",
+   "quote": "DATABASE_URL=connection-url ... Optional: set `API_URL` ... Optional: set `TWO_FACTOR_ENCRYPTION_KEY` ... MCP is disabled by default. Set `MCP_ENABLED=1`"
+  },
+  {
+   "id": "files:package.json",
+   "verdict": "confirmed",
+   "evidence": "package.json:18",
+   "quote": "\"build\": \"npm-run-all check:env build:db check:db build:tracker build:recorder build:geo build:openapi build:packages build:app\""
+  },
+  {
+   "id": "files:Dockerfile",
+   "verdict": "confirmed",
+   "evidence": "Dockerfile:7-97",
+   "quote": "FROM node:${NODE_IMAGE_VERSION} AS deps ... AS builder ... AS runner ... USER nextjs"
+  },
+  {
+   "id": "files:docker-compose.yml",
+   "verdict": "confirmed",
+   "evidence": "docker-compose.yml:22-32",
+   "quote": "db: image: postgres:15-alpine ... healthcheck: test: [\"CMD-SHELL\", \"pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}\"]"
+  },
+  {
+   "id": "files:scripts/start-docker.sh",
+   "verdict": "confirmed",
+   "evidence": "scripts/start-docker.sh:14-16",
+   "quote": "node scripts/check-db.js node scripts/update-tracker.js exec node server.js"
+  },
+  {
+   "id": "files:scripts/check-db.js",
+   "verdict": "confirmed",
+   "evidence": "scripts/check-db.js:87",
+   "quote": "for (const fn of [checkEnv, checkConnection, checkDatabaseVersion, applyMigration]) {"
+  },
+  {
+   "id": "files:scripts/build-geo.js",
+   "verdict": "confirmed",
+   "evidence": "scripts/build-geo.js:19-35",
+   "quote": "const db = 'GeoLite2-City'; ... const dest = path.resolve(process.cwd(), 'geo');"
+  },
+  {
+   "id": "files:next.config.ts",
+   "verdict": "confirmed",
+   "evidence": "next.config.ts:119-129",
+   "quote": "if (collectApiEndpoint) { headers.push({ source: collectApiEndpoint, headers: apiHeaders, }); rewrites.push({ source: collectApiEndpoint, destination: '/api/send', });"
+  },
+  {
+   "id": "files:docker/proxy.ts",
+   "verdict": "confirmed",
+   "evidence": "docker/proxy.ts:31-40",
+   "quote": "function customCollectEndpoint(request: NextRequest) { const collectEndpoint = process.env.COLLECT_API_ENDPOINT; ... url.pathname = COLLECT_PATH; return NextResponse.rewrite(url, { headers: apiHeaders });"
+  },
+  {
+   "id": "files:src/tracker/index.ts",
+   "verdict": "confirmed",
+   "evidence": "rollup.tracker.config.js:8-10",
+   "quote": "input: 'src/tracker/index.ts', output: { file: 'public/script.js',"
+  },
+  {
+   "id": "files:src/recorder/index.js",
+   "verdict": "confirmed",
+   "evidence": "src/recorder/index.js:1",
+   "quote": "import { addCustomEvent, record } from 'rrweb';"
+  },
+  {
+   "id": "files:src/app/",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:75",
+   "quote": "export async function POST(request: Request) {  (API routes under src/app/api beside pages under src/app/(main))"
+  },
+  {
+   "id": "files:src/app/api/send/route.ts",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/send/route.ts:75-77",
+   "quote": "export async function POST(request: Request) { try { const { body, error } = await parseRequest(request, schema, { skipAuth: true });"
+  },
+  {
+   "id": "files:src/app/api/record/route.ts",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/record/route.ts:185-241",
+   "quote": "if (body.type === 'record') { ... await saveRecording({ ... await saveHeatmapEvents(heatmapRows);"
+  },
+  {
+   "id": "files:src/app/(collect)/",
+   "verdict": "confirmed",
+   "evidence": "src/app/(collect)/p/[slug]/route.ts:64-66",
+   "quote": "return new NextResponse(image, { headers: { 'Content-Type': 'image/gif',"
+  },
+  {
+   "id": "files:src/app/api/websites/[websiteId]/",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/websites/[websiteId]/stats/route.ts:30",
+   "quote": "const data = await getWebsiteStats(websiteId, filters);  (sibling folders: funnels, journeys, retention, metrics, sessions, ...)"
+  },
+  {
+   "id": "files:src/app/api/auth/",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/auth/sso/route.ts:15-20",
+   "quote": "if (!redis.enabled) { return serverError('Redis is disabled'); } ... const token = await saveAuth({ userId: auth.user.id, pwd: hash(user.password) }, 86400);  (folders login, logout, sso, verify, subscription)"
+  },
+  {
+   "id": "files:src/app/api/teams/",
+   "verdict": "confirmed",
+   "evidence": "src/app/api/teams/route.ts:44",
+   "quote": "if (!(await canCreateTeam(auth))) {"
+  },
+  {
+   "id": "files:src/app/mcp/route.ts",
+   "verdict": "confirmed",
+   "evidence": "src/app/mcp/route.ts:25",
+   "quote": "const handler = createUmamiMcpHttpHandler({"
+  },
+  {
+   "id": "files:src/app/(main)/",
+   "verdict": "confirmed",
+   "evidence": "src/app/(main)/App.tsx:1",
+   "quote": "'use client';  (folders admin, boards, dashboard, links, pixels, settings, teams, websites)"
+  },
+  {
+   "id": "files:src/components/hooks/queries/",
+   "verdict": "wrong",
+   "evidence": "src/app/(main)/boards/BoardProvider.tsx:66-98",
+   "quote": "const { post, useMutation } = useApi(); ... return post(`/boards/${boardData.id}`, boardData);",
+   "fix": "Not one hook per API call: generic hooks such as useUpdateQuery and useDeleteQuery take any path (useUpdateQuery.ts:6-9; LoginForm uses useUpdateQuery('/auth/login')), and about a dozen pages and components call useApi() get/post directly (BoardProvider, FunnelEditForm, ShareEditForm, DashboardProvider...). The names do not map one to one onto routes."
+  },
+  {
+   "id": "files:src/lib/",
+   "verdict": "confirmed",
+   "evidence": "src/lib/redis.ts:84",
+   "quote": "async fetch(key: string, query: () => Promise<any>, time?: number) {  (one file per concern: auth.ts, detect.ts, db.ts, kafka.ts, ...)"
+  },
+  {
+   "id": "files:src/lib/auth.ts",
+   "verdict": "confirmed",
+   "evidence": "src/lib/auth.ts:167-174",
+   "quote": "export function parseShareToken(request: Request) { ... if (token?.type !== SHARE_TOKEN_TYPE) {"
+  },
+  {
+   "id": "files:src/lib/detect.ts",
+   "verdict": "confirmed",
+   "evidence": "src/lib/detect.ts:150-170",
+   "quote": "export function hasBlockedIp(clientIp: string) { const ignoreIps = process.env.IGNORE_IP; ... const range = ipaddr.parseCIDR(ip);"
+  },
+  {
+   "id": "files:src/lib/db.ts",
+   "verdict": "confirmed",
+   "evidence": "src/lib/db.ts:26-40",
+   "quote": "export async function runQuery(queries: any) {"
+  },
+  {
+   "id": "files:src/lib/redis.ts",
+   "verdict": "confirmed",
+   "evidence": "src/lib/redis.ts:84-98",
+   "quote": "async fetch(key: string, query: () => Promise<any>, time?: number) { const result = await this.get(key); ... const data = await query(); if (data) { await this.set(key, data, time);"
+  },
+  {
+   "id": "files:src/lib/kafka.ts",
+   "verdict": "confirmed",
+   "evidence": "src/lib/kafka.ts:109-117",
+   "quote": "if (batch.length && batchSize + size > maxMessageBytes) { result.push( ...(await producer.send({"
+  },
+  {
+   "id": "files:src/lib/clickhouse.ts",
+   "verdict": "confirmed",
+   "evidence": "src/lib/clickhouse.ts:734",
+   "quote": "async function insert(table: string, values: any[]) {"
+  },
+  {
+   "id": "files:src/lib/mcp/",
+   "verdict": "confirmed",
+   "evidence": "src/lib/mcp/dispatch.ts:14-18",
+   "quote": "The API routes the embedded MCP server may call, dispatched in-process (no loopback HTTP). ... export const MCP_DISPATCH_ROUTES"
+  },
+  {
+   "id": "files:src/permissions/",
+   "verdict": "confirmed",
+   "evidence": "src/permissions/website.ts:8",
+   "quote": "export async function canViewWebsite({ user, shareToken }: Auth, websiteId: string) {"
+  },
+  {
+   "id": "files:src/queries/sql/",
+   "verdict": "confirmed",
+   "evidence": "src/queries/sql/getWebsiteStats.ts:20-23",
+   "quote": "return runQuery({ [PRISMA]: () => relationalQuery(...args), [CLICKHOUSE]: () => clickhouseQuery(...args), });"
+  },
+  {
+   "id": "files:src/queries/prisma/",
+   "verdict": "confirmed",
+   "evidence": "src/queries/prisma/apiKey.ts:21-24",
+   "quote": "export async function getApiKeyByHash(keyHash: string) { return prisma.client.apiKey.findUnique({"
+  },
+  {
+   "id": "files:prisma/schema.prisma",
+   "verdict": "confirmed",
+   "evidence": "prisma/schema.prisma:7-8",
+   "quote": "datasource db { provider = \"postgresql\""
+  },
+  {
+   "id": "files:prisma/migrations/",
+   "verdict": "confirmed",
+   "evidence": "scripts/check-db.js:76",
+   "quote": "execSync('prisma migrate deploy', {"
+  },
+  {
+   "id": "files:db/clickhouse/schema.sql",
+   "verdict": "confirmed",
+   "evidence": "db/clickhouse/schema.sql:164",
+   "quote": "CREATE MATERIALIZED VIEW umami.website_event_stats_hourly_mv"
+  },
+  {
+   "id": "files:packages/",
+   "verdict": "confirmed",
+   "evidence": "Dockerfile:14-15",
+   "quote": "# Workspace packages (@umami/api-client, @umami/mcp) must be present for a frozen install. COPY packages/api-client/package.json ./packages/api-client/"
+  }
+ ],
+ "missing": [
+  {
+   "what": "Batch collect endpoint POST /api/batch",
+   "evidence": "src/app/api/batch/route.ts:7-36",
+   "why": "A second public ingestion entry point: accepts up to 500 payloads and replays each through the /api/send POST handler. No component, connection or flow mentions it."
+  },
+  {
+   "what": "Umami's own outside services: update check and telemetry",
+   "evidence": "src/lib/constants.ts:19-20; src/store/version.ts:20; src/app/api/scripts/telemetry/route.ts:18; scripts/telemetry.js:9",
+   "why": "The dashboard fetches api.umami.is/v1/updates, the telemetry script loads a pixel from i.umami.is, and scripts/telemetry.js posts to api.umami.is/v1/telemetry (off with DISABLE_TELEMETRY / PRIVATE_MODE). The map shows no outbound calls to umami.is."
+  },
+  {
+   "what": "Cloud mode and its account data written outside the repo",
+   "evidence": "src/lib/load.ts:42-52; src/app/api/record/route.ts:162-171; src/lib/request.ts:101-108; src/app/api/share/[slug]/route.ts:42",
+   "why": "With CLOUD_MODE, account:{id}, team:{id} and white-label:{id} keys are read from Redis to gate replays (Business plan), clip data to 6 months and brand share pages, but nothing in the repo writes them; an outside billing system is implied and missing."
+  },
+  {
+   "what": "Public share pages flow",
+   "evidence": "src/app/share/[slug]; src/app/api/share/[slug]/route.ts:1-10 (createToken with SHARE_TOKEN_TYPE)",
+   "why": "Anonymous viewers open /share/:slug, get a share token minted from the share table, and then call the analytics API with the share-token and share-context headers. It is a main read path with its own auth that no flow covers."
+  },
+  {
+   "what": "Favicon service (DuckDuckGo icons)",
+   "evidence": "src/lib/constants.ts:21; src/components/common/Favicon.tsx:16",
+   "why": "The dashboard loads referrer favicons from icons.duckduckgo.com by default (FAVICON_URL overrides), an outside system the browser calls."
+  }
+ ]
+}
