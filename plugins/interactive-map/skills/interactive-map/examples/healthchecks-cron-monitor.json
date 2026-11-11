@@ -270,7 +270,7 @@
       "tool": "Component · hc/api",
       "concept": "REST API",
       "what": "Create, update, pause and list checks, read pings and flips. A request carries a project API key in <code>X-Api-Key</code> (write calls also take <code>api_key</code> in the JSON body); read-only keys see but cannot change. Status badges are read by a signed URL without logging in; the Prometheus metrics view (in <code>hc/integrations/prometheus/</code>) takes a read-only key in the URL or a Bearer header.",
-      "why": "Teams create checks from their deploy scripts, so a new cron job gets monitored without anyone opening the dashboard.",
+      "why": "Scripts can create and update checks through it, so a new cron job can be monitored without anyone opening the dashboard.",
       "tools": "<code>hc/api/views.py</code> · <code>hc/api/decorators.py</code> · pydantic"
     },
     {
@@ -1053,7 +1053,7 @@
             {
               "n": "processed",
               "type": "timestamp",
-              "note": "empty until sendalerts claims it; set at once for pauses, resets and manual downs"
+              "note": "empty until sendalerts claims it; set at once for pauses, resumes and downs caused by a schedule edit in the web UI"
             },
             {
               "n": "old_status · new_status",
@@ -1291,7 +1291,7 @@
       },
       {
         "path": "templates/",
-        "t": "Django templates for pages, docs and emails. Email alerts use <code>templates/emails/</code>; the other integrations keep their message text in their own folders (<code>hc/integrations/*/templates/</code>).",
+        "t": "Django templates for pages, docs and emails. Email alerts use <code>templates/emails/</code>; most other integrations keep their message text in their own folders (<code>hc/integrations/*/templates/</code>).",
         "more": "accounts/, docs/, emails/, front/"
       },
       {
