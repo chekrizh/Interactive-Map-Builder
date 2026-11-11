@@ -960,8 +960,9 @@
     border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 16px; text-decoration: none;
     transition: color .15s var(--ml-ease);
   }
+  .help-credit span { text-decoration: underline; text-decoration-color: color-mix(in srgb,currentColor 45%,transparent); text-underline-offset: 3px; }
   .help-credit:hover { color: var(--ink); }
-  .help-credit:hover span { text-decoration: underline; text-underline-offset: 2px; }
+  .help-credit:hover span { text-decoration-color: currentColor; }
   .help-credit svg { width: 18px; height: 18px; flex: none; border-radius: 4px; }
   .modetip { position: fixed; z-index: 50; pointer-events: none; max-width: 280px; padding: 7px 10px; border-radius: 7px;
     background: var(--ink); color: var(--bg); font: 500 12px/1.4 "Manrope", sans-serif;

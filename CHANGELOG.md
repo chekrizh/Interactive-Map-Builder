@@ -2,6 +2,10 @@
 
 Versions follow `plugins/interactive-map/.claude-plugin/plugin.json`. Each version change publishes a [GitHub release](https://github.com/chekrizh/Interactive-Map-Builder/releases) with the skill zips.
 
+## 0.7.4 — 2026-11-11
+
+- The credit line in the help card is underlined, so it reads as a link before you hover it.
+
 ## 0.7.3 — 2026-11-11
 
 - The help card ends with "Made with Interactive Map Builder", the plugin logo and a link to the repository. `settings.credit: false` hides it.
