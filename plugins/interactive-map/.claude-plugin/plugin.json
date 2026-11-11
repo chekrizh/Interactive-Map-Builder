@@ -1,11 +1,21 @@
 {
   "name": "interactive-map",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Build an interactive map of a code repository (C4 overview, drill-down, animated flows, guided tour) as one self-contained HTML file.",
   "author": {
     "name": "chekrizh"
   },
+  "homepage": "https://chekrizh.github.io/Interactive-Map-Builder/",
   "repository": "https://github.com/chekrizh/Interactive-Map-Builder",
   "license": "MIT",
-  "icon": "./icon.svg"
+  "icon": "./icon.svg",
+  "keywords": [
+    "codebase",
+    "architecture",
+    "c4-model",
+    "onboarding",
+    "code-understanding",
+    "interactive-map",
+    "visualization"
+  ]
 }

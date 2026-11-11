@@ -1,6 +1,6 @@
 ---
 name: interactive-map-repo
-description: Explains how a code repository works as an interactive C4-style map (system context, then containers and their key components, with animated request and data flows). Use when the user asks to map, explain or onboard onto a repository, a service or a codebase. Draft; builds on the interactive-map skill for rendering.
+description: Explains how a code repository works as an interactive C4-style map (system context, then containers and their key components, with animated request and data flows). Use when the user asks to map, explain or onboard onto a repository, a service or a codebase. Builds on the interactive-map skill for rendering.
 ---
 
 # Interactive map of a repository
