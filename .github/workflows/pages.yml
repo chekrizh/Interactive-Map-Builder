@@ -1,5 +1,5 @@
-# Publishes the Kutt example map as a live demo on GitHub Pages, rendered by the skill itself,
-# so the demo always runs the viewer on main. Needs Settings -> Pages -> Source: GitHub Actions.
+# Publishes the example maps as live demos on GitHub Pages (Kutt on the front page), rendered by
+# the skill itself, so the demos always run the viewer on main. Needs Settings -> Pages -> Source: GitHub Actions.
 name: Demo
 
 on:
@@ -28,35 +28,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Render the demo map
+      - name: Render the example maps
         run: |
           mkdir _site
-          # The demo's first panel says what made the map and links back here.
+          # Every real-project example becomes a page; the Kutt map is also the front page.
+          # Each first panel says what made the map and links back here.
           python3 - <<'PY'
-          import json, pathlib
-          src = pathlib.Path('plugins/interactive-map/skills/interactive-map/examples/kutt-url-shortener.json')
-          d = json.loads(src.read_text(encoding='utf-8'))
+          import json, pathlib, subprocess
+          examples = pathlib.Path('plugins/interactive-map/skills/interactive-map/examples')
+          render = 'plugins/interactive-map/skills/interactive-map/scripts/render.py'
+          site = 'https://chekrizh.github.io/Interactive-Map-Builder/'
           credit = ('<p>Made with <a href="https://github.com/chekrizh/Interactive-Map-Builder">Interactive Map Builder</a>, '
                     'a Claude Code plugin that maps a repository like this one.</p>')
-          intro = d['panels']['introHtml']
-          assert intro.count('<div class="panel-actions">') == 1
-          d['panels']['introHtml'] = intro.replace('<div class="panel-actions">', credit + '<div class="panel-actions">')
-          pathlib.Path('demo.json').write_text(json.dumps(d, ensure_ascii=False), encoding='utf-8')
-          PY
-          python3 plugins/interactive-map/skills/interactive-map/scripts/render.py demo.json _site/index.html
-          # Link previews and search results show the project, not only the mapped repository.
-          python3 - <<'PY'
-          import pathlib
-          page = pathlib.Path('_site/index.html')
-          meta = ('<meta property="og:title" content="Interactive Map Builder: a map of the Kutt URL shortener">'
-                  '<meta property="og:description" content="An interactive C4 map made by a Claude Code plugin: drill-down, animated flows, code walkthroughs and a guided tour.">'
-                  '<meta property="og:image" content="https://raw.githubusercontent.com/chekrizh/Interactive-Map-Builder/main/docs/readme/social-preview.png">'
-                  '<meta property="og:url" content="https://chekrizh.github.io/Interactive-Map-Builder/">'
-                  '<meta name="twitter:card" content="summary_large_image">'
-                  '<link rel="canonical" href="https://chekrizh.github.io/Interactive-Map-Builder/">')
-          html = page.read_text(encoding='utf-8')
-          assert html.count('</title>') == 1
-          page.write_text(html.replace('</title>', '</title>' + meta, 1), encoding='utf-8')
+          pages = {src.stem: src for src in sorted(examples.glob('*.json')) if src.stem != 'fastapi-service'}
+          pages['index'] = examples / 'kutt-url-shortener.json'
+          for name, src in pages.items():
+              d = json.loads(src.read_text(encoding='utf-8'))
+              intro = d['panels']['introHtml']
+              assert intro.count('<div class="panel-actions">') == 1, src
+              d['panels']['introHtml'] = intro.replace('<div class="panel-actions">', credit + '<div class="panel-actions">')
+              tmp = pathlib.Path(f'{name}.demo.json')
+              tmp.write_text(json.dumps(d, ensure_ascii=False), encoding='utf-8')
+              out = pathlib.Path(f'_site/{name}.html')
+              subprocess.run(['python3', render, str(tmp), str(out)], check=True)
+              # Link previews and search results show the project, not only the mapped repository.
+              url = site if name == 'index' else f'{site}{name}.html'
+              what = d['page']['title'] if isinstance(d.get('page'), dict) and d['page'].get('title') else name
+              meta = (f'<meta property="og:title" content="{what} · Interactive Map Builder">'
+                      '<meta property="og:description" content="An interactive C4 map made by a Claude Code plugin: drill-down, animated flows, code walkthroughs and a guided tour.">'
+                      '<meta property="og:image" content="https://raw.githubusercontent.com/chekrizh/Interactive-Map-Builder/main/docs/readme/social-preview.png">'
+                      f'<meta property="og:url" content="{url}">'
+                      '<meta name="twitter:card" content="summary_large_image">'
+                      f'<link rel="canonical" href="{url}">')
+              html = out.read_text(encoding='utf-8')
+              assert html.count('</title>') == 1, out
+              out.write_text(html.replace('</title>', '</title>' + meta, 1), encoding='utf-8')
           PY
 
       - uses: actions/configure-pages@v5

@@ -108,15 +108,20 @@ What the repository is made of. The folders and files that matter, each with a l
 
 ## Example maps
 
-Three real open-source projects, mapped by the skill. Render any of them (see [How it works](#how-it-works)) and open the HTML file.
+Eight real open-source projects, mapped by the skill. Open any of them in the browser.
 
-| Map | What it shows best |
-|---|---|
-| [Kutt](https://github.com/thedevs-network/kutt), a URL shortener | A hand-tuned layout, a request path with a cache, background jobs |
-| [PrivateBin](https://github.com/PrivateBin/PrivateBin), a zero-knowledge pastebin | A fully automatic layout; the work done in the browser, not on the server |
-| [Healthchecks](https://github.com/healthchecks/healthchecks), a cron job monitor | A web app and background loops that share one database |
+| Map | What it shows best | |
+|---|---|---|
+| [Kutt](https://github.com/thedevs-network/kutt), a URL shortener | A hand-tuned layout, a request path with a cache, background jobs | [Open](https://chekrizh.github.io/Interactive-Map-Builder/) |
+| [PrivateBin](https://github.com/PrivateBin/PrivateBin), a zero-knowledge pastebin | A fully automatic layout; the work done in the browser, not on the server | [Open](https://chekrizh.github.io/Interactive-Map-Builder/privatebin-pastebin.html) |
+| [Healthchecks](https://github.com/healthchecks/healthchecks), a cron job monitor | A web app and background loops that share one database | [Open](https://chekrizh.github.io/Interactive-Map-Builder/healthchecks-cron-monitor.html) |
+| [Rivet](https://github.com/rivet-lab/rivet), a production-database extractor | A command line tool with no services: batch and change-data paths, a commit protocol | [Open](https://chekrizh.github.io/Interactive-Map-Builder/rivet-database-extractor.html) |
+| [Miniflux](https://github.com/miniflux/v2), a feed reader | One Go binary and PostgreSQL: a scheduler, a worker pool, three APIs | [Open](https://chekrizh.github.io/Interactive-Map-Builder/miniflux-feed-reader.html) |
+| [Umami](https://github.com/umami-software/umami), web analytics | A Next.js app with a tracker script, cookie-free visit counting, PostgreSQL with optional ClickHouse, Kafka and Redis | [Open](https://chekrizh.github.io/Interactive-Map-Builder/umami-web-analytics.html) |
+| [nanoGPT](https://github.com/karpathy/nanoGPT), a small GPT trainer | Machine-learning scripts: data preparation, the training loop, the model | [Open](https://chekrizh.github.io/Interactive-Map-Builder/nanogpt-gpt-trainer.html) |
+| [Lobsters](https://github.com/lobsters/lobsters), a link aggregator | A Rails monolith behind a bot filter, a full-page cache on disk, jobs and cron scripts | [Open](https://chekrizh.github.io/Interactive-Map-Builder/lobsters-link-aggregator.html) |
 
-The map files are in [`examples/`](plugins/interactive-map/skills/interactive-map/examples/), with the credits and the commit each one was written from.
+The last five were made in the [extra check experiment](docs/extra-check-experiment.md) and then checked against the code like the first three. The map files are in [`examples/`](plugins/interactive-map/skills/interactive-map/examples/), with the credits and the commit each one was written from.
 
 
 ## Install
@@ -193,4 +198,4 @@ open /tmp/map.html
 
 ## License
 
-[MIT](LICENSE). Bundled assets keep their own licenses: [Lucide](https://lucide.dev) icons (ISC), [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos) (CC0; brand marks remain trademarks of their owners), the Manrope font (SIL Open Font License). The example maps describe [Kutt](https://github.com/thedevs-network/kutt) (The Devs Network and contributors, MIT), [PrivateBin](https://github.com/PrivateBin/PrivateBin) (Sébastien Sauvage and the PrivateBin contributors, zlib/libpng) and [Healthchecks](https://github.com/healthchecks/healthchecks) (Pēteris Caune and other contributors, BSD 3-clause); they copy none of their code, and the [examples README](plugins/interactive-map/skills/interactive-map/examples/README.md) links each licence and mapped commit.
+[MIT](LICENSE). Bundled assets keep their own licenses: [Lucide](https://lucide.dev) icons (ISC), [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos) (CC0; brand marks remain trademarks of their owners), the Manrope font (SIL Open Font License). The example maps describe [Kutt](https://github.com/thedevs-network/kutt) (The Devs Network and contributors, MIT), [PrivateBin](https://github.com/PrivateBin/PrivateBin) (Sébastien Sauvage and the PrivateBin contributors, zlib/libpng) and [Healthchecks](https://github.com/healthchecks/healthchecks) (Pēteris Caune and other contributors, BSD 3-clause), [Rivet](https://github.com/rivet-lab/rivet) (Rivet Contributors, MIT), [Miniflux](https://github.com/miniflux/v2) (The Miniflux Authors, Apache 2.0), [Umami](https://github.com/umami-software/umami) (Umami Software, Inc., MIT), [nanoGPT](https://github.com/karpathy/nanoGPT) (Andrej Karpathy, MIT) and [Lobsters](https://github.com/lobsters/lobsters) (joshua stein and contributors, BSD 3-clause); they copy none of their code, and the [examples README](plugins/interactive-map/skills/interactive-map/examples/README.md) links each licence and mapped commit.

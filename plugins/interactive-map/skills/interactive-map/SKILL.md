@@ -14,6 +14,7 @@ Start from an example, copy its structure and replace the content. Write only th
 - `examples/kutt-url-shortener.json`: a full map of a real repository (the Kutt URL shortener) in C4 terms: context on the overview, containers and components on the map, node shapes, library icons and logos, four flows, a build order, a tour and the project structure. Use it as the main reference.
 - `examples/privatebin-pastebin.json`: a second repository map (the PrivateBin pastebin) written with no `layout` at all; render.py places everything. Start from it when you let the layout be automatic.
 - `examples/healthchecks-cron-monitor.json`: a third repository map (the Healthchecks cron job monitor): a web app plus background loops that share a database, with the automatic layout steered by `layout.grid`.
+- Five more real-project maps show other shapes of repository: `rivet-database-extractor.json` (a command line tool with no services), `miniflux-feed-reader.json` (one Go binary with a scheduler and workers), `umami-web-analytics.json` (a Next.js app with optional stores), `nanogpt-gpt-trainer.json` (machine-learning scripts) and `lobsters-link-aggregator.json` (a Rails monolith).
 - `examples/fastapi-service.json`: the smallest complete map, showing what a map must contain.
 
 - `nodes` and `edges`: the components and the connections between them. A node's `step` is the build step that adds it. `groups`, `zones` and `overview` decide how components cluster and what the big-picture view shows.

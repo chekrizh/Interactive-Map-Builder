@@ -1,0 +1,2207 @@
+{
+ "id": "rivet-db-extract",
+ "page": {
+  "title": "Rivet: database to warehouse, mapped",
+  "slots": {
+   "overviewDescription": "Rivet in context: who runs it, the databases it reads, the bucket it writes and the warehouses it loads.",
+   "mapDescription": "The modules of the rivet binary, the state store and the outside systems, with the paths a batch export, a change capture, a warehouse load and a verification take.",
+   "completionIntro": "You followed one batch export from the command line to a manifest in the bucket, watched a change stream acknowledge only what was durable, and loaded the result into a warehouse behind a count gate.",
+   "completionLessons": "<li>Why parts land first, the manifest second and the cursor last</li><li>Why a change is acknowledged at the source only after its part and manifest are durable</li><li>How <code>rivet load</code> trusts manifests and a row count, not whatever sits in the bucket</li><li>Where the state database fits: leases, ledgers and resume points</li>"
+  }
+ },
+ "panels": {
+  "introHtml": "<div class=\"p-eyebrow\">Start here</div><h2>Rivet, a production-database extractor</h2><p style=\"margin-top:8px\">A map of <a href=\"https://github.com/rivet-lab/rivet\">rivet-lab/rivet</a> in C4 terms. Rivet is one Rust command line tool: it reads PostgreSQL, MySQL, SQL Server, MongoDB or Oracle, writes Parquet or CSV to local disk, S3, GCS or Azure, and can load the result into BigQuery, Snowflake or ClickHouse.</p><p><small>Rivet is made by the Rivet contributors and released under the <a href=\"https://github.com/rivet-lab/rivet/blob/9ee7deaf93a3c344778f2434856e4bffc3b23385/LICENSE\">MIT licence</a>. This map describes it in its own words and is not affiliated with its authors.</small></p><h3>Try it</h3><ul class=\"newlist\"><li>Open a card to see that part of the tool.</li><li>Play <b>Batch export</b>: the order of the writes is the design.</li><li>Click a component for what it does and which files hold it.</li></ul><div class=\"panel-actions\"><button type=\"button\" class=\"panel-action\" id=\"gofull\">Open full map</button></div>",
+  "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>One binary, three outside worlds</h2><p style=\"margin-top:8px\">There is no server: every box inside the system boundary is a module of the <code>rivet</code> binary, run once per command by cron, Airflow or a person. What survives between runs is the state database and the files in the bucket.</p><h3>How to read it</h3><p>People on the left, then the command layer, the batch and change-capture pipelines, the commit seam and state, and the warehouse loader. Source databases, the bucket, the warehouses and Slack are outside the boundary.</p><p>A second small binary, <code>rivet-mcp</code>, gives an AI agent read-only diagnostics on the source.</p>"
+ },
+ "groups": {
+  "people": {
+   "title": "Operators and agents",
+   "huekey": "person",
+   "icon": "users",
+   "line1": "People or a scheduler run it.",
+   "line2": "Agents ask about the source.",
+   "chips": "cron · Airflow · MCP",
+   "text": "Rivet runs as a command you schedule, not a hosted service. A data engineer writes rivet.yaml and a scheduler runs the commands; an AI agent can query source health through rivet-mcp.",
+   "members": [
+    "operator",
+    "agent"
+   ]
+  },
+  "sources": {
+   "title": "Source databases",
+   "huekey": "external",
+   "icon": "database",
+   "line1": "Production databases,",
+   "line2": "read without hurting them.",
+   "chips": "PostgreSQL · MySQL · MongoDB",
+   "text": "The operational databases rivet extracts from: by SQL reads for batch exports, and by their change logs for change data capture.",
+   "members": [
+    "srcdb"
+   ]
+  },
+  "command": {
+   "title": "Commands and plans",
+   "huekey": "component",
+   "icon": "square-terminal",
+   "line1": "Parse, validate, plan",
+   "line2": "before anything is read.",
+   "chips": "clap · rivet.yaml · plans",
+   "text": "The command line, the YAML config, the plan that turns an export into a concrete strategy, the init and doctor commands, and the separate MCP binary.",
+   "members": [
+    "cli",
+    "config",
+    "planner",
+    "preflight",
+    "mcp"
+   ]
+  },
+  "batch": {
+   "title": "Batch extract",
+   "huekey": "component",
+   "icon": "table",
+   "line1": "Rows to Arrow batches",
+   "line2": "to Parquet or CSV parts.",
+   "chips": "snapshot · chunked · keyset",
+   "text": "The export runner and its strategies, the per-engine source drivers and the sink that streams Arrow batches into temporary Parquet or CSV files.",
+   "members": [
+    "runner",
+    "strategies",
+    "drivers",
+    "sink"
+   ]
+  },
+  "cdc": {
+   "title": "Change capture",
+   "huekey": "component",
+   "icon": "git-branch",
+   "line1": "Inserts, updates, deletes",
+   "line2": "from the database's log.",
+   "chips": "slot · binlog · change tables",
+   "text": "One change stream per engine and the capture sink that writes typed change parts and acknowledges the source only after they are durable.",
+   "members": [
+    "cdcstream",
+    "cdcsink"
+   ]
+  },
+  "durable": {
+   "title": "Commit and proof",
+   "huekey": "store",
+   "icon": "shield-check",
+   "line1": "Parts, manifest, state,",
+   "line2": "and checks after the fact.",
+   "chips": "manifest · SQLite",
+   "text": "The commit seam that uploads parts and writes the manifest, the destination backends, the state database, and the validate, reconcile and repair commands that check what landed.",
+   "members": [
+    "commit",
+    "destinations",
+    "state",
+    "verify"
+   ]
+  },
+  "load": {
+   "title": "Warehouse load",
+   "huekey": "component",
+   "icon": "warehouse",
+   "line1": "Manifests in, tables out,",
+   "line2": "behind a count gate.",
+   "chips": "rivet load · rivet compact",
+   "text": "The load driver that turns successful runs into warehouse tables, one adapter per warehouse, and the compact command that folds a change buffer into its base table.",
+   "members": [
+    "loaddriver",
+    "adapters",
+    "compact"
+   ]
+  },
+  "outside": {
+   "title": "Storage and warehouses",
+   "huekey": "external",
+   "icon": "cloud",
+   "line1": "Where the files land",
+   "line2": "and where they end up.",
+   "chips": "S3 · GCS · BigQuery",
+   "text": "The object store or local folder that holds the exported parts, the warehouses rivet loads, and the Slack webhook it notifies.",
+   "members": [
+    "bucket",
+    "warehouse",
+    "slack"
+   ]
+  }
+ },
+ "overview": [
+  {
+   "g": "people"
+  },
+  {
+   "g": "command"
+  },
+  {
+   "g": "batch"
+  },
+  {
+   "g": "cdc"
+  },
+  {
+   "g": "sources"
+  },
+  {
+   "g": "durable"
+  },
+  {
+   "g": "load"
+  },
+  {
+   "g": "outside"
+  }
+ ],
+ "overviewEdges": [
+  {
+   "id": "o1",
+   "from": "people",
+   "to": "command",
+   "label": "runs commands"
+  },
+  {
+   "id": "o2",
+   "from": "command",
+   "to": "batch",
+   "label": "rivet run"
+  },
+  {
+   "id": "o3",
+   "from": "command",
+   "to": "cdc",
+   "label": "mode: cdc"
+  },
+  {
+   "id": "o4",
+   "from": "command",
+   "to": "load",
+   "label": "rivet load"
+  },
+  {
+   "id": "o5",
+   "from": "batch",
+   "to": "sources",
+   "label": "SQL reads"
+  },
+  {
+   "id": "o6",
+   "from": "cdc",
+   "to": "sources",
+   "label": "reads the log"
+  },
+  {
+   "id": "o7",
+   "from": "batch",
+   "to": "durable",
+   "label": "parts"
+  },
+  {
+   "id": "o8",
+   "from": "cdc",
+   "to": "durable",
+   "label": "change parts"
+  },
+  {
+   "id": "o9",
+   "from": "durable",
+   "to": "outside",
+   "label": "writes files"
+  },
+  {
+   "id": "o10",
+   "from": "load",
+   "to": "outside",
+   "label": "loads tables"
+  },
+  {
+   "id": "o11",
+   "from": "load",
+   "to": "durable",
+   "label": "ledger"
+  }
+ ],
+ "zones": [
+  {
+   "id": "z_people",
+   "label": "People and agents",
+   "hue": "person"
+  },
+  {
+   "id": "z_cmd",
+   "label": "rivet binary · commands",
+   "hue": "component"
+  },
+  {
+   "id": "z_batch",
+   "label": "Batch extract · pipeline/ and source/",
+   "hue": "component"
+  },
+  {
+   "id": "z_cdc",
+   "label": "Change capture · source/cdc and pipeline/cdc",
+   "hue": "component"
+  },
+  {
+   "id": "z_commit",
+   "label": "Commit, state and proof",
+   "hue": "store"
+  },
+  {
+   "id": "z_load",
+   "label": "Warehouse load · load/",
+   "hue": "component"
+  },
+  {
+   "id": "z_src",
+   "label": "Source databases",
+   "hue": "external"
+  },
+  {
+   "id": "z_out",
+   "label": "Storage, warehouses, alerts",
+   "hue": "external"
+  }
+ ],
+ "nodes": [
+  {
+   "id": "operator",
+   "group": "people",
+   "zone": "z_people",
+   "cat": "person",
+   "shape": "person",
+   "step": 1,
+   "icon": "user",
+   "concept": "Data engineer or scheduler",
+   "tool": "Person · cron · Airflow",
+   "what": "Writes <code>rivet.yaml</code> (often scaffolded by <code>rivet init</code>) and runs <code>rivet run</code>, <code>rivet load</code> and <code>rivet compact</code> by hand or on a schedule.",
+   "why": "Rivet is a command, not a platform: each invocation does one job and exits, so cron, Airflow, a Kubernetes CronJob or <code>docker run</code> can drive it.",
+   "tools": "<code>rivet</code> binary · Homebrew, cargo or the Docker image · <code>rivet.yaml</code>"
+  },
+  {
+   "id": "agent",
+   "group": "people",
+   "zone": "z_people",
+   "cat": "person",
+   "shape": "person",
+   "step": 7,
+   "icon": "bot",
+   "concept": "AI agent",
+   "tool": "MCP client",
+   "what": "An assistant such as Claude Desktop or Claude Code that starts <code>rivet-mcp</code> and calls its tools to look at the source before or during an extract.",
+   "why": "Lets an agent check sessions, locks and table stats on the source without being given write access to it.",
+   "tools": "JSON-RPC over stdio · <code>src/bin/rivet-mcp.rs</code>"
+  },
+  {
+   "id": "srcdb",
+   "group": "sources",
+   "zone": "z_src",
+   "cat": "external",
+   "shape": "external",
+   "step": 1,
+   "logo": "postgresql",
+   "concept": "Source databases",
+   "tool": "PostgreSQL · MySQL · SQL Server · MongoDB · Oracle",
+   "what": "The production databases rivet reads. Batch exports send SQL (a server-side cursor on PostgreSQL, keyset or chunked range queries elsewhere); change capture reads a logical replication slot, the MySQL binlog, SQL Server change tables, a MongoDB change stream or Oracle LogMiner.",
+   "why": "They are production, so rivet keeps reads short and bounded, detects connection poolers (pgBouncer, ProxySQL, the Azure SQL gateway) and measures the load it adds to the server.",
+   "tools": "postgres · mysql · tiberius · mongodb crates · Oracle behind the <code>oracle</code> feature",
+   "icon": "database"
+  },
+  {
+   "id": "cli",
+   "group": "command",
+   "zone": "z_cmd",
+   "cat": "component",
+   "step": 1,
+   "icon": "square-terminal",
+   "concept": "Command line",
+   "tool": "Component · src/cli",
+   "what": "Parses the arguments with clap, checks cross-flag rules, then <code>dispatch</code> matches the subcommand to its entry point: <code>run</code>, <code>cdc</code>, <code>load</code>, <code>compact</code>, <code>init</code>, <code>check</code>, <code>doctor</code>, <code>plan</code>, <code>apply</code>, <code>validate</code>, <code>reconcile</code>, <code>repair</code> and the <code>state</code> tools.",
+   "why": "One place maps every error to an exit class and an error code, redacts credentials from the message and prints it as text or JSON, so schedulers can react to the exit status.",
+   "tools": "<code>src/main.rs</code> · <code>src/cli/args.rs</code> · <code>src/cli/dispatch.rs</code> · clap"
+  },
+  {
+   "id": "config",
+   "group": "command",
+   "zone": "z_cmd",
+   "cat": "component",
+   "step": 1,
+   "icon": "file-cog",
+   "concept": "Config loader",
+   "tool": "Component · src/config",
+   "what": "Reads <code>rivet.yaml</code>: the source, the list of exports with their mode, query, format and destination, tuning, notifications and the <code>load:</code> block. Resolves URLs from environment variables or files and applies <code>--param</code> values.",
+   "why": "Everything rivet does is declared here, so validation and lints run before any connection is opened.",
+   "tools": "serde YAML · <code>src/config/mod.rs</code> · <code>src/config/export.rs</code> · <code>src/config/load.rs</code>"
+  },
+  {
+   "id": "planner",
+   "group": "command",
+   "zone": "z_cmd",
+   "cat": "component",
+   "step": 3,
+   "icon": "route",
+   "concept": "Run plan",
+   "tool": "Component · src/plan",
+   "what": "Turns one export into a <code>ResolvedRunPlan</code>: the extraction strategy (snapshot, incremental, time window, chunked, keyset), the tuning profile, column overrides and the destination. <code>rivet plan</code> seals the same plan into a file that <code>rivet apply</code> replays.",
+   "why": "Separating the decision from the execution lets a plan be reviewed, hashed and replayed with the same chunk boundaries.",
+   "tools": "<code>src/plan/build.rs</code> · <code>src/plan/artifact.rs</code> · <code>src/pipeline/plan_cmd.rs</code> · <code>src/pipeline/apply_cmd.rs</code>"
+  },
+  {
+   "id": "preflight",
+   "group": "command",
+   "zone": "z_cmd",
+   "cat": "component",
+   "step": 4,
+   "icon": "stethoscope",
+   "concept": "Init, check and doctor",
+   "tool": "Component · src/init · src/preflight",
+   "what": "<code>rivet init</code> reads the source catalog and writes a reviewed YAML with one export per table and a suggested mode. <code>rivet check</code> runs EXPLAIN and a type report; <code>rivet doctor</code> probes the source and destination connections.",
+   "why": "Most failures are a wrong URL, a missing grant or a type that will not survive; finding them before the first run saves a failed production extract.",
+   "tools": "<code>src/init/mod.rs</code> · <code>src/preflight/doctor.rs</code> · <code>src/preflight/type_report.rs</code>"
+  },
+  {
+   "id": "mcp",
+   "group": "command",
+   "zone": "z_cmd",
+   "cat": "component",
+   "step": 7,
+   "icon": "plug",
+   "concept": "MCP server",
+   "tool": "Component · rivet-mcp binary",
+   "what": "A second binary that speaks JSON-RPC 2.0 over stdin and stdout and exposes read-only tools: PostgreSQL sessions, checkpoint pressure, table stats, locks and top queries, and MySQL process list, key metrics and table stats.",
+   "why": "Kept as its own binary rather than a subcommand, so an agent integration never pulls in the export path.",
+   "tools": "<code>src/mcp.rs</code> · <code>src/bin/rivet-mcp.rs</code>"
+  },
+  {
+   "id": "runner",
+   "group": "batch",
+   "zone": "z_batch",
+   "cat": "component",
+   "step": 3,
+   "icon": "play",
+   "inside": "runner",
+   "concept": "Export job runner",
+   "tool": "Component · pipeline/run.rs · job.rs",
+   "what": "<code>pipeline::run</code> selects the exports, runs them one after another, on a thread pool or as child processes, and prints the run aggregate. For each export <code>run_export_job</code> either hands a <code>mode: cdc</code> export to the capture or runs the batch plan with its gates.",
+   "why": "This is where the ordering lives: lease, run ledger, data, manifest, cursor, metrics. A crash between any two steps leaves something resume can finish rather than a gap.",
+   "tools": "<code>src/pipeline/run.rs</code> · <code>src/pipeline/job.rs</code> · <code>src/pipeline/parallel_children.rs</code> · <code>src/notify.rs</code>"
+  },
+  {
+   "id": "strategies",
+   "group": "batch",
+   "zone": "z_batch",
+   "cat": "component",
+   "step": 3,
+   "icon": "split",
+   "concept": "Extraction strategies",
+   "tool": "Component · single · chunked · keyset",
+   "what": "<code>run_with_reconnect</code> retries a failed attempt with backoff and a fresh connection. <code>run_export</code> then picks the loop: one query (snapshot, incremental, time window), chunked ranges with optional per-chunk checkpoints, or keyset pages.",
+   "why": "Short, bounded reads keep a large table from holding one long transaction on production; chunk and page checkpoints let <code>--resume</code> finish a crashed run.",
+   "tools": "<code>src/pipeline/single.rs</code> · <code>src/pipeline/chunked/</code> · <code>src/pipeline/keyset.rs</code> · <code>src/error/retry.rs</code> (error classes, re-exported as <code>pipeline::retry</code>)"
+  },
+  {
+   "id": "governor",
+   "group": "batch",
+   "zone": "z_batch",
+   "cat": "component",
+   "step": 3,
+   "icon": "gauge",
+   "concept": "Concurrency governor",
+   "tool": "Component · opt-in · tuning/adaptive.rs",
+   "what": "Watches how hard someone else is writing to the source and resizes the worker pool of a parallel chunked or keyset export. Every 1.5 s by default it reads one cumulative write-pressure counter over its own monitoring connection (PostgreSQL requested checkpoints, MySQL <code>Innodb_log_waits</code>, SQL Server <code>Log Flush Waits</code>, Oracle <code>redo log space requests</code>). If the counter rose, it drops one worker, down to <code>min_parallel</code>; if it did not, it adds one back, up to <code>parallel</code>. A missed reading holds the pool as it is; only after three misses in a row does it step back up. Each change goes into the run journal.",
+   "why": "Lets an export run on a production database without crowding out its real traffic: when the database gets busy, rivet backs off until it frees up. It listens only to write pressure, which a read-only export cannot cause, so it never sheds workers because of its own reads. It arms only with <code>tuning.adaptive: true</code> and <code>parallel</code> above 1.",
+   "tools": "<code>src/tuning/adaptive.rs</code> (<code>GovernorState</code>, <code>next_parallel</code>) · <code>src/pipeline/governor.rs</code> (arms it, resizes the permit semaphore) · <code>sample_governor_pressure</code> in the PostgreSQL, MySQL, SQL Server and Oracle sources · ADR-0019"
+  },
+  {
+   "id": "drivers",
+   "group": "batch",
+   "zone": "z_batch",
+   "cat": "component",
+   "step": 1,
+   "icon": "cable",
+   "concept": "Source drivers",
+   "tool": "Component · Source trait · src/source",
+   "what": "One <code>Source</code> per engine. PostgreSQL declares a cursor and fetches N rows at a time; MySQL, SQL Server, MongoDB and Oracle have their own loops. Each maps native types to a <code>RivetType</code>, converts rows to Arrow and pushes each batch to the sink. A shared batch controller sizes batches to a memory budget and throttles.",
+   "why": "Adding an engine means implementing one trait; the rest of the pipeline only ever sees Arrow batches.",
+   "tools": "<code>src/source/mod.rs</code> · <code>src/source/postgres/mod.rs</code> · <code>src/source/batch_controller.rs</code> · arrow"
+  },
+  {
+   "id": "sink",
+   "group": "batch",
+   "zone": "z_batch",
+   "cat": "component",
+   "step": 1,
+   "icon": "file-stack",
+   "concept": "Export sink and formats",
+   "tool": "Component · pipeline/sink · src/format",
+   "what": "Receives the schema and each Arrow batch, adds meta columns, and streams them into a temporary Parquet or CSV file. It rotates to a new part at <code>max_file_size</code> and computes per-column checksums as it goes. By default a worker thread encodes while the source thread keeps fetching.",
+   "why": "No batch is held beyond the current fetch, so memory stays at about batch size times row width, whatever the table size.",
+   "tools": "<code>src/pipeline/sink/mod.rs</code> · <code>src/format/parquet.rs</code> · <code>src/format/csv.rs</code>"
+  },
+  {
+   "id": "cdcstream",
+   "group": "cdc",
+   "zone": "z_cdc",
+   "cat": "component",
+   "step": 5,
+   "icon": "radio-tower",
+   "concept": "Change streams",
+   "tool": "Component · ChangeStream trait",
+   "what": "<code>create_change_stream</code> opens the engine's stream: on PostgreSQL a logical slot with the <code>test_decoding</code> plugin, polled with SQL (<code>pg_logical_slot_peek_changes</code>); the MySQL binlog; SQL Server change tables; a MongoDB change stream; Oracle LogMiner. Each yields canonical <code>ChangeEvent</code>s with an operation, table, row image and resume position.",
+   "why": "<code>ack</code> is separate from reading: an engine that consumes on read, like a PostgreSQL slot, only moves forward once rivet says the change is stored.",
+   "tools": "<code>src/source/cdc/mod.rs</code> · <code>src/source/postgres/cdc.rs</code> · <code>src/source/mysql/cdc.rs</code> · large transactions spill to disk · a pgoutput decoder (<code>pgoutput.rs</code>) exists but is not yet used outside tests"
+  },
+  {
+   "id": "cdcsink",
+   "group": "cdc",
+   "zone": "z_cdc",
+   "cat": "component",
+   "step": 5,
+   "icon": "git-commit-horizontal",
+   "inside": "cdcsink",
+   "concept": "Capture sink",
+   "tool": "Component · pipeline/cdc",
+   "what": "<code>run_capture</code> resolves each captured table's columns, then <code>run_to_files</code> pulls changes, routes them to per-table buffers and rolls them into typed parts with <code>__op</code>, <code>__pos</code> and <code>__seq</code> columns. Each roll uploads and records the parts, rewrites the manifest, saves the checkpoint file and acks. The standalone <code>rivet cdc</code> command drives the same <code>run_capture</code> from a URL, without a state store.",
+   "why": "Checkpoints sit on transaction boundaries and the ack comes last, so a crash anywhere re-reads changes instead of losing them: at-least-once. The resume position lives in a local checkpoint file (<code>cdc.checkpoint</code>, scaffolded as <code>./cdc/&lt;table&gt;.ckpt</code>), not in the state database; on PostgreSQL the slot itself also holds it.",
+   "tools": "<code>src/pipeline/cdc/mod.rs</code> · <code>src/pipeline/cdc/sink.rs</code> · <code>src/pipeline/cdc_job.rs</code>"
+  },
+  {
+   "id": "commit",
+   "group": "durable",
+   "zone": "z_commit",
+   "cat": "component",
+   "step": 2,
+   "icon": "stamp",
+   "concept": "Commit seam and manifest",
+   "tool": "Component · commit.rs · manifest_writer.rs",
+   "what": "Uploads each sealed part, computes its xxh3 fingerprint and MD5, compares the MD5 with what the store reported, and records the part. At the end of the run it writes <code>manifest.json</code> listing every part with rows and checksums, and <code>_SUCCESS</code> when the run succeeded.",
+   "why": "Every runner goes through the same seam, so the rule \"file first, then the record of it\" cannot drift between strategies. The manifest is what loaders trust.",
+   "tools": "<code>src/pipeline/commit.rs</code> · <code>src/pipeline/manifest_writer.rs</code> · <code>src/pipeline/finalize.rs</code> · <code>src/manifest.rs</code>"
+  },
+  {
+   "id": "destinations",
+   "group": "durable",
+   "zone": "z_commit",
+   "cat": "component",
+   "step": 2,
+   "icon": "hard-drive-upload",
+   "concept": "Destination backends",
+   "tool": "Component · Destination trait",
+   "what": "<code>create_destination</code> builds local, stdout, S3, GCS or Azure. The cloud ones go through OpenDAL with a retry layer. Besides <code>write</code>, each can list, read and head objects so validate and resume can inspect a prefix.",
+   "why": "A destination says how it commits (atomic, finalize on close, streaming); state is only updated once that commit is confirmed.",
+   "tools": "<code>src/destination/mod.rs</code> · <code>src/destination/cloud.rs</code> · <code>src/destination/gcs.rs</code> · opendal"
+  },
+  {
+   "id": "state",
+   "group": "durable",
+   "zone": "z_commit",
+   "cat": "store",
+   "shape": "database",
+   "step": 3,
+   "logo": "sqlite",
+   "inside": "state",
+   "concept": "State store",
+   "tool": "SQLite file or PostgreSQL",
+   "what": "<code>.rivet_state.db</code> beside the config, or a PostgreSQL database when <code>RIVET_STATE_URL</code> is set. Holds incremental cursors, chunk checkpoints, the run-status ledger, the per-part file log, metrics, journals and the load ledger. The CDC resume position is not here: it is a separate checkpoint file beside the config.",
+   "why": "Without it every run is a full reload and a crash means starting over. It is also what lets <code>rivet load</code> know which runs are already in the warehouse.",
+   "tools": "rusqlite · postgres · <code>src/state/mod.rs</code> · <code>src/state/migrations.rs</code>",
+   "icon": "database"
+  },
+  {
+   "id": "verify",
+   "group": "durable",
+   "zone": "z_commit",
+   "cat": "component",
+   "step": 4,
+   "icon": "clipboard-check",
+   "concept": "Validate, reconcile, repair",
+   "tool": "Component · pipeline/*_cmd.rs",
+   "what": "<code>rivet validate</code> re-reads a prefix's manifest and parts and checks counts and checksums without touching the source. <code>rivet reconcile</code> recounts each stored chunk with <code>COUNT(*)</code> on the source. <code>rivet repair --execute</code> re-exports only the chunks that differ.",
+   "why": "A green exit code says the run finished, not that the data is right; these commands give a reason to believe the files.",
+   "tools": "<code>src/pipeline/validate_cmd.rs</code> · <code>src/pipeline/reconcile_cmd.rs</code> · <code>src/pipeline/repair_cmd.rs</code>"
+  },
+  {
+   "id": "loaddriver",
+   "group": "load",
+   "zone": "z_load",
+   "cat": "component",
+   "step": 6,
+   "icon": "truck",
+   "inside": "loaddriver",
+   "concept": "Load driver",
+   "tool": "Component · load/orchestrate.rs",
+   "what": "<code>rivet load</code> plans one load per export, then for each table on a worker pool: takes a table lease, reads every manifest under the prefix, picks the successful runs not yet loaded, has the adapter land them and checks the row count before cleaning anything up.",
+   "why": "The warehouse-neutral driver owns the order and the gates, so each warehouse adapter only has to know its own SQL. A <code>load:</code> block on a destination its warehouse cannot read (anything but GCS for BigQuery and Snowflake) is refused at plan time.",
+   "tools": "<code>src/load/orchestrate.rs</code> · <code>src/load/plan.rs</code> · <code>src/load/reconcile.rs</code> · <code>src/load/mod.rs</code>"
+  },
+  {
+   "id": "adapters",
+   "group": "load",
+   "zone": "z_load",
+   "cat": "component",
+   "step": 6,
+   "icon": "plug-zap",
+   "concept": "Warehouse adapters",
+   "tool": "Component · TargetLoader trait",
+   "what": "One <code>TargetLoader</code> per warehouse: <code>materialize</code> a table from Parquet, <code>append_changelog</code> for change data, <code>create_view</code> for the current-state view, <code>compact</code> and <code>row_count</code>. BigQuery uses its REST jobs API, Snowflake its SQL API with a key-pair JWT, ClickHouse its HTTP interface.",
+   "why": "Every warehouse difference (external stages, partition limits, MERGE or not) stays behind this trait.",
+   "tools": "<code>src/load/bigquery/</code> · <code>src/load/bq_rest.rs</code> · <code>src/load/snowflake.rs</code> · <code>src/load/clickhouse.rs</code>"
+  },
+  {
+   "id": "compact",
+   "group": "load",
+   "zone": "z_load",
+   "cat": "component",
+   "step": 6,
+   "icon": "merge",
+   "concept": "Compact",
+   "tool": "Component · load/compact.rs",
+   "what": "<code>rivet compact</code> merges each table's change buffer <code>&lt;table&gt;__changes</code> into its base table and drops the buffer. BigQuery uses MERGE statements, split into windows for partitioned tables; Snowflake runs a DELETE and an INSERT in one transaction.",
+   "why": "Keeps the warehouse following the source with no full reloads. ClickHouse needs no compact step: its change log is a ReplacingMergeTree behind a view.",
+   "tools": "<code>src/load/compact.rs</code> · runs on the same worker pool and ledger as load"
+  },
+  {
+   "id": "bucket",
+   "group": "outside",
+   "zone": "z_out",
+   "cat": "external",
+   "shape": "external",
+   "step": 2,
+   "logo": "googlecloudstorage",
+   "concept": "Object store or local folder",
+   "tool": "S3 · GCS · Azure Blob · local disk",
+   "what": "Holds each export's prefix: the Parquet or CSV parts, named per run so a re-run never overwrites the last, plus <code>manifest.json</code> and <code>_SUCCESS</code>.",
+   "why": "It is both the output and the hand-off to the warehouse: <code>rivet load</code> reads only what a successful manifest declares, and BigQuery and Snowflake read the parts straight from it, so a load into them needs a GCS destination.",
+   "tools": "OpenDAL clients · credentials from the environment or files",
+   "icon": "cloud"
+  },
+  {
+   "id": "warehouse",
+   "group": "outside",
+   "zone": "z_out",
+   "cat": "external",
+   "shape": "external",
+   "step": 6,
+   "logo": "googlebigquery",
+   "concept": "Data warehouses",
+   "tool": "BigQuery · Snowflake · ClickHouse",
+   "what": "Where the loaded tables live: a base table per export, a <code>__changes</code> change log or buffer for change data, and a current-state view over it. BigQuery (<code>LOAD DATA</code>) and Snowflake (storage integration) read the Parquet parts from GCS themselves; for ClickHouse rivet reads each part and sends it over HTTP, from GCS, S3 or Azure.",
+   "why": "The reason most users run rivet at all; the dataset or database must already exist, rivet does not create it.",
+   "tools": "BigQuery jobs API · Snowflake SQL API v2 · ClickHouse HTTP",
+   "icon": "warehouse"
+  },
+  {
+   "id": "slack",
+   "group": "outside",
+   "zone": "z_out",
+   "cat": "external",
+   "shape": "external",
+   "step": 4,
+   "logo": "slack",
+   "concept": "Slack webhook",
+   "tool": "Incoming webhook",
+   "what": "Receives a short message with the export name, status, rows and duration when a run matches the configured events, such as a failure.",
+   "why": "A scheduled tool that fails quietly is worse than none; the webhook URL can come from an environment variable.",
+   "tools": "<code>src/notify.rs</code> · <code>notifications.slack</code> in the config",
+   "icon": "message-square"
+  }
+ ],
+ "edges": [
+  {
+   "id": "op_cli",
+   "from": "operator",
+   "to": "cli",
+   "label": "runs rivet"
+  },
+  {
+   "id": "ag_mcp",
+   "from": "agent",
+   "to": "mcp",
+   "label": "JSON-RPC over stdio"
+  },
+  {
+   "id": "mcp_src",
+   "from": "mcp",
+   "to": "srcdb",
+   "label": "read-only SQL"
+  },
+  {
+   "id": "cli_cfg",
+   "from": "cli",
+   "to": "config",
+   "label": "loads rivet.yaml"
+  },
+  {
+   "id": "cli_pre",
+   "from": "cli",
+   "to": "preflight",
+   "label": "init, check, doctor"
+  },
+  {
+   "id": "pre_src",
+   "from": "preflight",
+   "to": "srcdb",
+   "label": "catalog probes"
+  },
+  {
+   "id": "cli_run",
+   "from": "cli",
+   "to": "runner",
+   "label": "rivet run"
+  },
+  {
+   "id": "run_plan",
+   "from": "runner",
+   "to": "planner",
+   "label": "builds plan"
+  },
+  {
+   "id": "run_str",
+   "from": "runner",
+   "to": "strategies",
+   "label": "runs strategy"
+  },
+  {
+   "id": "str_drv",
+   "from": "strategies",
+   "to": "drivers",
+   "label": "Source::export"
+  },
+  {
+   "id": "drv_src",
+   "from": "drivers",
+   "to": "srcdb",
+   "label": "FETCH over SQL"
+  },
+  {
+   "id": "drv_sink",
+   "from": "drivers",
+   "to": "sink",
+   "label": "Arrow batches"
+  },
+  {
+   "id": "sink_com",
+   "from": "sink",
+   "to": "commit",
+   "label": "sealed parts"
+  },
+  {
+   "id": "com_dest",
+   "from": "commit",
+   "to": "destinations",
+   "label": "write"
+  },
+  {
+   "id": "dest_bkt",
+   "from": "destinations",
+   "to": "bucket",
+   "label": "PUT via OpenDAL"
+  },
+  {
+   "id": "com_state",
+   "from": "commit",
+   "to": "state",
+   "label": "file log"
+  },
+  {
+   "id": "run_state",
+   "from": "runner",
+   "to": "state",
+   "label": "lease, cursor, metrics"
+  },
+  {
+   "id": "run_slack",
+   "from": "runner",
+   "to": "slack",
+   "label": "HTTPS webhook"
+  },
+  {
+   "id": "run_cdc",
+   "from": "runner",
+   "to": "cdcsink",
+   "label": "run_capture"
+  },
+  {
+   "id": "cdc_str",
+   "from": "cdcsink",
+   "to": "cdcstream",
+   "label": "next_change, ack"
+  },
+  {
+   "id": "str_src",
+   "from": "cdcstream",
+   "to": "srcdb",
+   "label": "reads the change log"
+  },
+  {
+   "id": "cdc_dest",
+   "from": "cdcsink",
+   "to": "destinations",
+   "label": "parts, manifest"
+  },
+  {
+   "id": "cdc_state",
+   "from": "cdcsink",
+   "to": "state",
+   "label": "records parts"
+  },
+  {
+   "id": "cli_load",
+   "from": "cli",
+   "to": "loaddriver",
+   "label": "rivet load"
+  },
+  {
+   "id": "cli_comp",
+   "from": "cli",
+   "to": "compact",
+   "label": "rivet compact"
+  },
+  {
+   "id": "load_state",
+   "from": "loaddriver",
+   "to": "state",
+   "label": "lease, load ledger"
+  },
+  {
+   "id": "load_bkt",
+   "from": "loaddriver",
+   "to": "bucket",
+   "label": "reads manifests"
+  },
+  {
+   "id": "load_ad",
+   "from": "loaddriver",
+   "to": "adapters",
+   "label": "TargetLoader"
+  },
+  {
+   "id": "comp_ad",
+   "from": "compact",
+   "to": "adapters",
+   "label": "compact()"
+  },
+  {
+   "id": "ad_wh",
+   "from": "adapters",
+   "to": "warehouse",
+   "label": "SQL over HTTPS"
+  },
+  {
+   "id": "cli_ver",
+   "from": "cli",
+   "to": "verify",
+   "label": "validate, reconcile"
+  },
+  {
+   "id": "ver_dest",
+   "from": "verify",
+   "to": "destinations",
+   "label": "reads parts"
+  },
+  {
+   "id": "ver_state",
+   "from": "verify",
+   "to": "state",
+   "label": "chunk counts"
+  },
+  {
+   "id": "ver_src",
+   "from": "verify",
+   "to": "srcdb",
+   "label": "COUNT(*) per chunk"
+  },
+  {
+   "id": "ver_str",
+   "from": "verify",
+   "to": "strategies",
+   "label": "repair re-export"
+  },
+  {
+   "id": "bkt_wh",
+   "from": "bucket",
+   "to": "warehouse",
+   "label": "LOAD DATA from GCS"
+  },
+  {
+   "id": "cli_cdc",
+   "from": "cli",
+   "to": "cdcsink",
+   "label": "rivet cdc"
+  },
+  {
+   "id": "gov_src",
+   "from": "governor",
+   "to": "srcdb",
+   "label": "samples write pressure"
+  },
+  {
+   "id": "gov_str",
+   "from": "governor",
+   "to": "strategies",
+   "label": "resizes worker pool"
+  }
+ ],
+ "flows": {
+  "batch": {
+   "title": "Batch export",
+   "hue": "component",
+   "desc": "One rivet run of a snapshot or incremental export: rows become Arrow batches, then Parquet parts, then a manifest, and only then is the cursor moved.",
+   "hops": [
+    {
+     "e": "op_cli",
+     "t": "A scheduler runs <code>rivet run -c rivet.yaml</code>. <code>run_binary</code> installs a logger that redacts passwords and hands the parsed command to <code>dispatch</code>."
+    },
+    {
+     "e": "cli_cfg",
+     "t": "<code>dispatch_run</code> parses the <code>--param</code> values and the config is loaded with them; <code>RunSet</code> picks the exports to run."
+    },
+    {
+     "e": "cli_run",
+     "t": "<code>pipeline::run</code> decides how to run the exports: one after another, on threads, or as child processes. It opens the state database first so its migrations run once."
+    },
+    {
+     "e": "run_plan",
+     "t": "For each export, <code>build_plan_on</code> resolves the plan: the strategy, the tuning profile and the destination."
+    },
+    {
+     "e": "run_state",
+     "t": "<code>execute_resolved_plan</code> claims a run lease so two runs of one export cannot overlap, and writes a <code>running</code> row to the run-status ledger."
+    },
+    {
+     "e": "run_str",
+     "t": "<code>run_with_reconnect</code> opens a source connection and calls <code>run_export</code>; a transient failure retries with backoff, a closed port fails at once with a pointer to <code>rivet doctor</code>."
+    },
+    {
+     "e": "str_drv",
+     "t": "A single-query strategy builds an <code>ExportRequest</code> with the query and, for incremental, the stored cursor, and calls <code>Source::export</code>."
+    },
+    {
+     "e": "drv_src",
+     "t": "PostgreSQL: inside a transaction, a server-side cursor and <code>FETCH</code> of N rows at a time. The batch size adapts to a memory budget and the loop can sleep between fetches."
+    },
+    {
+     "e": "drv_sink",
+     "t": "Each batch is converted to Arrow and pushed to the sink. By default a worker thread encodes Parquet while the source thread fetches the next batch."
+    },
+    {
+     "e": "sink_com",
+     "t": "When the source is drained the writer is finished. Parts rotated at <code>max_file_size</code> and the last temp file are handed to <code>write_sink_parts</code>."
+    },
+    {
+     "e": "com_dest",
+     "t": "<code>write_part_file</code> uploads each part, then computes its fingerprint and MD5. If the store reported its own checksum and it differs, the run stops: the part corrupted in transit."
+    },
+    {
+     "e": "dest_bkt",
+     "t": "OpenDAL writes the object to S3, GCS or Azure, or the file lands in a local folder. Part names carry the run, so a re-run never overwrites the previous one."
+    },
+    {
+     "e": "com_state",
+     "t": "<code>record_part</code> adds the part to the run's manifest list and to the file log in the state database."
+    },
+    {
+     "e": "com_dest",
+     "t": "<code>finalize_manifest</code> writes <code>manifest.json</code> with every part, row count and checksum, then <code>_SUCCESS</code> if the run succeeded."
+    },
+    {
+     "e": "run_state",
+     "t": "<code>store_journal</code> saves the run journal and the run-status row is closed. Only then is the incremental cursor advanced, and only if the run succeeded with a manifest; a crash before it re-exports the window instead of skipping it. The metrics row comes last."
+    },
+    {
+     "e": "run_slack",
+     "t": "If notifications are configured and the outcome matches, a short message goes to the Slack webhook."
+    }
+   ]
+  },
+  "cdc": {
+   "title": "Change capture run",
+   "hue": "component",
+   "desc": "A mode: cdc export drains the database's change log to its current end, writing typed change parts and acknowledging the source only after each part is durable.",
+   "hops": [
+    {
+     "e": "op_cli",
+     "t": "The same <code>rivet run</code>, on a config whose export has <code>mode: cdc</code>. By default it only captures changes and the operator owns the initial load; with <code>cdc.initial: snapshot</code> the first run takes a baseline snapshot through the batch path first."
+    },
+    {
+     "e": "cli_run",
+     "t": "<code>run_export_job</code> sees the CDC mode and takes the capture branch instead of the batch plan."
+    },
+    {
+     "e": "run_state",
+     "t": "A CDC run lease in the state store keeps two runs of the export apart. The checkpoint is claimed by an owner file (<code>&lt;checkpoint&gt;.owner</code>) beside the checkpoint file, which stops two configs, each with its own state database, from reading the same stream."
+    },
+    {
+     "e": "run_cdc",
+     "t": "<code>run_cdc_export</code> fills a <code>CdcCapture</code> with one output per captured table and calls <code>run_capture</code>."
+    },
+    {
+     "e": "cdc_str",
+     "t": "<code>create_change_stream</code> opens the engine's stream from its last position. Tables whose log would carry only partial row images are refused before anything is read."
+    },
+    {
+     "e": "str_src",
+     "t": "The stream reads the log: on PostgreSQL a <code>test_decoding</code> slot polled with <code>pg_logical_slot_peek_changes</code>, the binlog on MySQL, change tables on SQL Server, a change stream on MongoDB, LogMiner on Oracle."
+    },
+    {
+     "e": "cdc_str",
+     "rev": true,
+     "t": "<code>next_change</code> yields canonical changes. The sink routes each to its table's buffer and remembers the last transaction boundary it saw."
+    },
+    {
+     "e": "cdc_dest",
+     "t": "When the buffers are big enough, <code>roll_all</code> encodes each table's part and uploads it, one worker per table."
+    },
+    {
+     "e": "dest_bkt",
+     "t": "The parts land in the table's prefix."
+    },
+    {
+     "e": "cdc_state",
+     "t": "Each part is recorded in the state database right after its upload, even if a sibling table's upload failed, so a failed run still says what it captured."
+    },
+    {
+     "e": "cdc_dest",
+     "t": "At a transaction boundary the run's manifest is rewritten to cover every part so far, still without <code>_SUCCESS</code>; the terminal write at a clean end adds it."
+    },
+    {
+     "e": "cdc_str",
+     "t": "Only now: save the checkpoint file at the last commit boundary, then <code>ack</code>. On PostgreSQL this is what lets the slot move past the changes; a crash before it re-reads them."
+    }
+   ]
+  },
+  "load": {
+   "title": "Load the warehouse",
+   "hue": "component",
+   "desc": "rivet load reads the manifests under each export's prefix, lands the runs not yet loaded and refuses to clean up unless the warehouse holds exactly the rows the manifests declare.",
+   "hops": [
+    {
+     "e": "op_cli",
+     "t": "After <code>rivet run</code>, the scheduler runs <code>rivet load -c cdc.yaml</code>."
+    },
+    {
+     "e": "cli_load",
+     "t": "<code>run_loads</code> plans one load per export from the config and picks one run id for the whole invocation, used as a cost label in the warehouse."
+    },
+    {
+     "e": "load_state",
+     "t": "Each worker takes a lease on its target table, so two loads cannot append the same runs twice, and reads the load ledger."
+    },
+    {
+     "e": "load_bkt",
+     "t": "<code>prepare_load</code> reads every <code>manifest.json</code> under the prefix, refuses foreign or failed runs and runs whose parts are no longer listed under the prefix, and keeps the successful runs not yet loaded."
+    },
+    {
+     "e": "load_ad",
+     "t": "The adapter for the target is built. A full export is materialized as a table; a CDC or incremental export is appended to <code>&lt;table&gt;__changes</code>."
+    },
+    {
+     "e": "ad_wh",
+     "t": "BigQuery runs a query job through its REST API, Snowflake a SQL script through the SQL API, ClickHouse an <code>INSERT … FORMAT Parquet</code> per part."
+    },
+    {
+     "e": "bkt_wh",
+     "t": "BigQuery and Snowflake pull the Parquet parts straight from the GCS prefix; the data does not pass through rivet. (ClickHouse is the exception: rivet reads each part and sends it.)"
+    },
+    {
+     "e": "ad_wh",
+     "rev": true,
+     "t": "The landed row count is read back from the target. <code>check_loaded_rows</code> compares it with the rows the manifests declared; on a mismatch the load fails and nothing is cleaned up."
+    },
+    {
+     "e": "load_bkt",
+     "t": "Only after the gate passes, and only if <code>cleanup_source</code> is on and no run is still writing there, the loaded parts are removed from the prefix."
+    },
+    {
+     "e": "load_state",
+     "t": "The load is recorded in <code>load_run</code> and each source run in <code>loaded_source_run</code>, so the next load skips them."
+    },
+    {
+     "e": "cli_comp",
+     "t": "On a base-and-buffer layout the scheduler then runs <code>rivet compact</code>."
+    },
+    {
+     "e": "comp_ad",
+     "t": "<code>run_compacts</code> calls the adapter's <code>compact</code> for each table."
+    },
+    {
+     "e": "ad_wh",
+     "t": "BigQuery merges the buffer into the base with MERGE statements, split into windows for partitioned tables; Snowflake runs a DELETE and an INSERT in one transaction. Then the buffer is dropped."
+    }
+   ]
+  },
+  "verify": {
+   "title": "Prove what landed",
+   "hue": "store",
+   "desc": "Between runs, validate re-reads the files, reconcile recounts the source chunk by chunk, and repair re-exports only the chunks that differ.",
+   "hops": [
+    {
+     "e": "op_cli",
+     "t": "An operator or a CI job runs <code>rivet validate</code> on an export."
+    },
+    {
+     "e": "cli_ver",
+     "t": "The validate command expands the export's destination and runs the same manifest checks as <code>rivet run --validate</code>, with no source query and no state writes."
+    },
+    {
+     "e": "ver_dest",
+     "t": "It reads <code>manifest.json</code> and the parts through the destination backend and checks that every part is there with its rows and checksums."
+    },
+    {
+     "e": "dest_bkt",
+     "t": "The reads go to the same prefix the run wrote: a missing or changed part shows up here."
+    },
+    {
+     "e": "ver_state",
+     "t": "<code>rivet reconcile</code> works on chunked exports with checkpoints: it lists the stored chunk tasks of the last run with their row counts."
+    },
+    {
+     "e": "ver_src",
+     "t": "For each chunk it runs <code>SELECT COUNT(*)</code> over the chunk's query on the source and reports matches and mismatches."
+    },
+    {
+     "e": "ver_str",
+     "t": "<code>rivet repair --execute</code> re-runs just the mismatched ranges through the chunked runner. The new files sit beside the originals; nothing is deleted or overwritten."
+    }
+   ]
+  }
+ },
+ "buildSteps": [
+  null,
+  {
+   "title": "A query to a local file",
+   "text": "Parse the command and the YAML, connect to one database, stream rows as Arrow batches into a Parquet file.",
+   "decision": "Everything downstream sees Arrow batches; each engine only has to produce them.",
+   "runnable": "rivet run -c rivet.yaml",
+   "nodes": [
+    "operator",
+    "srcdb",
+    "cli",
+    "config",
+    "drivers",
+    "sink"
+   ]
+  },
+  {
+   "title": "Parts and a manifest in a bucket",
+   "text": "Upload each part through one commit seam and finish the run with manifest.json and _SUCCESS.",
+   "decision": "File first, then the record of it: a crash leaves an unlisted part, never a listed part that is missing.",
+   "nodes": [
+    "commit",
+    "destinations",
+    "bucket"
+   ]
+  },
+  {
+   "title": "Plans, strategies and state",
+   "text": "Resolve each export to a strategy, run it with retries, and keep cursors, checkpoints and the run ledger in SQLite.",
+   "decision": "The cursor moves only after the manifest is written, so an incremental run never skips rows it did not land.",
+   "runnable": "rivet run -c rivet.yaml --resume",
+   "nodes": [
+    "runner",
+    "planner",
+    "strategies",
+    "state"
+   ]
+  },
+  {
+   "title": "Checks before and after",
+   "text": "Scaffold and probe before the first run; validate, reconcile and repair after it; tell Slack when something fails.",
+   "decision": "Verification commands read the destination and the source again instead of trusting the run's own report.",
+   "runnable": "rivet doctor -c rivet.yaml",
+   "nodes": [
+    "preflight",
+    "verify",
+    "slack"
+   ]
+  },
+  {
+   "title": "Change data capture",
+   "text": "Read each engine's change log as canonical events and write them as typed change parts.",
+   "decision": "Acknowledge the source last, after part, manifest and checkpoint: at-least-once instead of maybe-lost.",
+   "nodes": [
+    "cdcstream",
+    "cdcsink"
+   ]
+  },
+  {
+   "title": "Into the warehouse",
+   "text": "Load the runs a manifest declares, check the landed row count, then clean up; compact change buffers into base tables.",
+   "decision": "A warehouse-neutral driver owns the gates; each adapter only knows its own SQL and API.",
+   "runnable": "rivet load -c cdc.yaml && rivet compact -c cdc.yaml",
+   "nodes": [
+    "loaddriver",
+    "adapters",
+    "compact",
+    "warehouse"
+   ]
+  },
+  {
+   "title": "Diagnostics for agents",
+   "text": "A separate stdio binary exposes read-only source diagnostics as MCP tools.",
+   "decision": "A separate binary, so an agent integration never links in the write path.",
+   "runnable": "rivet-mcp --stdio",
+   "nodes": [
+    "agent",
+    "mcp"
+   ]
+  }
+ ],
+ "tourChapters": [
+  {
+   "name": "Context",
+   "hue": "--ink"
+  },
+  {
+   "name": "Batch export",
+   "hue": "--h-component"
+  },
+  {
+   "name": "Change capture",
+   "hue": "--h-component"
+  },
+  {
+   "name": "Warehouse",
+   "hue": "--h-component"
+  },
+  {
+   "name": "Proof",
+   "hue": "--h-store"
+  },
+  {
+   "name": "Recap",
+   "hue": "--ink"
+  }
+ ],
+ "tour": [
+  {
+   "ch": 0,
+   "level": 0,
+   "title": "One binary between production and the warehouse",
+   "body": [
+    "Rivet copies tables from an operational database into files, and optionally into a warehouse. It runs as a command and exits; there is no server.",
+    "People and an AI agent on one side, the source databases, the bucket and the warehouses on the other, and in between five parts of one Rust binary."
+   ],
+   "why": "The source is production and the result has to be trusted, so most of the design is about the order of writes and the evidence each run leaves behind."
+  },
+  {
+   "ch": 1,
+   "flow": "batch",
+   "hops": [
+    0,
+    8
+   ],
+   "title": "From a command to rows",
+   "body": [
+    "Follow one export from the command line through the plan and the retry loop to a cursor on the source."
+   ],
+   "why": "Leases and the run ledger are taken before any row is read, so a second scheduler tick cannot run the same export twice."
+  },
+  {
+   "ch": 1,
+   "flow": "batch",
+   "hops": [
+    8,
+    16
+   ],
+   "title": "Parts first, cursor last",
+   "body": [
+    "Batches become Parquet parts, parts become objects, objects are listed in a manifest, and only then does the cursor move."
+   ],
+   "why": "A crash at any point leaves either data with no record, which resume picks up, or nothing; never a record that skips data."
+  },
+  {
+   "ch": 2,
+   "flow": "cdc",
+   "title": "Changes, acknowledged when durable",
+   "body": [
+    "A CDC run drains the log to its current end, rolling buffered changes into typed parts."
+   ],
+   "why": "On PostgreSQL the ack moves the slot for good, so it has to come after the part, the manifest and the checkpoint."
+  },
+  {
+   "ch": 3,
+   "flow": "load",
+   "title": "Into the warehouse, behind a count gate",
+   "body": [
+    "rivet load reads manifests, not the bucket listing, and compares the landed rows with what the manifests declare."
+   ],
+   "why": "A typo'd prefix or a half-written run would otherwise load silently; here it is refused before anything is cleaned up."
+  },
+  {
+   "ch": 4,
+   "flow": "verify",
+   "title": "Proof after the fact",
+   "body": [
+    "Validate, reconcile and repair check the files and the source again, independently of the run that wrote them."
+   ],
+   "why": "These commands are why a green run can be believed: each one re-reads instead of trusting the run's own numbers."
+  },
+  {
+   "ch": 5,
+   "whole": true,
+   "title": "The whole tool, on one map",
+   "recap": {
+    "people": "A person or a scheduler runs the commands; an agent can ask about the source.",
+    "command": "Parse the command and config, plan each export, scaffold and probe.",
+    "batch": "Strategies drive source drivers; Arrow batches stream into Parquet or CSV parts.",
+    "cdc": "Change streams per engine; parts first, ack last.",
+    "sources": "Production databases, read in short bounded queries or through their logs.",
+    "durable": "One commit seam, a manifest per run, a state database, and checks after the fact.",
+    "load": "Manifests to warehouse tables behind a count gate, then compact.",
+    "outside": "The bucket that holds the parts, the warehouses, and Slack."
+   },
+   "body": [
+    "One Rust binary run per command, with the state database and the bucket as its only memory.",
+    "The design choice that shapes everything: each step writes its evidence before the next step is allowed to rely on it."
+   ]
+  }
+ ],
+ "insides": {
+  "runner": {
+   "kind": "steps",
+   "title": "Inside the runner: one batch export",
+   "sub": "What <code>execute_resolved_plan</code> in <code>src/pipeline/job.rs</code> does for one export, in order.",
+   "cap": "The data phase is one step in the middle. Everything after it decides what the run may claim: the manifest is written before the cursor moves, and the result is failed if any gate (validate, reconcile, cursor) failed, even when the data landed.",
+   "steps": [
+    {
+     "t": "Check the plan can run",
+     "d": "A partitioned export must already be expanded; a MongoDB collection is bound to its incarnation.",
+     "code": "src/pipeline/job.rs:1100-1111",
+     "exit": {
+      "when": "plan invalid",
+      "t": "Failed summary, nothing read"
+     }
+    },
+    {
+     "t": "Claim the run",
+     "d": "Take the run lease, claim the progress row, recover an interrupted checkpoint run and refuse a stored cursor past the last manifest.",
+     "code": "src/pipeline/job.rs:1112-1129",
+     "exit": {
+      "when": "another run holds it",
+      "t": "Refused",
+      "code": "src/pipeline/job.rs:1124-1128"
+     }
+    },
+    {
+     "t": "Open the run in the ledger",
+     "d": "A <code>running</code> row in <code>run_status</code>, then column and harm snapshots on a metadata connection.",
+     "code": "src/pipeline/job.rs:1135-1143"
+    },
+    {
+     "t": "Gate the columns",
+     "d": "Temporal settle columns, the type policy (<code>--strict</code>) and a prefix written by another pipeline shape.",
+     "code": "src/pipeline/job.rs:1152-1156",
+     "exit": {
+      "when": "a gate refuses",
+      "t": "Run fails before any read"
+     }
+    },
+    {
+     "t": "Run the strategy",
+     "d": "Parallel chunked with or without checkpoints, or <code>run_with_reconnect</code> for everything else.",
+     "code": "src/pipeline/job.rs:1157-1188"
+    },
+    {
+     "t": "Finalize the export",
+     "d": "On success, schema drift and quality checks; on failure, name a revoked column or a missing table.",
+     "code": "src/pipeline/job.rs:1189-1207"
+    },
+    {
+     "t": "Reconcile with the source",
+     "d": "Only when asked: count the source and compare with the rows exported.",
+     "code": "src/pipeline/job.rs:1253-1264"
+    },
+    {
+     "t": "Write the manifest",
+     "d": "<code>manifest.json</code> and <code>_SUCCESS</code>; a manifest that cannot be written turns the run into a failure.",
+     "code": "src/pipeline/job.rs:1266-1271"
+    },
+    {
+     "t": "Store the journal and close the ledger row",
+     "code": "src/pipeline/job.rs:1279-1293"
+    },
+    {
+     "t": "Advance the cursor",
+     "d": "Only if the run succeeded with a manifest; otherwise the next run re-exports the window.",
+     "code": "src/pipeline/job.rs:1294-1305"
+    },
+    {
+     "t": "Metrics, report, Slack",
+     "code": "src/pipeline/job.rs:1318-1327",
+     "async": true
+    },
+    {
+     "t": "Decide the result",
+     "d": "Failure, a manifest gap, or any of the validate, reconcile and cursor gates.",
+     "code": "src/pipeline/job.rs:1329-1331"
+    }
+   ]
+  },
+  "cdcsink": {
+   "kind": "steps",
+   "title": "Inside the capture sink: one roll",
+   "sub": "What <code>roll_all</code> in <code>src/pipeline/cdc/sink.rs</code> does each time the buffers are flushed.",
+   "cap": "The order is the guarantee: parts, then manifest, then checkpoint, then ack. Every table is flushed before the stream position is acknowledged, because the position belongs to the whole stream, not to one table.",
+   "steps": [
+    {
+     "t": "Pick the tables with buffered changes",
+     "code": "src/pipeline/cdc/sink.rs:402-407"
+    },
+    {
+     "t": "Mark the run as running",
+     "d": "The first roll for a table writes a manifest without <code>_SUCCESS</code>, so the prefix shows a run in progress.",
+     "code": "src/pipeline/cdc/sink.rs:408-424"
+    },
+    {
+     "t": "Encode and upload each table's part",
+     "d": "In parallel, one worker per table.",
+     "code": "src/pipeline/cdc/sink.rs:425-433"
+    },
+    {
+     "t": "Record every part that landed",
+     "d": "Even when a sibling's upload failed: it is durable either way.",
+     "code": "src/pipeline/cdc/sink.rs:434-452"
+    },
+    {
+     "t": "Any upload failed?",
+     "code": "src/pipeline/cdc/sink.rs:453-455",
+     "exit": {
+      "when": "upload error",
+      "t": "Stop without checkpoint or ack; the changes are read again"
+     }
+    },
+    {
+     "t": "Reached a commit boundary?",
+     "code": "src/pipeline/cdc/sink.rs:465",
+     "exit": {
+      "when": "mid-transaction",
+      "t": "Flushed but not acknowledged"
+     }
+    },
+    {
+     "t": "Rewrite the manifest",
+     "d": "A run-unique <code>Success</code> manifest that covers every part so far, still without <code>_SUCCESS</code>.",
+     "code": "src/pipeline/cdc/sink.rs:466-490"
+    },
+    {
+     "t": "Save the checkpoint",
+     "code": "src/pipeline/cdc/sink.rs:491-493"
+    },
+    {
+     "t": "Acknowledge the source",
+     "d": "On PostgreSQL this lets the slot advance; it cannot be undone.",
+     "code": "src/pipeline/cdc/sink.rs:498"
+    }
+   ]
+  },
+  "loaddriver": {
+   "kind": "steps",
+   "title": "Inside the load driver: one table",
+   "sub": "What <code>execute_load</code> in <code>src/load/orchestrate.rs</code> does for one table, with the full-load leg from <code>run_load</code>.",
+   "cap": "Every refusal happens before the first warehouse write and is journaled as refused. Cleanup of the staged files is the last thing that can happen, and only after the count gate.",
+   "steps": [
+    {
+     "t": "Take the table lease",
+     "d": "Two loads of one table would both read the ledger before either wrote it.",
+     "code": "src/load/orchestrate.rs:1228",
+     "exit": {
+      "when": "lease held",
+      "t": "Refused"
+     }
+    },
+    {
+     "t": "Build a missing base table",
+     "code": "src/load/orchestrate.rs:1229"
+    },
+    {
+     "t": "Prepare the inputs",
+     "d": "Read and reconcile every manifest under the prefix, select the runs not yet loaded and sum their rows.",
+     "code": "src/load/orchestrate.rs:1245-1251",
+     "exit": {
+      "when": "a manifest is refused",
+      "t": "Recorded as refused",
+      "code": "src/load/orchestrate.rs:1252-1255"
+     }
+    },
+    {
+     "t": "Anything new?",
+     "code": "src/load/orchestrate.rs:1256-1275",
+     "exit": {
+      "when": "all runs loaded",
+      "t": "Up to date, recorded as a skip"
+     }
+    },
+    {
+     "t": "Check the target before writing",
+     "d": "Not a view where a base table belongs, owned by rivet, within the partition budget.",
+     "code": "src/load/orchestrate.rs:1287-1300"
+    },
+    {
+     "t": "Mark the load as writing and run the leg",
+     "code": "src/load/orchestrate.rs:1301-1306"
+    },
+    {
+     "t": "Materialize the table",
+     "code": "src/load/mod.rs:727"
+    },
+    {
+     "t": "Count gate",
+     "d": "Landed rows must equal the manifests' rows.",
+     "code": "src/load/mod.rs:728",
+     "exit": {
+      "when": "count differs",
+      "t": "Load fails, source not cleaned up",
+      "code": "src/load/mod.rs:739-750"
+     }
+    },
+    {
+     "t": "Clean up the staged prefix",
+     "code": "src/load/mod.rs:730"
+    },
+    {
+     "t": "Record the load in the ledger",
+     "code": "src/load/orchestrate.rs:1315-1322"
+    }
+   ]
+  },
+  "state": {
+   "kind": "schema",
+   "title": "Inside the state store: the main tables",
+   "sub": "Some of the tables from <code>src/state/migrations.rs</code>. The same ladder exists for SQLite and for PostgreSQL.",
+   "cap": "Names are versioned by migrations: <code>file_log</code> was created as <code>file_manifest</code> and renamed in v8, when the word manifest was given to the JSON file in the bucket. Most tables are keyed by export name and run id, not by a foreign key.",
+   "tables": [
+    {
+     "name": "export_state",
+     "note": "One row per export: where an incremental export resumes.",
+     "code": "src/state/migrations.rs:15-19",
+     "fields": [
+      {
+       "n": "export_name",
+       "type": "text",
+       "note": "primary key"
+      },
+      {
+       "n": "last_cursor_value",
+       "type": "text",
+       "note": "advanced only after the manifest"
+      },
+      {
+       "n": "last_run_at",
+       "type": "text"
+      }
+     ]
+    },
+    {
+     "name": "run_status",
+     "note": "The run ledger: running at start, terminal at finalize.",
+     "code": "src/state/migrations.rs:298-305",
+     "fields": [
+      {
+       "n": "run_id",
+       "type": "text",
+       "note": "primary key"
+      },
+      {
+       "n": "export_name",
+       "type": "text"
+      },
+      {
+       "n": "prefix",
+       "type": "text",
+       "note": "which bucket prefix the run writes"
+      },
+      {
+       "n": "status",
+       "type": "text",
+       "note": "the manifest's status is copied from here"
+      },
+      {
+       "n": "started_at · finished_at",
+       "type": "text"
+      }
+     ]
+    },
+    {
+     "name": "file_log",
+     "note": "One row per part written.",
+     "code": "src/state/migrations.rs:44-54",
+     "fields": [
+      {
+       "n": "run_id",
+       "type": "text",
+       "ref": "run_status"
+      },
+      {
+       "n": "export_name",
+       "type": "text"
+      },
+      {
+       "n": "file_name",
+       "type": "text"
+      },
+      {
+       "n": "row_count · bytes",
+       "type": "integer"
+      },
+      {
+       "n": "format · compression",
+       "type": "text"
+      }
+     ]
+    },
+    {
+     "name": "chunk_task",
+     "note": "Per-chunk checkpoint of a chunked run; reconcile reads its counts.",
+     "code": "src/state/migrations.rs:70-83",
+     "fields": [
+      {
+       "n": "run_id",
+       "type": "text",
+       "ref": "chunk_run"
+      },
+      {
+       "n": "chunk_index",
+       "type": "integer"
+      },
+      {
+       "n": "start_key · end_key",
+       "type": "text"
+      },
+      {
+       "n": "status · attempts",
+       "type": "text · integer"
+      },
+      {
+       "n": "rows_written",
+       "type": "integer"
+      }
+     ]
+    },
+    {
+     "name": "chunk_run",
+     "note": "One chunked run; a partial unique index allows one in progress per export.",
+     "code": "src/state/migrations.rs:59-67",
+     "fields": [
+      {
+       "n": "run_id",
+       "type": "text",
+       "note": "primary key"
+      },
+      {
+       "n": "export_name",
+       "type": "text"
+      },
+      {
+       "n": "plan_hash",
+       "type": "text",
+       "note": "a resume must match the plan"
+      },
+      {
+       "n": "status",
+       "type": "text"
+      }
+     ]
+    },
+    {
+     "name": "export_metrics",
+     "note": "One row per run, failed runs included, for rivet metrics.",
+     "code": "src/state/migrations.rs:20-38",
+     "fields": [
+      {
+       "n": "export_name · run_id",
+       "type": "text"
+      },
+      {
+       "n": "duration_ms · total_rows",
+       "type": "integer"
+      },
+      {
+       "n": "peak_rss_mb",
+       "type": "integer"
+      },
+      {
+       "n": "status · error_message",
+       "type": "text"
+      }
+     ]
+    },
+    {
+     "name": "load_run",
+     "note": "Audit log of rivet load: one row per invocation and table.",
+     "code": "src/state/migrations.rs:221-231",
+     "fields": [
+      {
+       "n": "load_id",
+       "type": "text",
+       "note": "primary key"
+      },
+      {
+       "n": "target_table · warehouse · mode",
+       "type": "text"
+      },
+      {
+       "n": "source_run_ids",
+       "type": "text",
+       "note": "the extraction runs this load consumed"
+      },
+      {
+       "n": "rows_loaded",
+       "type": "integer"
+      },
+      {
+       "n": "status",
+       "type": "text"
+      }
+     ]
+    },
+    {
+     "name": "loaded_source_run",
+     "note": "The skip set: which extraction runs are already in which target.",
+     "code": "src/state/migrations.rs:234-240",
+     "fields": [
+      {
+       "n": "target_table",
+       "type": "text"
+      },
+      {
+       "n": "source_run_id",
+       "type": "text",
+       "ref": "run_status"
+      },
+      {
+       "n": "load_id",
+       "type": "text",
+       "ref": "load_run"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "files": {
+  "entries": [
+   {
+    "path": "src/main.rs",
+    "t": "Thin entry point: calls <code>cli::run_binary</code>.",
+    "tag": "entry point",
+    "nodes": [
+     "cli"
+    ]
+   },
+   {
+    "path": "src/cli/",
+    "t": "The clap grammar, cross-flag checks and the dispatch from subcommand to module.",
+    "nodes": [
+     "cli"
+    ],
+    "why": "The grammar (<code>args.rs</code>) is kept apart from what each command does (<code>dispatch.rs</code>), so the CLI reference can be generated from it."
+   },
+   {
+    "path": "src/config/",
+    "t": "rivet.yaml: source, exports, destinations, load block, lints and URL resolution.",
+    "nodes": [
+     "config"
+    ]
+   },
+   {
+    "path": "src/plan/",
+    "t": "Resolved run plans, sealed plan artifacts, advisory export prioritization and repair plans.",
+    "nodes": [
+     "planner"
+    ]
+   },
+   {
+    "path": "src/pipeline/",
+    "t": "Orchestration: the run, the per-export job, strategies, sink, commit seam and the verification commands.",
+    "open": true,
+    "more": "about 45 files"
+   },
+   {
+    "path": "src/pipeline/run.rs",
+    "t": "<code>pipeline::run</code>: selects exports and runs them sequentially, on threads or as child processes.",
+    "nodes": [
+     "runner"
+    ]
+   },
+   {
+    "path": "src/pipeline/job.rs",
+    "t": "One export: CDC branch or the batch plan with its gates, manifest and cursor order.",
+    "nodes": [
+     "runner"
+    ],
+    "why": "Read <code>execute_resolved_plan</code> first; it is the ordering contract of a batch run in one function."
+   },
+   {
+    "path": "src/pipeline/single.rs",
+    "t": "Retry and reconnect loop, the single-query export.",
+    "nodes": [
+     "strategies"
+    ]
+   },
+   {
+    "path": "src/pipeline/chunked/",
+    "t": "Chunked exports: range math, sequential and parallel runners, checkpoint resume.",
+    "nodes": [
+     "strategies"
+    ]
+   },
+   {
+    "path": "src/pipeline/sink/",
+    "t": "<code>ExportSink</code>: temp files, part rotation, checksums, the pipelined encoder thread.",
+    "nodes": [
+     "sink"
+    ]
+   },
+   {
+    "path": "src/pipeline/commit.rs",
+    "t": "The commit seam: upload a part, check its MD5, record it. <code>finalize.rs</code> writes the manifest and marker at the end.",
+    "nodes": [
+     "commit"
+    ],
+    "why": "Every runner calls the same two seams, so the write-then-record order cannot differ between strategies."
+   },
+   {
+    "path": "src/pipeline/cdc/",
+    "t": "The capture assembler and the change-part sink with its roll sequence.",
+    "nodes": [
+     "cdcsink"
+    ]
+   },
+   {
+    "path": "src/pipeline/validate_cmd.rs",
+    "t": "<code>rivet validate</code> against an existing prefix; <code>reconcile_cmd.rs</code> and <code>repair_cmd.rs</code> sit beside it.",
+    "nodes": [
+     "verify"
+    ]
+   },
+   {
+    "path": "src/tuning/",
+    "t": "Tuning profiles, batch sizing (adaptive and memory-based) and the concurrency governor.",
+    "why": "The governor's decision state is kept free of I/O so it can be unit-tested without a live database (ADR-0019); the wiring to the runners lives in <code>src/pipeline/governor.rs</code>.",
+    "nodes": [
+     "governor"
+    ]
+   },
+   {
+    "path": "src/source/",
+    "t": "The <code>Source</code> trait and one folder per engine, plus the batch controller.",
+    "open": true,
+    "nodes": [
+     "drivers"
+    ],
+    "why": "Each engine folder holds its batch driver, its Arrow conversion and its change stream side by side."
+   },
+   {
+    "path": "src/source/postgres/",
+    "t": "Server-side cursor export, NUMERIC handling, and a change stream that polls a test_decoding slot. pgoutput.rs is a decoder not yet wired in.",
+    "nodes": [
+     "drivers",
+     "cdcstream"
+    ]
+   },
+   {
+    "path": "src/source/cdc/",
+    "t": "The engine-neutral CDC seam: <code>ChangeStream</code>, events, ordering, spill to disk.",
+    "nodes": [
+     "cdcstream"
+    ]
+   },
+   {
+    "path": "src/format/",
+    "t": "Parquet and CSV writers behind the <code>Format</code> trait.",
+    "nodes": [
+     "sink"
+    ]
+   },
+   {
+    "path": "src/destination/",
+    "t": "Local, stdout, S3, GCS and Azure backends.",
+    "nodes": [
+     "destinations"
+    ]
+   },
+   {
+    "path": "src/manifest.rs",
+    "t": "The <code>RunManifest</code> written as manifest.json, and the marker names.",
+    "nodes": [
+     "commit"
+    ],
+    "why": "This is the contract between a run and every reader of the bucket: validate, resume and load."
+   },
+   {
+    "path": "src/state/",
+    "t": "The state store over SQLite or PostgreSQL: cursors, checkpoints, ledgers, leases.",
+    "nodes": [
+     "state"
+    ]
+   },
+   {
+    "path": "src/state/migrations.rs",
+    "t": "Schema version and the two migration ladders.",
+    "tag": "schema",
+    "nodes": [
+     "state"
+    ]
+   },
+   {
+    "path": "src/load/",
+    "t": "The load driver, manifest reconciliation, compact and one adapter per warehouse.",
+    "open": true,
+    "nodes": [
+     "loaddriver"
+    ]
+   },
+   {
+    "path": "src/load/orchestrate.rs",
+    "t": "<code>rivet load</code>: worker pool, leases, ledger, per-mode legs.",
+    "nodes": [
+     "loaddriver"
+    ]
+   },
+   {
+    "path": "src/load/bigquery/",
+    "t": "BigQuery adapter: DDL, table shape, MERGE.",
+    "nodes": [
+     "adapters"
+    ]
+   },
+   {
+    "path": "src/load/snowflake.rs",
+    "t": "Snowflake adapter over the SQL API.",
+    "nodes": [
+     "adapters"
+    ]
+   },
+   {
+    "path": "src/load/clickhouse.rs",
+    "t": "ClickHouse adapter: INSERT FORMAT Parquet, ReplacingMergeTree change log.",
+    "nodes": [
+     "adapters"
+    ]
+   },
+   {
+    "path": "src/load/compact.rs",
+    "t": "<code>rivet compact</code>.",
+    "nodes": [
+     "compact"
+    ]
+   },
+   {
+    "path": "src/preflight/",
+    "t": "check, doctor, EXPLAIN analysis and type reports.",
+    "nodes": [
+     "preflight"
+    ]
+   },
+   {
+    "path": "src/init/",
+    "t": "<code>rivet init</code>: catalog discovery per engine and the YAML scaffold.",
+    "nodes": [
+     "preflight"
+    ]
+   },
+   {
+    "path": "src/bin/rivet-mcp.rs",
+    "t": "The MCP binary; the tools live in <code>src/mcp.rs</code>.",
+    "tag": "entry point",
+    "nodes": [
+     "mcp"
+    ]
+   },
+   {
+    "path": "Cargo.toml",
+    "t": "Crate <code>rivet-cli</code>, binaries <code>rivet</code>, <code>rivet-mcp</code> and the dev-only <code>seed</code>.",
+    "tag": "config"
+   },
+   {
+    "path": "Dockerfile",
+    "t": "Multi-stage build to a slim Debian image with both binaries, run as a non-root user.",
+    "tag": "deploy"
+   },
+   {
+    "path": "docker-compose.yaml",
+    "t": "Test fixtures: every source engine, MinIO, fake GCS, Azurite, poolers, ClickHouse.",
+    "tag": "dev",
+    "why": "Not a deployment: rivet itself is never a service here, these are the databases and stores the live tests run against."
+   },
+   {
+    "path": "docs/architecture.md",
+    "t": "Data flow, the traits, memory model and source tree.",
+    "tag": "docs"
+   },
+   {
+    "path": "docs/adr/",
+    "t": "Architecture decisions: state invariants, manifest contract, CDC, load.",
+    "tag": "docs",
+    "more": "38 ADRs"
+   }
+  ]
+ },
+ "source": {
+  "repo": "https://github.com/rivet-lab/rivet",
+  "ref": "9ee7deaf93a3c344778f2434856e4bffc3b23385"
+ },
+ "layout": {
+  "grid": {
+   "operator": [
+    0,
+    2
+   ],
+   "agent": [
+    0,
+    3
+   ],
+   "config": [
+    1,
+    0
+   ],
+   "planner": [
+    2,
+    0
+   ],
+   "preflight": [
+    2,
+    1
+   ],
+   "cli": [
+    1,
+    2
+   ],
+   "mcp": [
+    2,
+    3
+   ],
+   "runner": [
+    3,
+    0
+   ],
+   "sink": [
+    4,
+    0
+   ],
+   "strategies": [
+    3,
+    1
+   ],
+   "drivers": [
+    4,
+    1
+   ],
+   "governor": [
+    3,
+    2
+   ],
+   "srcdb": [
+    3,
+    3
+   ],
+   "cdcstream": [
+    3,
+    4
+   ],
+   "cdcsink": [
+    4,
+    4
+   ],
+   "commit": [
+    5,
+    0
+   ],
+   "destinations": [
+    6,
+    0
+   ],
+   "state": [
+    6,
+    2
+   ],
+   "verify": [
+    5,
+    3
+   ],
+   "slack": [
+    7,
+    0
+   ],
+   "bucket": [
+    7,
+    1
+   ],
+   "warehouse": [
+    7,
+    2
+   ],
+   "loaddriver": [
+    6,
+    4
+   ],
+   "adapters": [
+    7,
+    4
+   ],
+   "compact": [
+    7,
+    5
+   ]
+  },
+  "overview": {
+   "people": {
+    "x": 60,
+    "y": 330
+   },
+   "command": {
+    "x": 490,
+    "y": 330
+   },
+   "batch": {
+    "x": 890,
+    "y": 40
+   },
+   "sources": {
+    "x": 890,
+    "y": 330
+   },
+   "cdc": {
+    "x": 890,
+    "y": 620
+   },
+   "outside": {
+    "x": 1290,
+    "y": 40
+   },
+   "durable": {
+    "x": 1290,
+    "y": 330
+   },
+   "load": {
+    "x": 1290,
+    "y": 620
+   }
+  },
+  "overviewEdges": {
+   "o1": {
+    "d": "M330,430 L490,430",
+    "x": 410,
+    "y": 417,
+    "anchor": "middle"
+   },
+   "o2": {
+    "d": "M680,330 L680,140 L890,140",
+    "x": 785,
+    "y": 127,
+    "anchor": "middle"
+   },
+   "o3": {
+    "d": "M680,530 L680,720 L890,720",
+    "x": 785,
+    "y": 707,
+    "anchor": "middle"
+   },
+   "o4": {
+    "d": "M600,530 L600,870 L1380,870 L1380,820",
+    "x": 990,
+    "y": 857,
+    "anchor": "middle"
+   },
+   "o5": {
+    "d": "M1025,240 L1025,330",
+    "x": 1039,
+    "y": 289,
+    "anchor": "start"
+   },
+   "o6": {
+    "d": "M1025,620 L1025,530",
+    "x": 1039,
+    "y": 579,
+    "anchor": "start"
+   },
+   "o7": {
+    "d": "M1110,240 L1110,285 L1350,285 L1350,330",
+    "x": 1230,
+    "y": 272,
+    "anchor": "middle"
+   },
+   "o8": {
+    "d": "M1110,620 L1110,575 L1350,575 L1350,530",
+    "x": 1230,
+    "y": 562,
+    "anchor": "middle"
+   },
+   "o9": {
+    "d": "M1460,330 L1460,240",
+    "x": 1474,
+    "y": 289,
+    "anchor": "start"
+   },
+   "o10": {
+    "d": "M1560,720 L1620,720 L1620,140 L1560,140",
+    "x": 1634,
+    "y": 434,
+    "anchor": "start"
+   },
+   "o11": {
+    "d": "M1460,620 L1460,530",
+    "x": 1474,
+    "y": 579,
+    "anchor": "start"
+   }
+  },
+  "viewBoxes": {
+   "map0": [
+    1680,
+    910
+   ]
+  },
+  "zones": {
+   "z_people": {
+    "x": 32,
+    "y": 420,
+    "w": 295,
+    "h": 358
+   },
+   "z_cmd": {
+    "x": 364,
+    "y": 30,
+    "w": 638,
+    "h": 748
+   },
+   "z_batch": {
+    "x": 1102,
+    "y": 30,
+    "w": 862,
+    "h": 528
+   },
+   "z_cdc": {
+    "x": 1122,
+    "y": 840,
+    "w": 801,
+    "h": 138
+   },
+   "z_commit": {
+    "x": 2019,
+    "y": 30,
+    "w": 748,
+    "h": 748
+   },
+   "z_load": {
+    "x": 2444,
+    "y": 840,
+    "w": 728,
+    "h": 308
+   },
+   "z_src": {
+    "x": 1064,
+    "y": 640,
+    "w": 453,
+    "h": 138
+   },
+   "z_out": {
+    "x": 2841,
+    "y": 30,
+    "w": 338,
+    "h": 528
+   }
+  }
+ }
+}
