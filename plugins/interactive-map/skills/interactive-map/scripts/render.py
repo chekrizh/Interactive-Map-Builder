@@ -452,7 +452,7 @@ def render(template, definition):
     if template.count(PLACEHOLDER) != 1:
         raise ValueError('template must contain exactly one empty map-definition placeholder')
     # Which plugin built the page, so a map file can be traced back to its viewer.
-    template = template.replace('<meta charset="UTF-8">', f'<meta charset="UTF-8"><meta name="generator" content="interactive-map {plugin_version()}">', 1)
+    template = template.replace('<meta charset="UTF-8">', f'<meta charset="UTF-8"><meta name="generator" content="interactive-map {plugin_version()} (https://github.com/chekrizh/Interactive-Map-Builder)">', 1)
     # The page names itself before any script runs, for browser tabs, bookmarks and search results.
     page = definition.get('page', {}) if isinstance(definition, dict) else {}
     head = f'<title>{html.escape(str(page.get("title", "")).strip() or "System Map")}</title>'

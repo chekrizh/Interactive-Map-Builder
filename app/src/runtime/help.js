@@ -14,6 +14,8 @@ export function createHelp({ env, model, state, act }) {
   const pop = doc.getElementById("helpPop");
   const list = doc.getElementById("helpList");
   if (!btn || !pop || !list) return { close() {} };
+  /* The credit line at the bottom of the card; settings.credit: false removes it. */
+  if (model.definition.settings?.credit === false) doc.getElementById("helpCredit")?.remove();
 
   const flowControls = doc.getElementById("flowControls");
   const flowPicker = doc.getElementById("flowPicker");

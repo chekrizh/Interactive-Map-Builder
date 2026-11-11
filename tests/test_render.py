@@ -281,7 +281,7 @@ class RenderTest(unittest.TestCase):
     def test_page_names_the_plugin_version(self):
         version = json.loads(render.PLUGIN.read_text(encoding='utf-8'))['version']
         page = render.render(render.viewer_page(), EXAMPLE)
-        self.assertIn(f'<meta name="generator" content="interactive-map {version}">', page)
+        self.assertIn(f'<meta name="generator" content="interactive-map {version} (https://github.com/chekrizh/Interactive-Map-Builder)">', page)
 
     def test_page_title_and_description_are_in_the_head(self):
         d = json.loads(json.dumps(EXAMPLE))

@@ -24,6 +24,8 @@ export interface ToolDefinition {
     appearanceRoles:{accent:string;artifact:string;error:string};
     /** Role colour of the build-step panel. */
     buildRole:string;
+    /** Show "Made with Interactive Map Builder" with a link at the bottom of the help card (default true). */
+    credit:boolean;
   };
   /** Exact authored layout. No automatic fallback is provided in this version. */
   layout: {

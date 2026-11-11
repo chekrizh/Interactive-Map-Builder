@@ -39,6 +39,7 @@ UI = {
     'helpFiles': 'Project structure: the repository, tied to the map.',
     'helpBuildAsk': 'Want to go deeper?',
     'helpBuild': 'How to build it: the system from scratch, layer by layer.',
+    'helpCredit': 'Made with Interactive Map Builder',
     # The bar over the map
     'bigPicture': 'The big picture',
     'fullMap': 'The full map',
@@ -147,6 +148,7 @@ def with_defaults(d):
     settings = dict(d.get('settings') if isinstance(d.get('settings'), dict) else {})
     overview = [b.get('g') for b in d.get('overview', []) if isinstance(b, dict)]
     settings.setdefault('recapOrder', overview)
+    settings.setdefault('credit', True)
     d['settings'] = settings
     layout = d.get('layout')
     if isinstance(layout, dict):
