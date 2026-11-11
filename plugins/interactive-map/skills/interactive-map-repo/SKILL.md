@@ -16,6 +16,7 @@ Before you read the repository, ask the user whether to run the **extra check**,
 - After the map is drafted, every component, connection and step is checked once more against the source code, and what does not hold up is fixed.
 - It takes about twice as long.
 - It makes factual mistakes on the map much less likely, but it is not a guarantee.
+- It is built on two known ideas, and you may name them so a technical user knows what to expect: software reflexion models (Murphy, Notkin and Sullivan, 1995), comparing the map with the code both ways, what is wrong and what is missing; and Reflexion (Shinn et al., 2023), where an independent reviewer's findings are written up as lessons and the map is fixed and rechecked, up to three times. For a non-technical user, one plain sentence is enough: an independent second reader checks the map against the code and the mistakes are fixed and checked again. Say "built on the ideas of", not that it implements them exactly.
 - For a quick overview or a simple project, we recommend going without it. When the map should be as reliable as possible (onboarding, a review, teaching), we recommend turning it on.
 
 Do not ask when the request already answers it ("just a quick sketch", "it must be accurate"); do what it says. When no one can answer (you run unattended, as a scheduled task or a subagent), go without it and say so when you deliver.
