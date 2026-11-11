@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """List the factual claims a map makes, one per line, for checking them against the source.
 
-usage: python3 claims.py MAP.json [--json] [--only ID[,ID...]]
+usage: python3 claims.py MAP.json [--json] [--only ID[,ID...]] [--changed OLD.json]
 
 Each claim gets a stable id built from the map's own ids, so a checker can return a verdict per
 claim and a later round can recheck only the claims that changed:
@@ -12,6 +12,7 @@ claim and a later round can recheck only the claims that changed:
   inside:<scene>/step<n>     step n of a code walkthrough, with its code reference
   inside:<scene>/exit<n>     the early exit of step n
   inside:<scene>/table<n>    a table or cache key, its fields and lifetime
+  inside:<scene>/caption     what the close-up's subtitle and caption say
   files:<path>               what a folder or file in the repository holds
 
 The tour, the build order, the overview cards and the start panels retell these claims and are
@@ -73,6 +74,8 @@ def claims(d):
     insides = d.get('insides', {})
     for sid, scene in (insides.items() if isinstance(insides, dict) else []):
         where = plain(scene.get('title')) or sid
+        if scene.get('sub') or scene.get('cap'):
+            add(f'inside:{sid}/caption', 'caption', f"{where}: {join(scene.get('sub'), scene.get('cap'))}")
         for i, s in enumerate(scene.get('steps', []) or [], 1):
             add(f'inside:{sid}/step{i}', 'code step',
                 f"{where}, step {i}: {join(s.get('t') + '.' if s.get('t') else '', s.get('d'))}",
@@ -103,12 +106,17 @@ def main():
     p.add_argument('map')
     p.add_argument('--json', action='store_true', help='print a JSON list instead of text')
     p.add_argument('--only', help='comma-separated claim ids to keep (recheck after a fix)')
+    p.add_argument('--changed', metavar='OLD.json',
+                   help='keep only claims that are new or reworded since this earlier version of the map')
     a = p.parse_args()
     d = json.load(sys.stdin if a.map == '-' else open(a.map, encoding='utf-8'))
     found = claims(d)
     if a.only:
         keep = set(a.only.split(','))
         found = [c for c in found if c['id'] in keep]
+    if a.changed:
+        old = {(c['id'], c['text'], tuple(c['code'])) for c in claims(json.load(open(a.changed, encoding='utf-8')))}
+        found = [c for c in found if (c['id'], c['text'], tuple(c['code'])) not in old]
     if a.json:
         print(json.dumps(found, ensure_ascii=False, indent=1))
         return

@@ -12,6 +12,8 @@ Clearer skill instructions, from a builder agent's notes on a real run:
 - The step 0 question is skipped when the task already carries the user's answer, also for a subagent.
 - Card count on the full map and path count in the project structure are guides, not limits.
 - `claims.py` includes a flow step's `note`, so the extra check covers it.
+- `claims.py` lists close-up captions, and `--changed OLD.json` lists the claims that are new or reworded since an earlier version of the map. The skill says how to split many claims across checkers and that the tour and build order retell checked claims.
+- Documented when the automatic layout leaves room for a label chip, why zones sharing columns overlap, and what `preview.py` does not capture.
 
 ## 0.7.4 — 2026-11-11
 

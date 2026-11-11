@@ -25,7 +25,7 @@ Start from an example, copy its structure and replace the content. Write only th
   Hops have no `async` field: say in `t` that nothing waits for the work (a job is queued, a loop picks it up later). A flow's optional `ending` is rich text shown after its last step.
 - `buildSteps`, `tourChapters` and `tour`: the build order (shown as "How to build it": a sensible order to assemble the system in your head, not the project's history) and the guided tour. The last tour step must play a flow or recap the whole map.
 - `layout`: leave it out and `render.py` lays the map out for you (`scripts/auto_layout.py`): zones become blocks of columns ordered along the edges, people on the left; cards are placed on a grid so connected cards line up and edges cross as little as possible; every card is sized to its text; edges are routed as horizontal and vertical runs around the cards with room for their labels; the overview gets a grid of cards in reading order. Steer it rather than writing coordinates:
-  - `layout.grid`: `{"node-id": [column, row]}` fixes a card's cell (both from 0); the rest are placed around it. `python3 scripts/auto_layout.py map.json out.json` writes the map with the grid the layout chose, so you can move one card and render again.
+  - `layout.grid`: `{"node-id": [column, row]}` fixes a card's cell (both from 0); the rest are placed around it. `python3 scripts/auto_layout.py map.json out.json` writes the map with the grid the layout chose, so you can move one card and render again. Two connected cards in neighbouring cells (the same row and the next column, or the same column and the next row) get a gap wide enough for their label chip, so that is the surest way to keep a label on its line. Zones placed in the same columns must not interleave rows, or their boxes overlap: give such a zone its own columns.
   - Anything you write in `layout` wins: an edge's own `d` (a path such as `M260,159 L340,159`), `lside` (`below` or `left`) to flip which side its label sits on, a zone's box, an overview card's position. `python3 scripts/auto_layout.py map.json out.json --freeze` writes every computed position and path, to fine-tune by hand.
   - A map that gives every card in `layout.nodes` keeps its hand layout; only what is missing is computed. The examples are laid out by hand.
   - Leave room for edge labels when you place things yourself: the viewer draws a label as a chip on its line only when the line has a straight run about 30 units longer than the label.
@@ -84,7 +84,7 @@ A map with an edge through a card or a hidden label teaches the wrong thing, so 
    - the map reads in one direction (people and inputs on the left or top, stores and outside services on the right or bottom) and related cards sit together.
 3. **Fix and repeat, at most three rounds.** Rerun `render.py` and `preview.py` after each fix. If something still looks wrong after three rounds, hand the map over and name what is left.
 
-`preview.py` needs Playwright with Chromium, from Python or Node; it installs nothing. If it exits with status 3, rely on the layout report alone and tell the user the map was not checked by eye.
+`preview.py` needs Playwright with Chromium, from Python or Node; it installs nothing. It does not capture close-ups or the project structure view; their layout is drawn by the viewer itself. If it exits with status 3, rely on the layout report alone and tell the user the map was not checked by eye.
 
 ## 4. Show it and return it
 
