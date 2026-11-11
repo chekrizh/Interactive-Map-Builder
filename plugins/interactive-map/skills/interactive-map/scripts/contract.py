@@ -34,7 +34,7 @@ SCHEMA = {
     'icons': {ANY: LEAF},
     'logos': {ANY: {k: LEAF for k in ('name', 'src', 'size', 'tile')}},
     'settings': {'appearanceRoles': {k: LEAF for k in ('accent', 'artifact', 'error')}, 'recapOrder': LEAF,
-                 'buildRole': LEAF},
+                 'buildRole': LEAF, 'credit': LEAF},
     'nodes': [{k: LEAF for k in (
         'id', 'group', 'zone', 'cat', 'icon', 'logo', 'shape', 'inside', 'step', 'concept', 'tool', 'tools',
         'what', 'why', 'decision', 'art')}],
