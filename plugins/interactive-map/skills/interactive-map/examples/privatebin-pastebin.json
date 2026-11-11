@@ -186,7 +186,7 @@
    "icon": "link",
    "tool": "External · optional",
    "concept": "URL shortener",
-   "what": "A YOURLS, Shlink or Chhoto instance that turns the long paste link into a short one.",
+   "what": "A YOURLS, Shlink, Chhoto or other shortener that turns the long paste link into a short one. Either the server's proxy calls it, or, when <code>urlshortener</code> points straight at its API, the browser does.",
    "why": "Paste links are long because they carry the key. A shortener makes them easy to share, at the price of handing the full link, key included, to that service.",
    "tools": "YOURLS, Shlink or Chhoto API, set in <code>cfg/conf.php</code>",
    "zone": "outside",
@@ -213,7 +213,7 @@
    "icon": "key-round",
    "tool": "Component · WebCrypto",
    "concept": "Crypto in the browser",
-   "what": "Makes a random 256-bit key, compresses the text with zlib and encrypts it with AES-256-GCM; a password, if set, is mixed in with PBKDF2.",
+   "what": "Makes a random 256-bit key, compresses the text with zlib (unless the browser lacks WebAssembly or the server sets compression to none) and encrypts it with AES-256-GCM; a password, if set, is appended to the key before PBKDF2.",
    "why": "This is the zero-knowledge promise: the server only ever receives ciphertext, so a breach or a subpoena yields nothing readable.",
    "tools": "<code>js/privatebin.js</code> CryptTool · WebCrypto API · zlib in WebAssembly",
    "zone": "browser",
@@ -227,9 +227,9 @@
    "icon": "arrow-left-right",
    "tool": "Component · fetch",
    "concept": "Server calls",
-   "what": "Sends and fetches JSON: the encrypted paste, comments, deletions and shortener requests.",
+   "what": "Sends new pastes and comments and fetches a paste, all as JSON. Two things go around it: the shortener request is a separate fetch from the paste status that reads back HTML, and the delete link is a plain page load.",
    "why": "One small layer decides what crosses the network, which makes it easy to check that the key never does.",
-   "tools": "<code>js/privatebin.js</code> ServerInteraction, Model.getPasteData",
+   "tools": "<code>js/privatebin.js</code> ServerInteraction, Model.getPasteData · PasteStatus.sendToShortener",
    "zone": "browser"
   },
   {
@@ -240,7 +240,7 @@
    "icon": "route",
    "tool": "Component · index.php",
    "concept": "Controller",
-   "what": "Every request lands in <code>index.php</code>; the controller picks create, read, delete, a shortener call or the page, and answers with JSON or HTML.",
+   "what": "Every request lands in <code>index.php</code>; the controller picks create, read, delete, a shortener call, the JSON-LD contexts or the page, and answers with JSON or HTML. The delete link (<code>?pasteid=…&amp;deletetoken=…</code>) is a plain page load: the controller compares the token with the paste's HMAC, deletes and shows the result on the page.",
    "why": "One entry point and no router: the operation is read from the method and the query string, which keeps the PHP side tiny.",
    "tools": "<code>lib/Controller.php</code> · <code>lib/Request.php</code> · <code>lib/FormatV2.php</code>",
    "zone": "server",
@@ -254,9 +254,9 @@
    "icon": "layout-template",
    "tool": "Component · PHP template",
    "concept": "Page template",
-   "what": "Renders the one HTML page with the settings the client needs: expiry options, formats, feature switches and a strict CSP.",
-   "why": "The page carries no paste data. It is the same for every paste; the client fetches the paste afterwards.",
-   "tools": "<code>lib/View.php</code> · <code>tpl/bootstrap5.php</code>",
+   "what": "Renders the one HTML page with the settings the client needs: expiry options, formats, feature switches and a strict CSP. The template is selectable; <code>bootstrap5</code> is the default.",
+   "why": "The page carries no paste data, only a status or error such as the result of a delete. It is the same for every paste; the client fetches the paste afterwards.",
+   "tools": "<code>lib/View.php</code> · <code>lib/TemplateSwitcher.php</code> · <code>tpl/bootstrap5.php</code>",
    "zone": "server"
   },
   {
@@ -267,7 +267,7 @@
    "icon": "gauge",
    "tool": "Component · per IP",
    "concept": "Traffic limiter",
-   "what": "Lets one IP create one paste every 10 seconds by default, or only listed IP ranges at all.",
+   "what": "Lets one IP post once every 10 seconds by default, pastes and comments alike. Exempted IP ranges skip the limit, a creators list can restrict posting to listed ranges, and a limit of 0 turns it off.",
    "why": "A public pastebin is an easy spam target. The IP is stored only as a keyed hash, so the limit works without keeping addresses.",
    "tools": "<code>lib/Persistence/TrafficLimiter.php</code> · <code>[traffic]</code> in the config",
    "zone": "server"
@@ -280,7 +280,7 @@
    "icon": "file-text",
    "tool": "Component · Paste, Comment",
    "concept": "Paste rules",
-   "what": "Checks the settings that travel in clear text, turns the expiry choice into a date, makes the ID and the delete token, and deletes a paste when it has expired or was read once.",
+   "what": "Checks the settings that travel in clear text, turns the expiry choice into a date, makes the ID and the delete token, and deletes a paste when it has expired or was read once. Comment rules check that the discussion is open and the parent exists, and give each poster an icon derived from an HMAC of their IP.",
    "why": "Expiry and burn-after-reading are enforced here, on the server, because the server is the only party that can actually delete the data.",
    "tools": "<code>lib/Model/Paste.php</code> · <code>lib/Model/Comment.php</code> · <code>lib/Persistence/ServerSalt.php</code>",
    "zone": "server",
@@ -294,7 +294,7 @@
    "icon": "trash-2",
    "tool": "Component · on new pastes",
    "concept": "Purge",
-   "what": "Deletes up to 10 expired pastes, at most once every 5 minutes, while handling a new paste.",
+   "what": "Deletes up to 10 expired pastes, at most once every 5 minutes by default, while handling a new paste (not a comment).",
    "why": "There is no cron job to set up. Expired pastes nobody opens again would otherwise stay on disk forever.",
    "tools": "<code>lib/Model.php</code> purge · <code>lib/Persistence/PurgeLimiter.php</code> · <code>[purge]</code> in the config",
    "zone": "server"
@@ -333,7 +333,7 @@
    "icon": "folder",
    "tool": "Default · data/",
    "concept": "Files on disk",
-   "what": "One file per paste under <code>data/ab/cd/</code>, comments in a folder beside it.",
+   "what": "One <code>.php</code> file per paste under <code>data/ab/cd/</code>: JSON behind a first line that makes PHP answer 403. Comments go in a folder beside it.",
    "why": "Works on any PHP host with no database at all, which is why it is the default.",
    "tools": "<code>lib/Data/Filesystem.php</code> · <code>data/</code>",
    "zone": "data",
@@ -345,7 +345,7 @@
    "cat": "store",
    "step": 5,
    "icon": "database",
-   "tool": "PDO · SQLite, MySQL, Postgres",
+   "tool": "PDO · SQLite, MySQL, Postgres and more",
    "concept": "SQL database",
    "what": "Three tables: pastes, comments and a small key-value config table.",
    "why": "For installs that already run a database or need several web servers to share the data.",
@@ -362,7 +362,7 @@
    "icon": "cloud",
    "tool": "S3 or Google Cloud",
    "concept": "Object storage",
-   "what": "Each paste as one object in a bucket.",
+   "what": "Each paste as one object in a bucket; comments and config values are separate objects.",
    "why": "For serverless or container hosting where the local disk does not last.",
    "tools": "<code>lib/Data/S3Storage.php</code> · <code>lib/Data/GoogleCloudStorage.php</code>",
    "zone": "data",
@@ -420,7 +420,7 @@
    "id": "ca_co",
    "from": "calls",
    "to": "controller",
-   "label": "JSON over HTTPS"
+   "label": "JSON over HTTP(S)"
   },
   {
    "id": "co_vi",
@@ -462,7 +462,7 @@
    "id": "px_sh",
    "from": "proxy",
    "to": "shortener",
-   "label": "HTTPS API"
+   "label": "HTTP API"
   },
   {
    "id": "li_st",
@@ -513,19 +513,19 @@
     },
     {
      "e": "ui_cr",
-     "t": "A fresh random 256-bit key. The text is compressed with zlib and encrypted with AES-256-GCM; the key is stretched with PBKDF2 (100,000 rounds), mixed with the password if there is one. The settings ride along as authenticated data, so the server cannot change them unnoticed."
+     "t": "A fresh random 256-bit key from <code>CryptTool.getSymmetricKey</code>. The text is compressed with zlib (or not at all without WebAssembly or when the server says none) and encrypted with AES-256-GCM; the key, with the password appended if there is one, is stretched with PBKDF2 (100,000 rounds). The settings ride along as authenticated data, so the server cannot change them unnoticed."
     },
     {
      "e": "ui_ca",
-     "t": "The request body is <code>{v: 2, ct, adata, meta: {expire}}</code>: ciphertext and the few settings the server must act on. No key, no plaintext."
+     "t": "The request body is <code>{v: 2, ct, adata, meta: {expire}}</code>: the ciphertext, plus <code>adata</code> holding the cipher parameters and the format, discussion and burn-after-reading flags in clear, and the expiry. No key, no plaintext."
     },
     {
      "e": "ca_co",
-     "t": "A POST, so <code>Request</code> sets the operation to create. The controller checks the size limit (10 MB) and the envelope's format."
+     "t": "A POST, so <code>Request</code> sets the operation to create. The first thing the controller does is ask the traffic limiter."
     },
     {
      "e": "co_li",
-     "t": "The traffic limiter hashes the IP with the server salt and refuses a second paste from it within 10 seconds."
+     "t": "The traffic limiter hashes the IP with the server salt and refuses a second post from it within 10 seconds (the default; exempted ranges skip it)."
     },
     {
      "e": "li_st",
@@ -533,25 +533,25 @@
     },
     {
      "e": "co_pa",
-     "t": "Paste rules turn the expiry choice into a date, reject a discussion on a burn-after-reading paste, and name the paste by a 64-bit hash of the ciphertext. Each paste gets its own salt."
+     "t": "Only now does the controller apply the size limit (10 MiB by default) and check the envelope's format, then run the purge. Paste rules turn the expiry choice into a date, reject a discussion on a burn-after-reading paste, and name the paste by a 64-bit hash of the ciphertext."
     },
     {
      "e": "pa_st",
-     "t": "The storage adapter writes the paste through the configured backend."
+     "t": "The paste gets its own random salt as it is stored, and the storage adapter writes it through the configured backend."
     },
     {
      "e": "st_fi",
-     "t": "With the default backend, one JSON file: <code>data/ab/cd/abcd….php</code>, prefixed so the web server never serves it."
+     "t": "With the default backend, one file: <code>data/ab/cd/abcd….php</code>, JSON behind a first line <code>&lt;?php http_response_code(403);</code>, so a request for the file gets a 403."
     },
     {
      "e": "ca_co",
      "rev": true,
-     "t": "The answer: the paste ID and a delete token, an HMAC of the ID with that paste's salt."
+     "t": "The answer: the paste ID, its URL and a delete token, an HMAC of the ID with that paste's salt."
     },
     {
      "e": "ui_ca",
      "rev": true,
-     "t": "The browser builds <code>?id#key</code> with the key in base58 after the <code>#</code>. Browsers never send the fragment to a server, so the key stays with whoever has the link."
+     "t": "The browser builds <code>?id#key</code> with the key in base58 after the <code>#</code> (<code>#-</code> for burn after reading). Browsers never send the fragment to a server, so the key stays with whoever has the link."
     }
    ]
   },
@@ -574,7 +574,7 @@
     },
     {
      "e": "ca_co",
-     "t": "A GET with a paste ID and a JSON Accept header: the read operation."
+     "t": "A GET with a paste ID and the header <code>X-Requested-With: JSONHttpRequest</code>, which marks it as a JSON call: the read operation."
     },
     {
      "e": "co_pa",
@@ -582,7 +582,7 @@
     },
     {
      "e": "pa_st",
-     "t": "The stored blob, its comments and the remaining lifetime are loaded. The paste's salt is removed from the answer."
+     "t": "The stored blob, its comments and the remaining lifetime are loaded. The controller then strips the paste's salt from the answer."
     },
     {
      "e": "ca_co",
@@ -596,7 +596,7 @@
     {
      "e": "ui_cr",
      "rev": true,
-     "t": "The plaintext is shown with the chosen format: plain text, syntax highlighting or Markdown, cleaned with DOMPurify."
+     "t": "The plaintext is shown with the chosen format: Markdown is rendered and cleaned with DOMPurify, syntax highlighting escapes the text first, and plain text is set as text."
     }
    ]
   },
@@ -611,11 +611,11 @@
     },
     {
      "e": "co_pu",
-     "t": "The purge limiter allows one round every 5 minutes, remembered as a small value in the store."
+     "t": "The purge limiter allows one round every 5 minutes by default (configurable, 0 disables the limit), remembered as a small value in the store."
     },
     {
      "e": "pu_st",
-     "t": "The backend lists up to 10 expired pastes and deletes them with their comments."
+     "t": "The backend lists up to 10 expired pastes and deletes them with their comments. On disk it only samples some random pastes, so a round may find fewer."
     },
     {
      "e": "st_fi",
@@ -626,11 +626,11 @@
   "shorten": {
    "title": "Shorten the link",
    "hue": "external",
-   "desc": "The long link with its key is sent to an outside shortener through the server, which holds the API key.",
+   "desc": "The long link with its key is sent to an outside shortener. This flow shows the server proxy, which holds the API key; if the urlshortener setting points straight at a shortener's API instead, the browser sends the link there itself.",
    "hops": [
     {
      "e": "ui_ca",
-     "t": "After creating a paste, the author clicks Shorten (or it happens on its own when configured). The client opens <code>?shortenviayourls&amp;link=…</code> with the full link."
+     "t": "After creating a paste, the author clicks Shorten (or it happens on its own when configured). The client fetches the configured <code>urlshortener</code> URL with the full link appended; with the proxy that is <code>?shortenviayourls</code>, <code>?shortenviashlink</code> or <code>?shortenviachhoto</code> with <code>&amp;link=…</code>."
     },
     {
      "e": "ca_co",
@@ -647,7 +647,7 @@
     },
     {
      "e": "co_vi",
-     "t": "The short link is shown on a small page of its own."
+     "t": "The short link comes back on a small page; the client reads the URL out of it and shows it in the paste status. Only if that fetch fails is the page opened in a new tab."
     }
    ]
   }
@@ -836,7 +836,7 @@
     },
     {
      "t": "Pick the parameters",
-     "d": "A random IV and salt, 100,000 PBKDF2 rounds, AES-256-GCM, zlib unless the browser lacks WebAssembly.",
+     "d": "A random IV and salt, 100,000 PBKDF2 rounds, AES-256-GCM, zlib unless the browser lacks WebAssembly or the server's compression setting says none.",
      "code": "js/privatebin.js:1240-1257"
     },
     {
@@ -855,7 +855,7 @@
     },
     {
      "t": "Put the key in the link",
-     "d": "base58 after <code>#</code>; with burn after reading, after <code>#-</code> so the reader confirms before the paste is fetched and deleted.",
+     "d": "Done by PasteEncrypter once the server answers: base58 after <code>#</code>; with burn after reading, after <code>#-</code> so the reader confirms before the paste is fetched and deleted.",
      "code": "js/privatebin.js:5280-5291"
     }
    ]
@@ -864,11 +864,11 @@
    "kind": "steps",
    "title": "Inside the controller: a new paste",
    "sub": "What <code>Controller::_create()</code> does with a POST, in order. Early exits answer with a JSON error.",
-   "cap": "The same entry point handles comments: a body with a paste ID and a parent ID is a comment, stored next to its paste.",
+   "cap": "The same entry point handles comments: the browser encrypts the comment and POSTs it with a paste ID and a parent ID; Comment rules check that the paste allows discussion and the parent exists, add the poster's icon, and store it next to its paste.",
    "steps": [
     {
      "t": "Which operation?",
-     "d": "POST means create; a paste ID with a delete token means delete; a paste ID alone means read.",
+     "d": "POST, PUT or DELETE with a body means create; a paste ID with a delete token means delete (also by POST); a paste ID alone means read. JSON-LD and shortener requests have their own operations.",
      "code": "lib/Request.php:110-192"
     },
     {
@@ -876,7 +876,7 @@
      "code": "lib/Controller.php:279-290",
      "exit": {
       "when": "too soon",
-      "t": "Please wait 10 seconds",
+      "t": "Please wait N seconds (10 by default)",
       "code": "lib/Persistence/TrafficLimiter.php:200-215"
      }
     },
@@ -976,8 +976,8 @@
       },
       {
        "n": "data",
-       "type": "blob",
-       "note": "ciphertext, settings and attachments as JSON"
+       "type": "mediumblob",
+       "note": "ciphertext, settings and attachments as JSON; TEXT on Postgres, CLOB on Oracle"
       },
       {
        "n": "expiredate",
@@ -987,7 +987,7 @@
       {
        "n": "meta",
        "type": "text",
-       "note": "creation time and the paste's salt"
+       "note": "the paste's meta without the expiry date: for a new paste, just its salt"
       }
      ]
     },
@@ -1017,8 +1017,8 @@
       },
       {
        "n": "vizhash",
-       "type": "text",
-       "note": "icon derived from the poster's IP hash"
+       "type": "blob",
+       "note": "the poster's icon as a data URI (identicon, jdenticon or vizhash, per the icon setting), derived from an HMAC of their IP; TEXT on Postgres"
       },
       {
        "n": "postdate",
@@ -1101,7 +1101,7 @@
    {
     "path": "lib/Persistence/",
     "t": "Small server-side state: server salt, traffic limiter and purge limiter.",
-    "why": "These values live in the same store as the pastes, so a multi-server install shares them for free.",
+    "why": "These values live in the same store as the pastes, so servers that share a backend (a database, a bucket or a shared data folder) share them too.",
     "nodes": [
      "limiter",
      "purge"
@@ -1110,7 +1110,7 @@
    {
     "path": "lib/Data/",
     "t": "One class per storage backend behind AbstractData.",
-    "why": "Adding a backend means one new class; nothing else changes.",
+    "why": "Adding a backend means one new class, plus any defaults for it in <code>lib/Configuration.php</code>.",
     "nodes": [
      "store",
      "files",
@@ -1127,7 +1127,7 @@
    },
    {
     "path": "tpl/bootstrap5.php",
-    "t": "The single HTML page.",
+    "t": "The main HTML page, the default template; <code>tpl/shortenerproxy.php</code> is the small page for a short link.",
     "tag": "template",
     "nodes": [
      "view"
@@ -1163,6 +1163,14 @@
     "tag": "admin",
     "nodes": [
      "purge",
+     "store"
+    ]
+   },
+   {
+    "path": "bin/migrate",
+    "t": "Command line tool that copies pastes and comments from one storage backend to another.",
+    "tag": "admin",
+    "nodes": [
      "store"
     ]
    },
