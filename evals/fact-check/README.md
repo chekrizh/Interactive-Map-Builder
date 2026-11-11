@@ -4,6 +4,8 @@ Does the repo skill's code check (section 5 of `interactive-map-repo/SKILL.md`: 
 
 **Repos** (fresh, none used before): rivet (Rust CLI, data pipeline), miniflux (Go web service + workers), umami (Next.js analytics), nanoGPT (ML scripts), lobsters (Rails). Commits are in `RUNLOG.md`.
 
+Per repo, `runs/<repo>/` holds `mapA.json` (before), `mapB.json` (after), `map.check.md` (the author's reflection log), `verdicts-r*.json` (each round) and the judge's files. Render a map with `render.py` to view it. The scripts carry the absolute paths of the run.
+
 **Design.** Each map was built once from scratch with the check skipped (`mapA.json`). The check loop was then run on it (`mapB.json`), so the build stage is identical and the cost difference is the check alone. The builder agent kept its context and did the reflection and fixes; each check round was a fresh agent.
 
 **Measuring accuracy without ground truth.** A separate blind judge (same model, different instructions, `JUDGE_PROMPT.md`) got, shuffled and unlabelled, every claim that differs between A and B (both versions) plus 30 random unchanged claims (`judgeset.py`). Errors in unchanged claims are shared by A and B. The judge also listed important gaps in each map's outline (components and flows), labelled X/Y at random. Disagreements between checker and judge were settled by hand.

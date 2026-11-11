@@ -27,11 +27,14 @@ plugins/interactive-map/
     scripts/layout_check.py         redraws the map as the viewer does and reports layout problems
     scripts/metrics.json            Manrope character widths for layout_check.py (tools/build_metrics.js)
     scripts/preview.py, preview.js  screenshots of a rendered map (overview, full map, each flow)
-  skills/interactive-map-repo/      repo mode: how to read a repository and model it in C4 terms
+    scripts/claims.py               lists a map's checkable statements with stable ids (the extra check)
+  skills/interactive-map-repo/      repo mode: how to read a repository and model it in C4 terms;
+                                    verify.md tells the extra check's reviewer what counts as confirmed
 app/                                viewer source (Vite): dev server + template build
   src/app.d.ts                      the map format as TypeScript types
   src/runtime/engine.js             wires the viewer modules; each module gets explicit inputs
 evals/maps/                         scripts that generate the Kutt and PrivateBin example maps
+evals/fact-check/                   the extra-check experiment: five repos, maps before/after, verdicts, scoring
 tests/test_render.py                render.py checks, incl. agreement with the page's own validator
 tests/browser_probe.js              opens a map full of hostile text and reports anything that ran
 tests/viewer_snapshots.js           screenshots and state after every action, to compare before/after
