@@ -1,6 +1,0 @@
-{
-  "claims": [
-    {"id": "node:ranking", "verdict": "confirmed", "evidence": "app/models/vote.rb:109-165; app/models/story.rb:583-587,730-756,905-906; app/models/comment.rb:375-401,506-511", "quote": "if update_counters / t = v.target / if v.user_id != t.user_id / User.update_counters t.user_id, karma: score_delta / end / t.update_score_and_recalculate!(score_delta, flag_delta) [vote.rb:158-163]; Vote.vote_thusly_on_story_or_comment_for_user_because(1, id, nil, user_id, nil, false) [story.rb:906]; self.hotness = calculated_hotness [story.rb:586]; Vote.create! story: story, comment: self, user: user, vote: 1 ... update_score_and_recalculate! 0, 0 # trigger db calculation [comment.rb:508-510]; score = (select coalesce(sum(vote), 0) from votes where comment_id = comments.id), ... confidence = ? [comment.rb:393-395]"}
-  ],
-  "missing": []
-}

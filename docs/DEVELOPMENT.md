@@ -34,13 +34,13 @@ app/                                viewer source (Vite): dev server + template 
   src/app.d.ts                      the map format as TypeScript types
   src/runtime/engine.js             wires the viewer modules; each module gets explicit inputs
 evals/maps/                         scripts that generate the Kutt and PrivateBin example maps
-evals/fact-check/                   the extra-check experiment: five repos, maps before/after, verdicts, scoring
 tests/test_render.py                render.py checks, incl. agreement with the page's own validator
 tests/browser_probe.js              opens a map full of hostile text and reports anything that ran
 tests/viewer_snapshots.js           screenshots and state after every action, to compare before/after
 tools/build_library.py              rebuilds the icon and logo library from upstream packages
 tools/build_metrics.js              measures Manrope for layout_check.py
 tools/readme_shots.js, readme_gifs.js  capture the README screenshots and GIFs from the example maps
+docs/extra-check-experiment.md      how the extra check was measured, and the results
 docs/readme/                        images for the README; social-preview.png is uploaded by hand
                                     in Settings -> General -> Social preview
 .github/workflows/                  release.yml (tag + release with skill zips), pages.yml (live demo)

@@ -1,7 +1,0 @@
-{
-  "claims": [
-    {"id": "node:redis", "verdict": "confirmed", "evidence": "src/lib/load.ts:10; src/app/(collect)/q/[slug]/route.ts:16-27; src/queries/prisma/website.ts:228-229; src/lib/redis.ts:7,49; src/lib/auth.ts:149-156; src/app/api/teams/route.ts:78-90; src/app/api/auth/sso/route.ts:15-16; src/app/api/share/[slug]/route.ts:42", "quote": "website = await redis.client.fetch(`website:${websiteId}`, () => getWebsite(websiteId), 86400); ... if (cloudMode) { await redis.client.set(`website:${websiteId}`, data); } ... export const DEFAULT_TTL = 3600; ... const authKey = `auth:${createAuthKey()}`; ... await redis.client.set(`team:${teamId}`, {...}, 60 * 60 * 24 * 90); ... if (!redis.enabled) { return serverError('Redis is disabled'); }"},
-    {"id": "node:umamiis", "verdict": "confirmed", "evidence": "src/lib/constants.ts:19-20; src/store/version.ts:20; src/app/api/scripts/telemetry/route.ts:4-18; scripts/telemetry.js:9; scripts/postbuild.js:5", "quote": "export const UPDATES_URL = 'https://api.umami.is/v1/updates'; export const TELEMETRY_PIXEL = 'https://i.umami.is/a.png'; ... process.env.DISABLE_TELEMETRY || process.env.PRIVATE_MODE ... const url = 'https://api.umami.is/v1/telemetry'; ... if (!process.env.DISABLE_TELEMETRY) { await sendTelemetry('build'); }"}
-  ],
-  "missing": []
-}

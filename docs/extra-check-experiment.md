@@ -1,16 +1,14 @@
-# Fact-check experiment (2026-11-11)
+# The extra check: experiment (2026-11-11)
 
 Does the repo skill's code check (section 5 of `interactive-map-repo/SKILL.md`: `claims.py`, a fresh checker following `verify.md`, up to three rounds of reflect-and-fix) make maps more accurate, and what does it cost?
 
 **Repos** (fresh, none used before): rivet (Rust CLI, data pipeline), miniflux (Go web service + workers), umami (Next.js analytics), nanoGPT (ML scripts), lobsters (Rails). Commits are in `RUNLOG.md`.
 
-Per repo, `runs/<repo>/` holds `mapA.json` (before), `mapB.json` (after), `map.check.md` (the author's reflection log), `verdicts-r*.json` (each round) and the judge's files. Render a map with `render.py` to view it. The scripts carry the absolute paths of the run.
-
 **Design.** Each map was built once from scratch with the check skipped (`mapA.json`). The check loop was then run on it (`mapB.json`), so the build stage is identical and the cost difference is the check alone. The builder agent kept its context and did the reflection and fixes; each check round was a fresh agent.
 
-**Measuring accuracy without ground truth.** A separate blind judge (same model, different instructions, `JUDGE_PROMPT.md`) got, shuffled and unlabelled, every claim that differs between A and B (both versions) plus 30 random unchanged claims (`judgeset.py`). Errors in unchanged claims are shared by A and B. The judge also listed important gaps in each map's outline (components and flows), labelled X/Y at random. Disagreements between checker and judge were settled by hand.
+**Measuring accuracy without ground truth.** A separate blind judge (same model, different instructions, [prompt](extra-check-judge-prompt.md)) got, shuffled and unlabelled, every claim that differs between A and B (both versions) plus 30 random unchanged claims. Errors in unchanged claims are shared by A and B. The judge also listed important gaps in each map's outline (components and flows), labelled X/Y at random. Disagreements between checker and judge were settled by hand.
 
-**Results** (`score.py`):
+**Results:**
 
 | repo | claims | wrong in A | wrong in B | rounds | build min / tokens | check min / tokens |
 |---|---|---|---|---|---|---|
@@ -30,3 +28,4 @@ Fix-round token counts are the new tokens only; a resumed builder also re-reads 
 - The checker is not perfectly consistent: one README-based claim passed round 1 and failed round 2; one wrong default passed two rounds and only the judge caught it.
 - Checker notes on loosely-right claims went into its reply, not the JSON, so the author never saw them; `verify.md` now asks for `note`.
 - A wrong file path in panel text (`src/pipeline/retry.rs`) is not a code reference, so render.py did not catch it; a cheap deterministic check is possible.
+- An end-to-end run on a sixth repository (httpie) with a fresh agent following the skill: it asked the question first, could not start a subagent in that environment, checked its own map by `verify.md` instead and still found and fixed 8 wrong claims out of 164 in two rounds. The skill now asks the agent to say so when it checked its own map.
