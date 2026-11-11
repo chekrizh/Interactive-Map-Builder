@@ -2,6 +2,17 @@
 
 Versions follow `plugins/interactive-map/.claude-plugin/plugin.json`. Each version change publishes a [GitHub release](https://github.com/chekrizh/Interactive-Map-Builder/releases) with the skill zips.
 
+## 0.7.5 — 2026-11-11
+
+Clearer skill instructions, from a builder agent's notes on a real run:
+
+- The extra check now runs last, after the layout check, so the text it confirms is the text the reader gets. A layout fix that rewords a claim is rechecked.
+- Documented flow hop fields (`rev`, `note`, `bad`, `breaks`), failure flows, how `inside` and `insides` fit together, and the legend label of every role preset.
+- Claims confirmed with a note are tightened or the reason to keep them is logged; a self-check finds each quote's line with a search.
+- The step 0 question is skipped when the task already carries the user's answer, also for a subagent.
+- Card count on the full map and path count in the project structure are guides, not limits.
+- `claims.py` includes a flow step's `note`, so the extra check covers it.
+
 ## 0.7.4 — 2026-11-11
 
 - The credit line in the help card is underlined, so it reads as a link before you hover it.

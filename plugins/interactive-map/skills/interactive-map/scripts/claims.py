@@ -67,7 +67,8 @@ def claims(d):
             way = f"{name(e.get('to'))} -> {name(e.get('from'))}" if hop.get('rev') else \
                 f"{name(e.get('from'))} -> {name(e.get('to'))}"
             add(f'flow:{fid}/{i}', 'flow step',
-                f"Flow \"{plain(f.get('title'))}\", step {i} of {len(f.get('hops', []))} ({way}): {plain(hop.get('t'))}")
+                f"Flow \"{plain(f.get('title'))}\", step {i} of {len(f.get('hops', []))} ({way}): "
+                + join(plain(hop.get('t')), 'Note: ' + plain(hop.get('note')) if hop.get('note') else ''))
 
     insides = d.get('insides', {})
     for sid, scene in (insides.items() if isinstance(insides, dict) else []):

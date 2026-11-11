@@ -1,6 +1,6 @@
 {
   "name": "interactive-map",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "Build an interactive map of a code repository (C4 overview, drill-down, animated flows, guided tour) as one self-contained HTML file.",
   "author": {
     "name": "chekrizh"
