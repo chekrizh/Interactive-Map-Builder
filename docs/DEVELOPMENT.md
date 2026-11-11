@@ -17,6 +17,7 @@ plugins/interactive-map/
     examples/                       kutt-url-shortener.json (the main example, hand layout),
                                     privatebin-pastebin.json (automatic layout),
                                     healthchecks-cron-monitor.json (automatic, steered by layout.grid),
+                                    five more real-project maps (rivet, miniflux, umami, nanogpt, lobsters),
                                     fastapi-service.json (the smallest complete map; the dev map);
                                     README.md credits each project and its mapped commit
     scripts/render.py               map JSON -> HTML; fills defaults and names from the library
@@ -33,17 +34,17 @@ plugins/interactive-map/
 app/                                viewer source (Vite): dev server + template build
   src/app.d.ts                      the map format as TypeScript types
   src/runtime/engine.js             wires the viewer modules; each module gets explicit inputs
-evals/maps/                         scripts that generate the Kutt and PrivateBin example maps
 tests/test_render.py                render.py checks, incl. agreement with the page's own validator
 tests/browser_probe.js              opens a map full of hostile text and reports anything that ran
 tests/viewer_snapshots.js           screenshots and state after every action, to compare before/after
 tools/build_library.py              rebuilds the icon and logo library from upstream packages
 tools/build_metrics.js              measures Manrope for layout_check.py
 tools/readme_shots.js, readme_gifs.js  capture the README screenshots and GIFs from the example maps
+tools/examples/                     scripts that generate the Kutt and PrivateBin example maps
 docs/extra-check-experiment.md      how the extra check was measured, and the results
 docs/readme/                        images for the README; social-preview.png is uploaded by hand
                                     in Settings -> General -> Social preview
-.github/workflows/                  release.yml (tag + release with skill zips), pages.yml (live demo)
+.github/workflows/                  release.yml (tag + release with skill zips), pages.yml (live example maps)
 ```
 
 ## Develop the viewer
@@ -69,7 +70,7 @@ Keep every file in the plugin readable and under 256 KiB (fonts and images aside
 2. Run `python3 -m unittest discover tests` and `claude plugin validate .`.
 3. **Bump `version` in `plugins/interactive-map/.claude-plugin/plugin.json`.** Claude Code users keep their cached copy until this string changes, so a push without a bump reaches nobody.
 4. Merge to `main`. Marketplace users get the update on their next update command, or on their own if they enabled auto-update.
-5. Nothing else by hand. On a version change `.github/workflows/release.yml` tags `v<version>` and publishes a GitHub release with one zip per skill for Claude apps users (who have to upload them again), and `.github/workflows/pages.yml` re-renders the live demo (the Kutt map) whenever the format skill changes.
+5. Nothing else by hand. On a version change `.github/workflows/release.yml` tags `v<version>` and publishes a GitHub release with one zip per skill for Claude apps users (who have to upload them again), and `.github/workflows/pages.yml` re-renders every real-project example on GitHub Pages (Kutt on the front page) whenever the format skill changes.
 
 When the viewer's look changes, update the README images: render the three real-project examples into one folder and run `node tools/readme_shots.js <that folder> docs/readme`, then `node tools/readme_gifs.js <that folder>/kutt-url-shortener.html docs/readme` for the two GIFs (needs ffmpeg).
 

@@ -1,6 +1,6 @@
-"""Generate the Kutt (URL shortener) map definition as a first C4-style repo map.
+"""Generate the Kutt (URL shortener) example map: a C4-style repository map with a hand layout.
 
-Run: python3 evals/maps/build_kutt.py > plugins/interactive-map/skills/interactive-map/examples/kutt-url-shortener.json
+Run: python3 tools/examples/build_kutt.py > plugins/interactive-map/skills/interactive-map/examples/kutt-url-shortener.json
 """
 import json
 import pathlib
@@ -16,8 +16,8 @@ def at(c, r):
     return {"x": C[c], "y": R[r], "w": W, "h": H}
 
 
-def node(id, group, cat, step, icon, tool, concept, what, why, tools, zone):
-    return dict(id=id, group=group, cat=cat, step=step, icon=icon, tool=concept, concept=tool,
+def node(id, group, cat, step, icon, concept, tool, what, why, tools, zone):
+    return dict(id=id, group=group, cat=cat, step=step, icon=icon, tool=tool, concept=concept,
                 what=what, why=why, tools=tools, zone=zone)
 
 

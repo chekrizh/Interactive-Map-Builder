@@ -1,9 +1,7 @@
-"""Generate the PrivateBin (pastebin) map definition: a repo map written with no layout at all.
+"""Generate the PrivateBin (pastebin) example map: a repository map written with no layout at all,
+so every position comes from render.py.
 
-The second C4 example after Kutt, built to test the automatic layout on a repository it was
-not tuned on. Every position on the map comes from render.py.
-
-Run: python3 evals/maps/build_privatebin.py > plugins/interactive-map/skills/interactive-map/examples/privatebin-pastebin.json
+Run: python3 tools/examples/build_privatebin.py > plugins/interactive-map/skills/interactive-map/examples/privatebin-pastebin.json
 """
 import json
 
