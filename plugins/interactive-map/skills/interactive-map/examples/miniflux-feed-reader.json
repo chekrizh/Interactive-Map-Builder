@@ -1,0 +1,1850 @@
+{
+ "id": "miniflux-feed-reader",
+ "source": {
+  "repo": "https://github.com/miniflux/v2",
+  "ref": "9447aaeceb98ebdf7c4528b3e96dc5b44b35af5b"
+ },
+ "page": {
+  "title": "Miniflux: a feed reader, mapped",
+  "slots": {
+   "overviewDescription": "Miniflux in context: who reads with it, which sites it polls, where it sends entries and what it is made of.",
+   "mapDescription": "One Go binary with a web server, a scheduler and a worker pool, sharing one PostgreSQL database.",
+   "completionLessons": "<li>Why one process both serves pages and polls feeds</li><li>How a refresh skips unchanged feeds and never brings back deleted entries</li><li>Where feed content is cleaned before anyone sees it</li>",
+   "completionIntro": "You followed a feed from the scheduler to the database, a new subscription, an entry being read and a mobile app syncing."
+  }
+ },
+ "ui": {
+  "buildNote": "The steps assemble Miniflux from a single feed fetch outwards: one sensible order, not the project's history."
+ },
+ "panels": {
+  "introHtml": "<div class=\"p-eyebrow\">Start here</div><h2>Miniflux, the minimalist feed reader</h2><p style=\"margin-top:8px\">A map of <a href=\"https://github.com/miniflux/v2\">miniflux/v2</a> in C4 terms: context on the overview, the parts of the single Go binary and its PostgreSQL database on the full map.</p><p><small>Miniflux is made by the Miniflux Authors and released under the <a href=\"https://github.com/miniflux/v2/blob/9447aaeceb98ebdf7c4528b3e96dc5b44b35af5b/LICENSE\">Apache License 2.0</a>. This map describes it in its own words and is not affiliated with its authors.</small></p><h3>Try it</h3><ul class=\"newlist\"><li>Open a card to see its part of the system.</li><li>Play <b>Scheduled refresh</b>: it is what Miniflux spends most of its time doing.</li><li>Click a component for what it does and where it lives in the code.</li></ul><div class=\"panel-actions\"><button type=\"button\" class=\"panel-action\" id=\"gofull\">Open full map</button></div>",
+  "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>Feeds in, clean entries out</h2><p style=\"margin-top:8px\">Everything runs in one process started by <code>miniflux</code>: an HTTP server, a scheduler on two tickers and a pool of workers. They share nothing but the <code>Storage</code> object and the database behind it.</p><h3>How to read it</h3><p>Readers and apps on the left, the HTTP side next, then the background loop and the feed engine that does the fetching and cleaning, with storage and the outside web on the right. Feed fetching, scraping and the media proxy all go through the same fetcher.</p>"
+ },
+ "groups": {
+  "people": {
+   "title": "Readers and apps",
+   "huekey": "person",
+   "icon": "users",
+   "line1": "Read in a browser,",
+   "line2": "or sync a mobile app.",
+   "chips": "browser · Fever · Google Reader",
+   "text": "People read in the web UI; native apps and scripts reach the same data through the REST API or the Fever and Google Reader compatible APIs.",
+   "members": [
+    "reader",
+    "apps"
+   ]
+  },
+  "web": {
+   "title": "HTTP side",
+   "huekey": "component",
+   "icon": "globe",
+   "line1": "Pages, three APIs",
+   "line2": "and a media proxy.",
+   "chips": "net/http · templates",
+   "text": "One router mounts the web UI, the REST API, the two compatibility APIs and health probes. Sign-in can go through an OAuth2 or OIDC provider.",
+   "members": [
+    "router",
+    "webui",
+    "restapi",
+    "compat",
+    "mediaproxy",
+    "idp"
+   ]
+  },
+  "background": {
+   "title": "Background polling",
+   "huekey": "background",
+   "icon": "timer",
+   "line1": "A ticker picks due feeds,",
+   "line2": "workers refresh them.",
+   "chips": "scheduler · worker pool",
+   "text": "A feed ticker hands batches of due feeds to a pool of goroutines; a second ticker archives old entries and expired sessions.",
+   "members": [
+    "scheduler",
+    "pool"
+   ]
+  },
+  "engine": {
+   "title": "Feed engine",
+   "huekey": "component",
+   "icon": "rss",
+   "line1": "Fetch, parse, filter,",
+   "line2": "scrape and sanitize.",
+   "chips": "internal/reader",
+   "text": "The reader packages discover feeds, fetch them with conditional requests, parse four formats and clean every entry before it is stored.",
+   "members": [
+    "refresh",
+    "discovery",
+    "fetcher",
+    "parser",
+    "processor",
+    "websites"
+   ]
+  },
+  "share": {
+   "title": "Send it on",
+   "huekey": "external",
+   "icon": "share-2",
+   "line1": "New entries and saved ones",
+   "line2": "go to 25+ services.",
+   "chips": "webhook · Slack · Wallabag",
+   "text": "Every new entry can be pushed to notification services, and a saved or starred entry to read-later and bookmark services.",
+   "members": [
+    "integrations",
+    "services"
+   ]
+  },
+  "storage": {
+   "title": "Storage",
+   "huekey": "store",
+   "icon": "database",
+   "line1": "One Go storage layer,",
+   "line2": "one PostgreSQL database.",
+   "chips": "PostgreSQL · lib/pq",
+   "text": "All SQL lives in one package; PostgreSQL holds users, feeds, entries, sessions, icons and even TLS certificates, and does the full-text search.",
+   "members": [
+    "storage",
+    "db"
+   ]
+  }
+ },
+ "overview": [
+  {
+   "g": "people"
+  },
+  {
+   "g": "web"
+  },
+  {
+   "g": "background"
+  },
+  {
+   "g": "engine"
+  },
+  {
+   "g": "share"
+  },
+  {
+   "g": "storage"
+  }
+ ],
+ "overviewEdges": [
+  {
+   "id": "o1",
+   "from": "people",
+   "to": "web",
+   "label": "read, sync"
+  },
+  {
+   "id": "o2",
+   "from": "web",
+   "to": "engine",
+   "label": "subscribe"
+  },
+  {
+   "id": "o3",
+   "from": "background",
+   "to": "engine",
+   "label": "refresh due feeds"
+  },
+  {
+   "id": "o4",
+   "from": "engine",
+   "to": "storage",
+   "label": "entries"
+  },
+  {
+   "id": "o5",
+   "from": "engine",
+   "to": "share",
+   "label": "new entries"
+  },
+  {
+   "id": "o6",
+   "from": "web",
+   "to": "storage",
+   "label": "query"
+  }
+ ],
+ "zones": [
+  {
+   "id": "clients",
+   "label": "Clients",
+   "hue": "person"
+  },
+  {
+   "id": "http",
+   "label": "HTTP server · internal/http, ui, api",
+   "hue": "component"
+  },
+  {
+   "id": "loop",
+   "label": "Background · scheduler and workers",
+   "hue": "background"
+  },
+  {
+   "id": "engine",
+   "label": "Feed engine · internal/reader",
+   "hue": "component"
+  },
+  {
+   "id": "data",
+   "label": "Storage",
+   "hue": "store"
+  },
+  {
+   "id": "internet",
+   "label": "Outside services",
+   "hue": "external"
+  }
+ ],
+ "nodes": [
+  {
+   "id": "reader",
+   "group": "people",
+   "zone": "clients",
+   "cat": "person",
+   "shape": "person",
+   "icon": "user",
+   "step": 3,
+   "concept": "Reader",
+   "tool": "Person · browser",
+   "what": "Someone who subscribes to feeds, reads entries, stars and saves them. The web UI is server-rendered HTML with a small script for keyboard shortcuts, gestures and marking entries read.",
+   "why": "Miniflux is self-hosted, usually for one person or a household, so every page is built for one reader's own feeds.",
+   "tools": "Any browser · installable as a web app · <code>internal/ui/static/js/app.js</code>"
+  },
+  {
+   "id": "apps",
+   "group": "people",
+   "zone": "clients",
+   "cat": "external",
+   "shape": "external",
+   "icon": "smartphone",
+   "step": 6,
+   "concept": "Apps and scripts",
+   "tool": "External systems",
+   "what": "Native feed reader apps that speak the Fever or Google Reader API, and scripts that use the REST API (for example through the Go client in <code>client/</code>).",
+   "why": "Miniflux has no mobile app of its own; speaking existing protocols lets readers keep the app they like.",
+   "tools": "Fever and Google Reader clients · <code>client/</code> Go library · curl with <code>X-Auth-Token</code>"
+  },
+  {
+   "id": "router",
+   "group": "web",
+   "zone": "http",
+   "cat": "component",
+   "icon": "network",
+   "step": 3,
+   "concept": "HTTP server and router",
+   "tool": "Component · internal/http/server",
+   "what": "Starts the listeners (TCP, Unix socket, systemd socket, TLS from files or Let's Encrypt) and builds the router: health probes at the root, then the Fever, Google Reader and REST APIs, <code>/metrics</code>, and the web UI as the catch-all, all under an optional base path. When <code>METRICS_COLLECTOR</code> is on, the daemon also runs a collector goroutine that reads counts from storage on a timer for Prometheus to scrape.",
+   "why": "A shared middleware finds the real client IP behind trusted proxies and sets HSTS once, so no handler has to.",
+   "tools": "<code>internal/http/server/routes.go</code> · <code>server.go</code> · <code>middleware.go</code> · golang.org/x/crypto/acme/autocert"
+  },
+  {
+   "id": "webui",
+   "group": "web",
+   "zone": "http",
+   "cat": "component",
+   "icon": "layout-dashboard",
+   "step": 3,
+   "concept": "Web UI",
+   "tool": "Component · internal/ui",
+   "what": "About 100 routes for unread, starred, history, search, feeds, categories, settings and sign-in. Each request passes a web-session middleware (session from a cookie, else redirect to login) and a CSRF check, then a handler renders a Go template.",
+   "why": "Pages are rendered on the server from templates embedded in the binary, so the UI needs no build step and works without much JavaScript.",
+   "tools": "<code>internal/ui/ui.go</code> · <code>web_session_middleware.go</code> · <code>internal/template/</code> · WebAuthn"
+  },
+  {
+   "id": "restapi",
+   "group": "web",
+   "zone": "http",
+   "cat": "component",
+   "icon": "braces",
+   "step": 6,
+   "concept": "REST API v1",
+   "tool": "Component · internal/api",
+   "what": "JSON endpoints under <code>/v1/</code> for users, categories, feeds, entries, icons, enclosures, OPML and API keys. A request authenticates with an <code>X-Auth-Token</code> API key or HTTP Basic auth.",
+   "why": "Everything the UI can do is scriptable; the official Go and Python clients are built on it.",
+   "tools": "<code>internal/api/api.go</code> · <code>middleware.go</code> · <code>feed_handlers.go</code>"
+  },
+  {
+   "id": "compat",
+   "group": "web",
+   "zone": "http",
+   "cat": "component",
+   "icon": "plug",
+   "step": 6,
+   "concept": "Fever and Google Reader APIs",
+   "tool": "Component · internal/fever, internal/googlereader",
+   "what": "Two compatibility layers that translate old client protocols onto Miniflux's own storage: list items, mark read, star. Each is switched on per user on the integrations page, with its own username and password.",
+   "why": "Existing mobile apps already speak these protocols; separate credentials mean a phone never holds the main account password.",
+   "tools": "<code>internal/fever/handler.go</code> · <code>internal/googlereader/handler.go</code> · <code>middleware.go</code>"
+  },
+  {
+   "id": "mediaproxy",
+   "group": "web",
+   "zone": "http",
+   "cat": "component",
+   "icon": "image",
+   "step": 4,
+   "concept": "Media proxy",
+   "tool": "Component · internal/mediaproxy",
+   "what": "Templates rewrite image and media URLs in entry content to <code>/proxy/&lt;hmac&gt;/&lt;url&gt;</code>. The handler checks the HMAC, fetches the media and streams it back with a strict Content-Security-Policy. By default only plain <code>http://</code> media is proxied.",
+   "why": "It stops mixed-content warnings on an HTTPS install and hides the reader's IP from image hosts; the HMAC keeps it from being an open proxy.",
+   "tools": "<code>internal/mediaproxy/</code> · <code>internal/ui/proxy.go</code> · <code>MEDIA_PROXY_MODE</code>"
+  },
+  {
+   "id": "scheduler",
+   "group": "background",
+   "zone": "loop",
+   "cat": "background",
+   "icon": "alarm-clock",
+   "step": 2,
+   "concept": "Scheduler",
+   "tool": "Goroutines · internal/cli/scheduler.go",
+   "what": "Two tickers started by the daemon. The feed ticker (every <code>POLLING_FREQUENCY</code>, 60 minutes by default) asks storage for a batch of due feeds and pushes it to the pool. The cleanup ticker (every 24 hours) removes old sessions, archives old entries and deletes orphan icons. With <code>DISABLE_SCHEDULER_SERVICE</code> set, an outside cron can run the same work as one-off commands: <code>miniflux -refresh-feeds</code> (its own short-lived workers, not the pool) and <code>miniflux -run-cleanup-tasks</code>.",
+   "why": "Feeds have no way to notify a reader; polling on a schedule is the only way news arrives.",
+   "tools": "<code>internal/cli/scheduler.go</code> · <code>cleanup_tasks.go</code> · <code>refresh_feeds.go</code> · <code>daemon.go</code>"
+  },
+  {
+   "id": "pool",
+   "group": "background",
+   "zone": "loop",
+   "cat": "background",
+   "shape": "worker",
+   "icon": "cpu",
+   "step": 2,
+   "concept": "Worker pool",
+   "tool": "Goroutines · internal/worker",
+   "what": "<code>WORKER_POOL_SIZE</code> goroutines (16 by default) reading jobs from one unbuffered channel. Each job is one feed; the worker calls <code>RefreshFeed</code> and records how long it took.",
+   "why": "Feeds are slow and independent, so many are fetched at once while the channel keeps the scheduler from running ahead of the workers.",
+   "tools": "<code>internal/worker/pool.go</code> · <code>worker.go</code>"
+  },
+  {
+   "id": "refresh",
+   "group": "engine",
+   "zone": "engine",
+   "cat": "component",
+   "icon": "refresh-cw",
+   "inside": "refresh",
+   "step": 1,
+   "concept": "Feed handler",
+   "tool": "Component · internal/reader/handler",
+   "what": "<code>CreateFeed</code> and <code>RefreshFeed</code>: load the feed, schedule its next check, fetch it, parse it, process its entries, store them, then hand new entries to integrations and update the icon.",
+   "why": "The scheduler, the UI and the API all refresh feeds through these two functions, so every path gets the same rules.",
+   "tools": "<code>internal/reader/handler/handler.go</code> · <code>internal/model/feed.go</code>"
+  },
+  {
+   "id": "discovery",
+   "group": "engine",
+   "zone": "engine",
+   "cat": "component",
+   "icon": "search",
+   "step": 5,
+   "concept": "Subscription finder",
+   "tool": "Component · internal/reader/subscription",
+   "what": "Turns a website address into feed URLs: is it already a feed, a YouTube channel or a GitHub page, does the HTML link to feeds, can the user's own RSS-Bridge server make one, or does a well-known path like <code>/feed</code> answer.",
+   "why": "Readers paste a website, not a feed URL. When the address is a feed, the body is kept so the feed is not downloaded twice.",
+   "tools": "<code>internal/reader/subscription/finder.go</code> · goquery"
+  },
+  {
+   "id": "fetcher",
+   "group": "engine",
+   "zone": "engine",
+   "cat": "component",
+   "icon": "download",
+   "step": 1,
+   "concept": "Fetcher",
+   "tool": "Component · internal/reader/fetcher",
+   "what": "A request builder over Go's HTTP client: per-feed user agent, cookie, credentials and proxy, a rotating proxy list, ETag and Last-Modified, timeouts, and a check after DNS resolution that refuses private network addresses unless allowed.",
+   "why": "Users can make the server fetch any URL; checking the resolved IP at dial time stops a feed from probing the internal network.",
+   "tools": "<code>internal/reader/fetcher/request_builder.go</code> · <code>response_handler.go</code> · <code>internal/proxyrotator/</code>"
+  },
+  {
+   "id": "parser",
+   "group": "engine",
+   "zone": "engine",
+   "cat": "component",
+   "icon": "file-code",
+   "step": 1,
+   "concept": "Feed parsers",
+   "tool": "Component · internal/reader/parser",
+   "what": "Detects the format and hands the body to the Atom, RSS, JSON Feed or RDF parser, which turns it into one <code>model.Feed</code> with its entries.",
+   "why": "Everything after this step works on one model and never needs to know which format a feed used.",
+   "tools": "<code>internal/reader/parser/parser.go</code> · <code>reader/atom</code> · <code>reader/rss</code> · <code>reader/json</code> · <code>reader/rdf</code>"
+  },
+  {
+   "id": "processor",
+   "group": "engine",
+   "zone": "engine",
+   "cat": "component",
+   "icon": "filter",
+   "inside": "processor",
+   "step": 4,
+   "concept": "Entry processor",
+   "tool": "Component · internal/reader/processor",
+   "what": "For every entry: block and keep filters, tracking-parameter removal, URL rewrites, scraping the original page when the crawler is on, content rewrite rules, HTML sanitizing and reading time.",
+   "why": "Feed content is untrusted HTML from strangers. The sanitizer always runs last, so nothing a rule or the scraper adds escapes it.",
+   "tools": "<code>internal/reader/processor/processor.go</code> · <code>reader/filter</code> · <code>reader/scraper</code> · <code>reader/readability</code> · <code>reader/sanitizer</code> · <code>reader/rewrite</code>"
+  },
+  {
+   "id": "integrations",
+   "group": "share",
+   "zone": "engine",
+   "cat": "component",
+   "icon": "share-2",
+   "step": 7,
+   "concept": "Integrations",
+   "tool": "Component · internal/integration",
+   "what": "<code>PushEntries</code> sends new entries to notification services (webhook, Slack, Discord, ntfy, Telegram, Matrix, Apprise, Pushover, Gotify). <code>SendEntry</code> sends one saved or starred entry to read-later and bookmark services (Wallabag, Pinboard, Readwise, Linkding and more).",
+   "why": "Both run in their own goroutine, so a slow or failing service never holds up a refresh or a click.",
+   "tools": "<code>internal/integration/integration.go</code> · one folder per service"
+  },
+  {
+   "id": "storage",
+   "group": "storage",
+   "zone": "data",
+   "cat": "store",
+   "icon": "layers",
+   "step": 1,
+   "concept": "Storage layer",
+   "tool": "Component · internal/storage",
+   "what": "One <code>Storage</code> type with every SQL query: feed and entry CRUD, the job batch builder, query builders for entry lists and search, sessions, API keys, integrations and the certificate cache.",
+   "why": "No ORM: hand-written SQL in one package, so every query the app makes can be read and tuned in one place.",
+   "tools": "<code>internal/storage/entry.go</code> · <code>feed.go</code> · <code>batch.go</code> · <code>entry_query_builder.go</code>"
+  },
+  {
+   "id": "db",
+   "group": "storage",
+   "zone": "data",
+   "cat": "store",
+   "shape": "database",
+   "logo": "postgresql",
+   "icon": "database",
+   "inside": "db",
+   "step": 1,
+   "concept": "PostgreSQL",
+   "tool": "PostgreSQL",
+   "what": "The only data store. Its schema is built by a list of Go migration functions run in order, one transaction each, and recorded in <code>schema_version</code>.",
+   "why": "Full-text search uses PostgreSQL's own <code>tsvector</code> and GIN index, so there is no separate search engine to run.",
+   "tools": "<code>internal/database/migrations.go</code> · <code>DATABASE_URL</code> · <code>RUN_MIGRATIONS</code> · lib/pq"
+  },
+  {
+   "id": "websites",
+   "group": "engine",
+   "zone": "internet",
+   "cat": "external",
+   "shape": "external",
+   "icon": "rss",
+   "step": 1,
+   "concept": "Feeds and websites",
+   "tool": "External systems",
+   "what": "The publishers' servers: feed documents, the full article pages the scraper reads, favicons, and images loaded through the media proxy.",
+   "why": "Miniflux only ever pulls from them; their caching headers decide how often it comes back.",
+   "tools": "Atom · RSS · JSON Feed · RDF · HTML"
+  },
+  {
+   "id": "services",
+   "group": "share",
+   "zone": "internet",
+   "cat": "external",
+   "shape": "external",
+   "icon": "send",
+   "step": 7,
+   "concept": "Third-party services",
+   "tool": "External systems",
+   "what": "Read-later, bookmark and notification services, plus any URL that accepts a signed webhook.",
+   "why": "Readers keep using the tools they already have; Miniflux only hands entries over.",
+   "tools": "HTTPS APIs and webhooks"
+  },
+  {
+   "id": "idp",
+   "group": "web",
+   "zone": "internet",
+   "cat": "external",
+   "shape": "external",
+   "icon": "key-round",
+   "step": 6,
+   "concept": "OAuth2 or OIDC provider",
+   "tool": "External system",
+   "what": "Optional sign-in through Google or any OpenID Connect provider, set with <code>OAUTH2_PROVIDER</code>. The redirect stores a state and a PKCE verifier in the web session; the callback checks the state, fetches the profile and finds (or, if allowed, creates) the user. Users can also sign in with a password, a passkey (WebAuthn) or a trusted reverse-proxy header.",
+   "why": "Lets a household or a team reuse the identity they already have instead of another password.",
+   "tools": "<code>internal/oauth2/</code> · coreos/go-oidc · golang.org/x/oauth2"
+  }
+ ],
+ "edges": [
+  {
+   "id": "re_ro",
+   "from": "reader",
+   "to": "router",
+   "label": "HTTPS"
+  },
+  {
+   "id": "ap_ro",
+   "from": "apps",
+   "to": "router",
+   "label": "HTTPS + token"
+  },
+  {
+   "id": "ro_ui",
+   "from": "router",
+   "to": "webui",
+   "label": "/ catch-all"
+  },
+  {
+   "id": "ro_api",
+   "from": "router",
+   "to": "restapi",
+   "label": "/v1/"
+  },
+  {
+   "id": "ro_co",
+   "from": "router",
+   "to": "compat",
+   "label": "/fever/, /reader/"
+  },
+  {
+   "id": "ui_mp",
+   "from": "webui",
+   "to": "mediaproxy",
+   "label": "GET /proxy/"
+  },
+  {
+   "id": "ui_id",
+   "from": "webui",
+   "to": "idp",
+   "label": "OAuth2 redirect"
+  },
+  {
+   "id": "ui_st",
+   "from": "webui",
+   "to": "storage",
+   "label": "sessions, entries"
+  },
+  {
+   "id": "api_st",
+   "from": "restapi",
+   "to": "storage",
+   "label": "queries"
+  },
+  {
+   "id": "co_st",
+   "from": "compat",
+   "to": "storage",
+   "label": "items, mark read"
+  },
+  {
+   "id": "ui_di",
+   "from": "webui",
+   "to": "discovery",
+   "label": "find feeds"
+  },
+  {
+   "id": "ui_rf",
+   "from": "webui",
+   "to": "refresh",
+   "label": "CreateFeed"
+  },
+  {
+   "id": "api_rf",
+   "from": "restapi",
+   "to": "refresh",
+   "label": "CreateFeed, RefreshFeed"
+  },
+  {
+   "id": "ui_po",
+   "from": "webui",
+   "to": "pool",
+   "label": "refresh all"
+  },
+  {
+   "id": "ui_in",
+   "from": "webui",
+   "to": "integrations",
+   "label": "save entry"
+  },
+  {
+   "id": "co_in",
+   "from": "compat",
+   "to": "integrations",
+   "label": "starred entry"
+  },
+  {
+   "id": "sc_st",
+   "from": "scheduler",
+   "to": "storage",
+   "label": "due feeds, archive"
+  },
+  {
+   "id": "sc_po",
+   "from": "scheduler",
+   "to": "pool",
+   "label": "Push(jobs)"
+  },
+  {
+   "id": "po_rf",
+   "from": "pool",
+   "to": "refresh",
+   "label": "RefreshFeed"
+  },
+  {
+   "id": "rf_fe",
+   "from": "refresh",
+   "to": "fetcher",
+   "label": "conditional GET"
+  },
+  {
+   "id": "di_fe",
+   "from": "discovery",
+   "to": "fetcher",
+   "label": "fetch page"
+  },
+  {
+   "id": "pr_fe",
+   "from": "processor",
+   "to": "fetcher",
+   "label": "scrape article"
+  },
+  {
+   "id": "mp_fe",
+   "from": "mediaproxy",
+   "to": "fetcher",
+   "label": "fetch media"
+  },
+  {
+   "id": "fe_ws",
+   "from": "fetcher",
+   "to": "websites",
+   "label": "HTTP GET"
+  },
+  {
+   "id": "rf_pa",
+   "from": "refresh",
+   "to": "parser",
+   "label": "ParseFeed"
+  },
+  {
+   "id": "rf_pr",
+   "from": "refresh",
+   "to": "processor",
+   "label": "process entries"
+  },
+  {
+   "id": "pr_st",
+   "from": "processor",
+   "to": "storage",
+   "label": "IsNewEntry"
+  },
+  {
+   "id": "rf_st",
+   "from": "refresh",
+   "to": "storage",
+   "label": "save feed, entries"
+  },
+  {
+   "id": "rf_in",
+   "from": "refresh",
+   "to": "integrations",
+   "label": "new entries"
+  },
+  {
+   "id": "in_sv",
+   "from": "integrations",
+   "to": "services",
+   "label": "HTTPS"
+  },
+  {
+   "id": "st_db",
+   "from": "storage",
+   "to": "db",
+   "label": "SQL"
+  }
+ ],
+ "flows": {
+  "poll": {
+   "title": "Scheduled refresh",
+   "hue": "background",
+   "desc": "The feed ticker fires, a batch of due feeds goes to the workers, and each feed is fetched only if it changed.",
+   "hops": [
+    {
+     "e": "sc_st",
+     "t": "Every <code>POLLING_FREQUENCY</code> (60 minutes by default) the feed ticker builds a batch: feeds that are not disabled, have fewer than 3 parsing errors and whose <code>next_check_at</code> has passed, oldest first, at most <code>BATCH_SIZE</code> (100). <code>POLLING_LIMIT_PER_HOST</code> can cap feeds per host; it is 0 (no cap) by default."
+    },
+    {
+     "e": "st_db",
+     "t": "One <code>SELECT id, user_id, feed_url FROM feeds … ORDER BY next_check_at</code>. A per-host cap, when configured, is applied in Go while reading the rows."
+    },
+    {
+     "e": "sc_po",
+     "t": "<code>pool.Push(jobs)</code> sends the jobs one by one into an unbuffered channel, so the ticker waits until a worker is free to take each one."
+    },
+    {
+     "e": "po_rf",
+     "t": "A worker calls <code>RefreshFeed(store, userID, feedID, false)</code>. Not forced, so HTTP caching applies."
+    },
+    {
+     "e": "rf_st",
+     "t": "The feed row is loaded and its next check is scheduled before anything is fetched, so a feed that fails still moves to the back of the queue."
+    },
+    {
+     "e": "rf_fe",
+     "t": "The request carries the feed's own user agent, cookie, credentials and proxy, plus <code>If-None-Match</code> and <code>If-Modified-Since</code> from the last response."
+    },
+    {
+     "e": "fe_ws",
+     "t": "The publisher answers. A 304 or an unchanged ETag ends the refresh here: only the error counter is reset and the feed row saved."
+    },
+    {
+     "e": "rf_pa",
+     "t": "The body is read (up to a size limit), its format detected and parsed into a feed with entries. The next check moves out to the feed's TTL, <code>Cache-Control</code> or <code>Expires</code> when that is later."
+    },
+    {
+     "e": "rf_pr",
+     "t": "Each entry is filtered, its URL cleaned of tracking parameters, its page scraped if the crawler is on, rewritten and sanitized."
+    },
+    {
+     "e": "pr_st",
+     "t": "Whether an entry is new decides whether it is scraped. An entry counts as known if it is stored or tombstoned, so archived entries are not scraped again."
+    },
+    {
+     "e": "rf_st",
+     "t": "<code>RefreshFeedEntries</code> runs one transaction per entry: an existing entry is updated when the refresh is forced, or when the feed neither uses the crawler nor ignores updates; a new one is inserted unless a tombstone says it was deleted."
+    },
+    {
+     "e": "st_db",
+     "t": "The insert computes the <code>document_vectors</code> search column from the title (weight A) and the content (weight B)."
+    },
+    {
+     "e": "rf_in",
+     "t": "If the insert produced new entries, <code>PushEntries</code> starts in its own goroutine. The refresh does not wait for it."
+    },
+    {
+     "e": "in_sv",
+     "t": "Each enabled notification service gets the new entries: a signed webhook, a Slack or Discord message, an ntfy push, one Telegram message per entry."
+    }
+   ]
+  },
+  "subscribe": {
+   "title": "Subscribe to a website",
+   "hue": "component",
+   "desc": "A reader pastes a website address; Miniflux finds its feed, downloads and stores it, and opens the new feed's page.",
+   "hops": [
+    {
+     "e": "re_ro",
+     "t": "The reader submits the form: <code>POST /subscribe</code> with a URL, a category and optional fetch settings."
+    },
+    {
+     "e": "ro_ui",
+     "t": "The web-session middleware loads the session from its cookie and the CSRF middleware checks the form token before <code>submitSubscription</code> runs."
+    },
+    {
+     "e": "ui_di",
+     "t": "<code>FindSubscriptions</code> tries, in order: the URL is already a feed, a YouTube channel, a GitHub page, feed links in the HTML, RSS-Bridge, well-known feed paths."
+    },
+    {
+     "e": "di_fe",
+     "t": "The page is fetched with the settings from the form (user agent, cookie, proxy, TLS options)."
+    },
+    {
+     "e": "fe_ws",
+     "t": "The site answers with HTML or, if the URL was a feed, with the feed itself."
+    },
+    {
+     "e": "ui_rf",
+     "t": "Exactly one feed found: <code>CreateFeedFromSubscriptionDiscovery</code> reuses the body already downloaded, otherwise <code>CreateFeed</code> fetches it. Several feeds found: the reader picks one on another page."
+    },
+    {
+     "e": "rf_pa",
+     "t": "The feed is parsed; a duplicate feed URL or a category that is not the user's stops here with a translated error."
+    },
+    {
+     "e": "rf_pr",
+     "t": "All entries are processed as if forced: every one is new, so a crawler feed scrapes every article on the first fetch."
+    },
+    {
+     "e": "rf_st",
+     "t": "<code>CreateFeed</code> inserts the feed row and its entries; then the icon checker looks for the site's favicon."
+    },
+    {
+     "e": "st_db",
+     "t": "Feed, entries, enclosures and the icon land in PostgreSQL."
+    },
+    {
+     "e": "re_ro",
+     "rev": true,
+     "t": "The browser is redirected to <code>/feed/&lt;id&gt;/entries</code> and the new entries are there, unread."
+    }
+   ]
+  },
+  "read": {
+   "title": "Read an entry",
+   "hue": "person",
+   "desc": "A reader opens an unread entry: the page is rendered on the server and its images come back through the media proxy.",
+   "hops": [
+    {
+     "e": "re_ro",
+     "t": "<code>GET /unread/entry/&lt;id&gt;</code> with the session cookie."
+    },
+    {
+     "e": "ro_ui",
+     "t": "No valid session: redirect to the login page with the address to come back to. Otherwise the request carries the user ID into the handler."
+    },
+    {
+     "e": "ui_st",
+     "t": "The handler loads the entry, finds the previous and next unread entries for the arrows, and marks it read if the user's settings say so."
+    },
+    {
+     "e": "st_db",
+     "t": "Plain SQL on <code>entries</code>; the counters for the menu come from one more query."
+    },
+    {
+     "e": "re_ro",
+     "rev": true,
+     "t": "The template renders the content through <code>proxyFilter</code>: media URLs that should be proxied become <code>/proxy/&lt;hmac&gt;/&lt;url&gt;</code>."
+    },
+    {
+     "e": "ro_ui",
+     "t": "The browser asks for an image at its proxy address; static and proxy routes skip the session lookup."
+    },
+    {
+     "e": "ui_mp",
+     "t": "The handler decodes the URL and recomputes the HMAC with the server's key; a mismatch answers 403."
+    },
+    {
+     "e": "mp_fe",
+     "t": "The media is fetched with the browser's <code>Range</code>, <code>Accept</code> and <code>User-Agent</code> headers, and a site-specific <code>Referer</code> where one is needed."
+    },
+    {
+     "e": "fe_ws",
+     "t": "The image host sees the server's address, not the reader's. The response is streamed back with a 72-hour cache and a strict Content-Security-Policy."
+    }
+   ]
+  },
+  "sync": {
+   "title": "A mobile app syncs",
+   "hue": "external",
+   "desc": "A Google Reader client logs in with its own credentials, downloads items, and marks one read and one starred.",
+   "hops": [
+    {
+     "e": "ap_ro",
+     "t": "The app posts to <code>/accounts/ClientLogin</code> with the Google Reader username and password set on the integrations page, and gets a token back."
+    },
+    {
+     "e": "ro_co",
+     "t": "Later calls under <code>/reader/api/0/</code> carry <code>Authorization: GoogleLogin auth=…</code>; the middleware maps it back to the user."
+    },
+    {
+     "e": "co_st",
+     "t": "<code>stream/items/ids</code> and <code>stream/items/contents</code> read entries with the same query builder the web UI uses."
+    },
+    {
+     "e": "st_db",
+     "t": "Entries come back as Google Reader items with their own ID format."
+    },
+    {
+     "e": "co_st",
+     "t": "<code>edit-tag</code> marks entries read or unread, starred or unstarred, in batches."
+    },
+    {
+     "e": "co_in",
+     "t": "Each newly starred entry is sent to the user's save integrations in a goroutine, just as the Save button does in the web UI."
+    },
+    {
+     "e": "in_sv",
+     "t": "For example a Wallabag or Pinboard bookmark is created. A failure is logged and does not change the response."
+    }
+   ]
+  },
+  "cleanup": {
+   "title": "Daily cleanup",
+   "hue": "background",
+   "desc": "The second ticker deletes old sessions and archives old entries, leaving tombstones so the next refresh does not bring them back.",
+   "hops": [
+    {
+     "e": "sc_st",
+     "t": "Every <code>CLEANUP_FREQUENCY_HOURS</code> (24): delete sessions older than 30 days (anonymous ones after 24 hours), archive read entries after 60 days and unread ones after 180, then delete icons no feed uses."
+    },
+    {
+     "e": "st_db",
+     "t": "One statement per status: pick old entries that are neither starred nor shared, delete them and insert <code>(feed_id, hash)</code> into <code>entry_tombstones</code>. Without the tombstone the next refresh would insert them again as unread."
+    }
+   ]
+  },
+  "signin": {
+   "title": "Sign in with OIDC",
+   "hue": "external",
+   "desc": "A reader without a session signs in through the identity provider and gets a fresh, rotated session cookie.",
+   "hops": [
+    {
+     "e": "re_ro",
+     "t": "The reader opens <code>/</code> without a session cookie. It is a public route that starts a session, so it is answered with the login page."
+    },
+    {
+     "e": "ro_ui",
+     "t": "The web-session middleware makes an anonymous session with its own CSRF token and sets its cookie."
+    },
+    {
+     "e": "ui_st",
+     "t": "The anonymous session is stored in <code>web_sessions</code> with no user, so the next request finds its CSRF token and OAuth2 state. Unused ones are deleted after 24 hours."
+    },
+    {
+     "e": "ui_id",
+     "t": "<code>/oauth2/oidc/redirect</code> stores a random state and a PKCE code verifier in the session and sends the browser to the provider. On return, <code>/oauth2/oidc/callback</code> compares the state in constant time and exchanges the code for the user's profile."
+    },
+    {
+     "e": "ui_st",
+     "t": "The user is found by the profile ID, or created when <code>OAUTH2_USER_CREATION</code> allows it. The session gets the user and is rotated: new ID, new secret, old row replaced. The password form (<code>POST /login</code>, bcrypt check) ends in the same rotation."
+    },
+    {
+     "e": "st_db",
+     "t": "The rotated row in <code>web_sessions</code> now carries the <code>user_id</code>."
+    },
+    {
+     "e": "re_ro",
+     "rev": true,
+     "t": "The new cookie (<code>id.secret</code>, HttpOnly, SameSite=Lax) is set and the browser is redirected to the user's home page."
+    }
+   ]
+  }
+ },
+ "buildSteps": [
+  null,
+  {
+   "title": "Fetch one feed",
+   "text": "A fetcher, four parsers and a function that stores a feed's entries in PostgreSQL.",
+   "decision": "One model for every format, and hand-written SQL in one storage package.",
+   "runnable": "miniflux -migrate",
+   "nodes": [
+    "websites",
+    "fetcher",
+    "parser",
+    "refresh",
+    "storage",
+    "db"
+   ]
+  },
+  {
+   "title": "Poll on a schedule",
+   "text": "A ticker that picks due feeds by next_check_at and a pool of workers that refresh them.",
+   "decision": "Goroutines and a channel inside the same process: no queue server, no separate worker binary.",
+   "runnable": "miniflux -refresh-feeds",
+   "nodes": [
+    "scheduler",
+    "pool"
+   ]
+  },
+  {
+   "title": "Read in a browser",
+   "text": "An HTTP server, session and CSRF middleware, and server-rendered pages.",
+   "decision": "Templates and assets are embedded in the binary, so one file is the whole application.",
+   "runnable": "miniflux",
+   "nodes": [
+    "reader",
+    "router",
+    "webui"
+   ]
+  },
+  {
+   "title": "Make content safe",
+   "text": "Filters, scraper, rewrite rules and a sanitizer for every entry, and a proxy for its images.",
+   "decision": "Sanitize last, after every rule and the scraper, and sign proxy URLs so the proxy is not open.",
+   "nodes": [
+    "processor",
+    "mediaproxy"
+   ]
+  },
+  {
+   "title": "Find feeds for a website",
+   "text": "Discovery from a website address: HTML links, YouTube, GitHub, RSS-Bridge and well-known paths.",
+   "decision": "Keep the feed body when the address is a feed, so subscribing fetches it only once.",
+   "nodes": [
+    "discovery"
+   ]
+  },
+  {
+   "title": "Let other clients in",
+   "text": "A REST API, the Fever and Google Reader APIs for mobile apps, and OAuth2 sign-in.",
+   "decision": "Compatibility APIs use their own credentials, separate from the account password.",
+   "nodes": [
+    "apps",
+    "restapi",
+    "compat",
+    "idp"
+   ]
+  },
+  {
+   "title": "Send entries on",
+   "text": "Integrations that push new entries to notification services and saved ones to read-later services.",
+   "decision": "Fire and forget in a goroutine: a slow service never delays a refresh or a click.",
+   "nodes": [
+    "integrations",
+    "services"
+   ]
+  }
+ ],
+ "tourChapters": [
+  {
+   "name": "Context",
+   "hue": "--ink"
+  },
+  {
+   "name": "Polling",
+   "hue": "--h-background"
+  },
+  {
+   "name": "Reading",
+   "hue": "--h-component"
+  },
+  {
+   "name": "Other clients",
+   "hue": "--h-external"
+  },
+  {
+   "name": "Recap",
+   "hue": "--ink"
+  }
+ ],
+ "tour": [
+  {
+   "ch": 0,
+   "level": 0,
+   "title": "A feed reader in one binary",
+   "body": [
+    "Miniflux polls RSS, Atom and JSON feeds for its users, cleans every entry and shows them in a plain web UI or hands them to mobile apps.",
+    "Readers and apps on one side, feeds and third-party services on the other, and in between one Go process and one PostgreSQL database."
+   ],
+   "why": "Minimalist by design: no queue server, no cache, no search engine. PostgreSQL and goroutines do it all."
+  },
+  {
+   "ch": 1,
+   "flow": "poll",
+   "hops": [
+    0,
+    4
+   ],
+   "title": "The ticker picks due feeds",
+   "body": [
+    "Every hour by default, a batch of feeds whose next check has passed goes to the worker pool."
+   ],
+   "why": "Each feed carries its own next_check_at, so a busy feed and a quiet one are polled at different rates within the same loop."
+  },
+  {
+   "ch": 1,
+   "flow": "poll",
+   "hops": [
+    4,
+    10
+   ],
+   "title": "Fetch only what changed",
+   "body": [
+    "A conditional request, a parser for four formats and the entry processor that filters, scrapes and sanitizes."
+   ],
+   "why": "ETags and Last-Modified make most refreshes a 304, which is cheap for both Miniflux and the publisher."
+  },
+  {
+   "ch": 1,
+   "flow": "poll",
+   "hops": [
+    10,
+    14
+   ],
+   "title": "Store, then tell others",
+   "body": [
+    "Entries are stored one transaction at a time; new ones go out to notification services in the background."
+   ],
+   "why": "Tombstones keep archived entries from coming back, and integrations run in a goroutine so a slow webhook never blocks a worker."
+  },
+  {
+   "ch": 2,
+   "flow": "subscribe",
+   "title": "Subscribe by website address",
+   "body": [
+    "The finder turns a website into a feed URL, and the same feed handler creates it."
+   ],
+   "why": "Readers paste a website, not a feed URL. Reusing the feed handler means a new feed is cleaned exactly like a refreshed one."
+  },
+  {
+   "ch": 2,
+   "flow": "read",
+   "title": "Read an entry",
+   "body": [
+    "Server-rendered page, images through the signed media proxy."
+   ],
+   "why": "The reader's browser never contacts an image host directly for proxied media, which keeps trackers out and HTTPS pages clean."
+  },
+  {
+   "ch": 2,
+   "flow": "signin",
+   "title": "Signing in",
+   "body": [
+    "A session exists before login; signing in attaches the user and rotates it."
+   ],
+   "why": "Rotating the session at login means a session ID seen before sign-in is useless afterwards."
+  },
+  {
+   "ch": 3,
+   "flow": "sync",
+   "title": "Apps speak old protocols",
+   "body": [
+    "A Google Reader client logs in with its own credentials and syncs read and starred state."
+   ],
+   "why": "Supporting Fever and Google Reader gives Miniflux many mobile apps without writing one."
+  },
+  {
+   "ch": 3,
+   "flow": "cleanup",
+   "title": "The daily cleanup",
+   "body": [
+    "Old read and unread entries are deleted and remembered as tombstones."
+   ],
+   "why": "Without archiving the entries table would grow forever; without tombstones the next refresh would bring the entries back."
+  },
+  {
+   "ch": 4,
+   "whole": true,
+   "title": "The whole reader, on one map",
+   "recap": {
+    "people": "Read in a browser or sync a mobile app.",
+    "web": "One router: web UI, REST API, compatibility APIs and the media proxy.",
+    "background": "A ticker picks due feeds; a pool of goroutines refreshes them.",
+    "engine": "Fetch with caching headers, parse, filter, scrape and sanitize.",
+    "share": "New and saved entries go out to 25+ services.",
+    "storage": "Hand-written SQL on one PostgreSQL database, search included."
+   },
+   "body": [
+    "One Go binary serves pages, polls feeds and cleans content; PostgreSQL holds everything.",
+    "The choice that shapes it: one process, one database, no other moving parts."
+   ]
+  }
+ ],
+ "insides": {
+  "refresh": {
+   "kind": "steps",
+   "title": "Inside the feed handler: RefreshFeed",
+   "sub": "What <code>RefreshFeed</code> does for one feed, in order. The worker pool, the web UI and the REST API all call it.",
+   "cap": "The next check is scheduled before the fetch, and every error path saves the feed with a translated error message, so a broken feed shows its problem in the UI and still waits its turn.",
+   "steps": [
+    {
+     "t": "Load the feed",
+     "code": "internal/reader/handler/handler.go:211-218",
+     "exit": {
+      "when": "missing",
+      "t": "Feed not found error"
+     }
+    },
+    {
+     "t": "Schedule the next check",
+     "d": "Set <code>checked_at</code>, and <code>next_check_at</code> from the scheduler mode (round robin, or entry frequency from last week's count).",
+     "code": "internal/reader/handler/handler.go:220-230"
+    },
+    {
+     "t": "Build the request",
+     "d": "The feed's credentials, user agent, cookie, proxy and TLS options.",
+     "code": "internal/reader/handler/handler.go:232-242"
+    },
+    {
+     "t": "Add caching headers",
+     "d": "ETag and Last-Modified, unless the feed ignores the HTTP cache or the refresh is forced.",
+     "code": "internal/reader/handler/handler.go:244-249"
+    },
+    {
+     "t": "Fetch",
+     "code": "internal/reader/handler/handler.go:251-264",
+     "d": "On 429 the next check moves to the Retry-After delay."
+    },
+    {
+     "t": "Fetch failed?",
+     "code": "internal/reader/handler/handler.go:266-274",
+     "exit": {
+      "when": "error",
+      "t": "Save the error on the feed",
+      "code": "internal/reader/handler/handler.go:30-38"
+     }
+    },
+    {
+     "t": "Redirected onto another feed?",
+     "code": "internal/reader/handler/handler.go:276-279",
+     "exit": {
+      "when": "duplicate",
+      "t": "Duplicated feed error"
+     }
+    },
+    {
+     "t": "Modified?",
+     "code": "internal/reader/handler/handler.go:281",
+     "exit": {
+      "when": "304",
+      "t": "Keep the new Last-Modified, skip parsing",
+      "code": "internal/reader/handler/handler.go:360-371"
+     }
+    },
+    {
+     "t": "Read and parse the body",
+     "code": "internal/reader/handler/handler.go:289-302",
+     "exit": {
+      "when": "bad format",
+      "t": "Parse error saved on the feed"
+     }
+    },
+    {
+     "t": "Respect the publisher's TTL",
+     "d": "The later of the RSS TTL, Cache-Control max-age and Expires.",
+     "code": "internal/reader/handler/handler.go:304-312"
+    },
+    {
+     "t": "Process the entries",
+     "code": "internal/reader/handler/handler.go:326-327"
+    },
+    {
+     "t": "Store the entries",
+     "d": "Existing entries are updated when the refresh is forced, or when the feed neither uses the crawler nor ignores updates.",
+     "code": "internal/reader/handler/handler.go:329-337"
+    },
+    {
+     "t": "Push new entries to integrations",
+     "code": "internal/reader/handler/handler.go:339-348",
+     "async": true
+    },
+    {
+     "t": "Update headers and icon",
+     "code": "internal/reader/handler/handler.go:350-359"
+    },
+    {
+     "t": "Reset errors and save the feed",
+     "code": "internal/reader/handler/handler.go:373-380"
+    }
+   ]
+  },
+  "processor": {
+   "kind": "steps",
+   "title": "Inside the entry processor",
+   "sub": "What <code>ProcessFeedEntries</code> does with each entry of a fetched feed, oldest first.",
+   "cap": "Filters run twice: once on what the feed said, and again on the scraped article if the scraper replaced the content. The sanitizer is always the last thing that touches the HTML.",
+   "steps": [
+    {
+     "t": "Load the user and the filter rules",
+     "d": "User-level and feed-level block and keep rules are combined.",
+     "code": "internal/reader/processor/processor.go:30-51"
+    },
+    {
+     "t": "One request builder for scraping",
+     "code": "internal/reader/processor/processor.go:53-62"
+    },
+    {
+     "t": "Walk the entries oldest first",
+     "d": "So older entries get lower creation times.",
+     "code": "internal/reader/processor/processor.go:64-65"
+    },
+    {
+     "t": "Blocked by a rule?",
+     "code": "internal/reader/processor/processor.go:75-86",
+     "exit": {
+      "when": "blocked",
+      "t": "Dropped from the feed"
+     }
+    },
+    {
+     "t": "Clean and rewrite the URL",
+     "d": "Remove tracking parameters such as utm_source, then apply URL rewrite rules.",
+     "code": "internal/reader/processor/processor.go:88-94"
+    },
+    {
+     "t": "Scrape the article",
+     "d": "Only when the crawler is on and the entry is new or the refresh is forced: custom CSS rules or the readability extractor.",
+     "code": "internal/reader/processor/processor.go:95-142"
+    },
+    {
+     "t": "Apply rewrite rules",
+     "code": "internal/reader/processor/processor.go:144"
+    },
+    {
+     "t": "Blocked after scraping?",
+     "code": "internal/reader/processor/processor.go:146-158",
+     "exit": {
+      "when": "blocked",
+      "t": "Dropped from the feed"
+     }
+    },
+    {
+     "t": "Sanitize the HTML",
+     "d": "Against the article's base URL; unsafe tags and attributes are removed.",
+     "code": "internal/reader/processor/processor.go:160-165"
+    },
+    {
+     "t": "Compute the reading time",
+     "code": "internal/reader/processor/processor.go:167"
+    },
+    {
+     "t": "YouTube durations in bulk",
+     "d": "When the user shows reading time, <code>FETCH_YOUTUBE_WATCH_TIME</code> is on and a <code>YOUTUBE_API_KEY</code> is set; calls the YouTube Data API.",
+     "code": "internal/reader/processor/processor.go:172-174"
+    }
+   ]
+  },
+  "db": {
+   "kind": "schema",
+   "title": "Inside PostgreSQL: the main tables",
+   "sub": "Created by the migration list in <code>internal/database/migrations.go</code>; many columns were added by later migrations.",
+   "cap": "Deleted entries leave only a <code>(feed_id, hash)</code> tombstone. Inserts check it in the same statement, so a feed that still lists an old item never brings it back as unread.",
+   "tables": [
+    {
+     "name": "users",
+     "note": "One account with its preferences.",
+     "code": "internal/database/migrations.go:23-33",
+     "fields": [
+      {
+       "n": "username · password",
+       "type": "text",
+       "note": "bcrypt hash"
+      },
+      {
+       "n": "is_admin",
+       "type": "bool"
+      },
+      {
+       "n": "block/keep_filter_entry_rules",
+       "type": "text",
+       "note": "added later; apply to every feed"
+      }
+     ]
+    },
+    {
+     "name": "feeds",
+     "note": "One subscription of one user.",
+     "code": "internal/database/migrations.go:56-72",
+     "fields": [
+      {
+       "n": "user_id",
+       "type": "fk",
+       "ref": "users"
+      },
+      {
+       "n": "feed_url",
+       "type": "text",
+       "note": "unique per user"
+      },
+      {
+       "n": "etag_header · last_modified_header",
+       "type": "text",
+       "note": "for conditional requests"
+      },
+      {
+       "n": "parsing_error_count",
+       "type": "int",
+       "note": "at the limit, the scheduler skips the feed"
+      },
+      {
+       "n": "next_check_at",
+       "type": "timestamptz",
+       "note": "what the scheduler sorts on"
+      },
+      {
+       "n": "crawler · disabled",
+       "type": "bool"
+      }
+     ]
+    },
+    {
+     "name": "entries",
+     "note": "One item of a feed.",
+     "code": "internal/database/migrations.go:76-91",
+     "fields": [
+      {
+       "n": "feed_id",
+       "type": "fk",
+       "ref": "feeds"
+      },
+      {
+       "n": "user_id",
+       "type": "fk",
+       "ref": "users",
+       "note": "denormalised from the feed"
+      },
+      {
+       "n": "hash",
+       "type": "text",
+       "note": "unique per feed; identifies the item"
+      },
+      {
+       "n": "status",
+       "type": "enum",
+       "note": "unread or read"
+      },
+      {
+       "n": "starred · share_code",
+       "type": "bool · text",
+       "note": "both protect from archiving"
+      },
+      {
+       "n": "document_vectors",
+       "type": "tsvector",
+       "note": "full-text search, GIN index"
+      },
+      {
+       "n": "changed_at",
+       "type": "timestamptz"
+      }
+     ]
+    },
+    {
+     "name": "entry_tombstones",
+     "note": "Entries deleted by archiving.",
+     "code": "internal/database/migrations.go:1472-1480",
+     "fields": [
+      {
+       "n": "feed_id",
+       "type": "fk",
+       "ref": "feeds"
+      },
+      {
+       "n": "hash",
+       "type": "text"
+      },
+      {
+       "n": "deleted_at",
+       "type": "timestamptz"
+      }
+     ]
+    },
+    {
+     "name": "web_sessions",
+     "note": "Browser sessions, signed in or not.",
+     "code": "internal/database/migrations.go:1449-1459",
+     "fields": [
+      {
+       "n": "id · secret_hash",
+       "type": "text · bytea",
+       "note": "the cookie holds id.secret"
+      },
+      {
+       "n": "user_id",
+       "type": "fk",
+       "ref": "users",
+       "note": "empty before login"
+      },
+      {
+       "n": "state",
+       "type": "jsonb",
+       "note": "CSRF token, flash messages, OAuth2 state"
+      }
+     ]
+    },
+    {
+     "name": "integrations",
+     "note": "One wide row per user with every service's settings.",
+     "code": "internal/database/migrations.go:153-167",
+     "fields": [
+      {
+       "n": "user_id",
+       "type": "fk",
+       "ref": "users"
+      },
+      {
+       "n": "*_enabled · *_url · *_token",
+       "type": "mixed",
+       "note": "a column set per service, added by migrations"
+      },
+      {
+       "n": "fever_* · googlereader_*",
+       "type": "text",
+       "note": "credentials for the compatibility APIs"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "files": {
+  "entries": [
+   {
+    "path": "main.go",
+    "t": "Calls cli.Parse(); the whole program is one binary.",
+    "tag": "entry point"
+   },
+   {
+    "path": "internal/cli/",
+    "t": "Flags, startup and the daemon.",
+    "open": true,
+    "more": "admin, password reset, export and health-check commands"
+   },
+   {
+    "path": "internal/cli/cli.go",
+    "t": "Reads the config, connects to PostgreSQL, runs migrations if asked, then starts the daemon or a one-off command.",
+    "tag": "entry point"
+   },
+   {
+    "path": "internal/cli/daemon.go",
+    "t": "Creates the worker pool, starts the scheduler and the HTTP servers, handles SIGTERM and SIGHUP.",
+    "nodes": [
+     "router",
+     "pool",
+     "scheduler"
+    ],
+    "why": "The clearest picture of how the process runs: three parts started side by side and stopped in order."
+   },
+   {
+    "path": "internal/cli/scheduler.go",
+    "t": "The feed ticker and the cleanup ticker.",
+    "nodes": [
+     "scheduler"
+    ]
+   },
+   {
+    "path": "internal/cli/cleanup_tasks.go",
+    "t": "Removes old sessions, archives entries, deletes orphan icons.",
+    "nodes": [
+     "scheduler"
+    ]
+   },
+   {
+    "path": "internal/cli/refresh_feeds.go",
+    "t": "The -refresh-feeds command: one batch refreshed by its own workers, for installs that poll from cron.",
+    "nodes": [
+     "scheduler"
+    ]
+   },
+   {
+    "path": "internal/config/options.go",
+    "t": "Every option with its default, read from environment variables or a config file.",
+    "tag": "config"
+   },
+   {
+    "path": "internal/http/server/",
+    "t": "Listeners, TLS and Let's Encrypt, the root router and shared middleware.",
+    "nodes": [
+     "router"
+    ]
+   },
+   {
+    "path": "internal/ui/",
+    "t": "Web UI handlers, one file per page or action.",
+    "nodes": [
+     "webui"
+    ],
+    "more": "about 100 handler files, forms and views"
+   },
+   {
+    "path": "internal/ui/ui.go",
+    "t": "Every web route and the middleware chain: web session, then CSRF.",
+    "nodes": [
+     "webui"
+    ]
+   },
+   {
+    "path": "internal/ui/proxy.go",
+    "t": "The media proxy handler.",
+    "nodes": [
+     "mediaproxy"
+    ]
+   },
+   {
+    "path": "internal/ui/auth.go",
+    "t": "Attaches the user to the web session at sign-in, rotates it and sets the cookie.",
+    "nodes": [
+     "webui"
+    ]
+   },
+   {
+    "path": "internal/template/templates/",
+    "t": "Go HTML templates, embedded in the binary.",
+    "nodes": [
+     "webui"
+    ]
+   },
+   {
+    "path": "internal/ui/static/js/",
+    "t": "The small front-end script: shortcuts, gestures, marking entries read.",
+    "nodes": [
+     "webui",
+     "reader"
+    ]
+   },
+   {
+    "path": "internal/api/",
+    "t": "REST API v1 handlers and its API-key and Basic auth middleware.",
+    "nodes": [
+     "restapi"
+    ]
+   },
+   {
+    "path": "internal/fever/",
+    "t": "Fever API.",
+    "nodes": [
+     "compat"
+    ]
+   },
+   {
+    "path": "internal/googlereader/",
+    "t": "Google Reader API.",
+    "nodes": [
+     "compat"
+    ]
+   },
+   {
+    "path": "internal/worker/",
+    "t": "The worker pool.",
+    "nodes": [
+     "pool"
+    ]
+   },
+   {
+    "path": "internal/reader/",
+    "t": "Everything about getting feeds: one package per step or format.",
+    "open": true,
+    "more": "atom, rss, json, rdf, icon, opml, readability, rewrite, sanitizer, urlcleaner"
+   },
+   {
+    "path": "internal/reader/handler/handler.go",
+    "t": "CreateFeed and RefreshFeed.",
+    "nodes": [
+     "refresh"
+    ],
+    "why": "Start reading here: it calls every other reader package in order."
+   },
+   {
+    "path": "internal/reader/fetcher/",
+    "t": "Request builder and response handler.",
+    "nodes": [
+     "fetcher"
+    ]
+   },
+   {
+    "path": "internal/reader/parser/",
+    "t": "Format detection and dispatch to the four parsers.",
+    "nodes": [
+     "parser"
+    ]
+   },
+   {
+    "path": "internal/reader/processor/",
+    "t": "Per-entry pipeline and site-specific helpers (YouTube, Bilibili, Nebula, Odysee).",
+    "nodes": [
+     "processor"
+    ]
+   },
+   {
+    "path": "internal/reader/subscription/",
+    "t": "Feed discovery from a website address.",
+    "nodes": [
+     "discovery"
+    ]
+   },
+   {
+    "path": "internal/integration/",
+    "t": "One folder per third-party service, called from integration.go.",
+    "nodes": [
+     "integrations"
+    ],
+    "more": "about 30 services"
+   },
+   {
+    "path": "internal/mediaproxy/",
+    "t": "Rewrites media URLs to signed proxy URLs.",
+    "nodes": [
+     "mediaproxy"
+    ]
+   },
+   {
+    "path": "internal/oauth2/",
+    "t": "Google and OIDC providers.",
+    "nodes": [
+     "idp"
+    ]
+   },
+   {
+    "path": "internal/storage/",
+    "t": "All SQL, one file per table or concern.",
+    "nodes": [
+     "storage"
+    ]
+   },
+   {
+    "path": "internal/storage/batch.go",
+    "t": "Builds the batch of due feeds for the scheduler.",
+    "nodes": [
+     "storage",
+     "scheduler"
+    ]
+   },
+   {
+    "path": "internal/database/migrations.go",
+    "t": "The schema as an ordered list of Go migration functions.",
+    "nodes": [
+     "db"
+    ],
+    "why": "Migrations are compiled in, so the binary always carries the schema it expects and refuses to start on an older one."
+   },
+   {
+    "path": "internal/model/",
+    "t": "Feed, Entry, User and the other structs every package shares; ScheduleNextCheck lives in feed.go."
+   },
+   {
+    "path": "client/",
+    "t": "The Go client library for the REST API.",
+    "nodes": [
+     "apps"
+    ]
+   },
+   {
+    "path": "packaging/",
+    "t": "Dockerfiles, Debian and RPM packages, the systemd unit.",
+    "tag": "deploy"
+   },
+   {
+    "path": "contrib/docker-compose/basic.yml",
+    "t": "Miniflux plus PostgreSQL in two containers.",
+    "tag": "deploy",
+    "nodes": [
+     "db"
+    ]
+   }
+  ]
+ },
+ "layout": {
+  "overview": {
+   "people": {
+    "x": 60,
+    "y": 40
+   },
+   "web": {
+    "x": 480,
+    "y": 40
+   },
+   "storage": {
+    "x": 900,
+    "y": 40
+   },
+   "background": {
+    "x": 60,
+    "y": 350
+   },
+   "engine": {
+    "x": 480,
+    "y": 350
+   },
+   "share": {
+    "x": 900,
+    "y": 350
+   }
+  },
+  "grid": {
+   "reader": [
+    0,
+    1
+   ],
+   "apps": [
+    0,
+    2
+   ],
+   "router": [
+    1,
+    2
+   ],
+   "webui": [
+    1,
+    1
+   ],
+   "restapi": [
+    1,
+    4
+   ],
+   "compat": [
+    1,
+    3
+   ],
+   "mediaproxy": [
+    1,
+    0
+   ],
+   "scheduler": [
+    2,
+    3
+   ],
+   "pool": [
+    2,
+    2
+   ],
+   "refresh": [
+    3,
+    2
+   ],
+   "discovery": [
+    4,
+    0
+   ],
+   "fetcher": [
+    4,
+    1
+   ],
+   "parser": [
+    3,
+    3
+   ],
+   "processor": [
+    4,
+    2
+   ],
+   "integrations": [
+    3,
+    1
+   ],
+   "storage": [
+    5,
+    3
+   ],
+   "db": [
+    5,
+    4
+   ],
+   "websites": [
+    5,
+    1
+   ],
+   "services": [
+    5,
+    2
+   ],
+   "idp": [
+    5,
+    0
+   ]
+  },
+  "zones": {
+   "clients": {
+    "x": 34,
+    "y": 200,
+    "w": 232,
+    "h": 308
+   },
+   "http": {
+    "x": 327,
+    "y": 30,
+    "w": 446,
+    "h": 808
+   },
+   "loop": {
+    "x": 798,
+    "y": 370,
+    "w": 364,
+    "h": 328
+   },
+   "engine": {
+    "x": 1220,
+    "y": 30,
+    "w": 816,
+    "h": 668
+   },
+   "data": {
+    "x": 2084,
+    "y": 560,
+    "w": 313,
+    "h": 278
+   },
+   "internet": {
+    "x": 2101,
+    "y": 30,
+    "w": 278,
+    "h": 478
+   }
+  }
+ }
+}

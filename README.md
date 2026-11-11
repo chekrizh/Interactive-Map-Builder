@@ -108,15 +108,20 @@ What the repository is made of. The folders and files that matter, each with a l
 
 ## Example maps
 
-Three real open-source projects, mapped by the skill. Render any of them (see [How it works](#how-it-works)) and open the HTML file.
+Eight real open-source projects, mapped by the skill. Open any of them in the browser.
 
-| Map | What it shows best |
-|---|---|
-| [Kutt](https://github.com/thedevs-network/kutt), a URL shortener | A hand-tuned layout, a request path with a cache, background jobs |
-| [PrivateBin](https://github.com/PrivateBin/PrivateBin), a zero-knowledge pastebin | A fully automatic layout; the work done in the browser, not on the server |
-| [Healthchecks](https://github.com/healthchecks/healthchecks), a cron job monitor | A web app and background loops that share one database |
+| Map | What it shows best | |
+|---|---|---|
+| [Kutt](https://github.com/thedevs-network/kutt), a URL shortener | A hand-tuned layout, a request path with a cache, background jobs | [Open](https://chekrizh.github.io/Interactive-Map-Builder/) |
+| [PrivateBin](https://github.com/PrivateBin/PrivateBin), a zero-knowledge pastebin | A fully automatic layout; the work done in the browser, not on the server | [Open](https://chekrizh.github.io/Interactive-Map-Builder/privatebin-pastebin.html) |
+| [Healthchecks](https://github.com/healthchecks/healthchecks), a cron job monitor | A web app and background loops that share one database | [Open](https://chekrizh.github.io/Interactive-Map-Builder/healthchecks-cron-monitor.html) |
+| [Rivet](https://github.com/rivet-lab/rivet), a production-database extractor | A command line tool with no services: batch and change-data paths, a commit protocol | [Open](https://chekrizh.github.io/Interactive-Map-Builder/rivet-database-extractor.html) |
+| [Miniflux](https://github.com/miniflux/v2), a feed reader | One Go binary and PostgreSQL: a scheduler, a worker pool, three APIs | [Open](https://chekrizh.github.io/Interactive-Map-Builder/miniflux-feed-reader.html) |
+| [Umami](https://github.com/umami-software/umami), web analytics | A Next.js app with a tracker script, cookie-free visit counting, PostgreSQL with optional ClickHouse, Kafka and Redis | [Open](https://chekrizh.github.io/Interactive-Map-Builder/umami-web-analytics.html) |
+| [nanoGPT](https://github.com/karpathy/nanoGPT), a small GPT trainer | Machine-learning scripts: data preparation, the training loop, the model | [Open](https://chekrizh.github.io/Interactive-Map-Builder/nanogpt-gpt-trainer.html) |
+| [Lobsters](https://github.com/lobsters/lobsters), a link aggregator | A Rails monolith behind a bot filter, a full-page cache on disk, jobs and cron scripts | [Open](https://chekrizh.github.io/Interactive-Map-Builder/lobsters-link-aggregator.html) |
 
-The map files are in [`examples/`](plugins/interactive-map/skills/interactive-map/examples/), with the credits and the commit each one was written from.
+The last five were made in the [extra check experiment](docs/extra-check-experiment.md) and then checked against the code like the first three. The map files are in [`examples/`](plugins/interactive-map/skills/interactive-map/examples/), with the credits and the commit each one was written from.
 
 
 ## Install
@@ -171,6 +176,7 @@ The skills are then also available as `/interactive-map:interactive-map` and `/i
 
 - **Two skills.** `interactive-map-repo` is the method for repositories: find the evidence (deployment files, entry points, contracts), model it in [C4](https://c4model.com) terms (context on the overview, containers and components on the full map) and pick the flows worth animating. `interactive-map` is the format: how to write the map JSON and render it.
 - **The agent never writes HTML.** It writes one JSON definition. `render.py` (Python 3, standard library only) validates it with the same checks the page runs, lists every problem at once, sanitises its text, and puts it into the prebuilt viewer.
+- **An optional extra check.** Before it starts, the agent asks whether to run it. Once the map is drafted, an independent reviewer (the agent itself where it cannot start one) checks every component, connection and step against the source code, and the agent writes up its mistakes, fixes them and has the fixes checked again, up to three rounds. It builds on software reflexion models (Murphy, Notkin and Sullivan, 1995) and Reflexion (Shinn et al., 2023). On five fresh repositories it cut wrong statements from 2.7% to 0.2% and roughly doubled the time ([the experiment](docs/extra-check-experiment.md)).
 - **An asset library is built in.** About 2,300 [Lucide](https://lucide.dev) icons, about 3,500 brand logos from [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos), and role presets with tested light and dark colours. A map only names them.
 - **The output is self-contained.** Each HTML file carries its own copy of the viewer, the map and the font, so it keeps working when the skill changes.
 
@@ -185,11 +191,11 @@ open /tmp/map.html
 ## What the plugin does on your machine
 
 - **Only instructions and scripts.** The plugin adds two skills. It has no hooks, no MCP servers and no settings changes.
-- **Python scripts, standard library only.** `render.py` reads the map JSON, the viewer in `assets/viewer/` and the asset library, lays the map out (`auto_layout.py`) and checks the layout (`layout_check.py`), strips any HTML outside a small allowlist from the map's text (`contract.py`), and writes one HTML file to the path you give it. With `--repo-dir` it also reads the repository checkout you name, to check that code references and paths exist. `find_asset.py` searches the asset library and prints names. None of them makes network requests, runs other programs or reads anything outside the skill folder, the map and the checkout you pass.
+- **Python scripts, standard library only.** `render.py` reads the map JSON, the viewer in `assets/viewer/` and the asset library, lays the map out (`auto_layout.py`) and checks the layout (`layout_check.py`), strips any HTML outside a small allowlist from the map's text (`contract.py`), and writes one HTML file to the path you give it. With `--repo-dir` it also reads the repository checkout you name, to check that code references and paths exist. `find_asset.py` searches the asset library and prints names. `claims.py` reads a map and lists its statements for the extra check. None of them makes network requests, runs other programs or reads anything outside the skill folder, the map and the checkout you pass.
 - **One optional script opens a browser.** `preview.py` screenshots a rendered map so the agent can check it by eye. It uses Playwright with Chromium if they are already installed (it looks for them with `npm root -g` and starts `node` with `preview.js`), opens only the local HTML file and saves PNG files next to it. It installs nothing; without Playwright it exits and the agent relies on the layout check alone.
 - **The generated page works offline.** Its script, styles, font, icons and logos are inlined; it makes no network requests and sends nothing anywhere.
 - **Everything shipped is readable.** The viewer is committed unminified (built from `app/`), and the icon and logo library is split into JSON files with one item per line (built by `tools/build_library.py`), so every file stays under 256 KB and can be reviewed.
 
 ## License
 
-[MIT](LICENSE). Bundled assets keep their own licenses: [Lucide](https://lucide.dev) icons (ISC), [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos) (CC0; brand marks remain trademarks of their owners), the Manrope font (SIL Open Font License). The example maps describe [Kutt](https://github.com/thedevs-network/kutt) (The Devs Network and contributors, MIT), [PrivateBin](https://github.com/PrivateBin/PrivateBin) (Sébastien Sauvage and the PrivateBin contributors, zlib/libpng) and [Healthchecks](https://github.com/healthchecks/healthchecks) (Pēteris Caune and other contributors, BSD 3-clause); they copy none of their code, and the [examples README](plugins/interactive-map/skills/interactive-map/examples/README.md) links each licence and mapped commit.
+[MIT](LICENSE). Bundled assets keep their own licenses: [Lucide](https://lucide.dev) icons (ISC), [Simple Icons](https://simpleicons.org) and [gilbarbara/logos](https://github.com/gilbarbara/logos) (CC0; brand marks remain trademarks of their owners), the Manrope font (SIL Open Font License). The example maps describe [Kutt](https://github.com/thedevs-network/kutt) (The Devs Network and contributors, MIT), [PrivateBin](https://github.com/PrivateBin/PrivateBin) (Sébastien Sauvage and the PrivateBin contributors, zlib/libpng) and [Healthchecks](https://github.com/healthchecks/healthchecks) (Pēteris Caune and other contributors, BSD 3-clause), [Rivet](https://github.com/rivet-lab/rivet) (Rivet Contributors, MIT), [Miniflux](https://github.com/miniflux/v2) (The Miniflux Authors, Apache 2.0), [Umami](https://github.com/umami-software/umami) (Umami Software, Inc., MIT), [nanoGPT](https://github.com/karpathy/nanoGPT) (Andrej Karpathy, MIT) and [Lobsters](https://github.com/lobsters/lobsters) (joshua stein and contributors, BSD 3-clause); they copy none of their code, and the [examples README](plugins/interactive-map/skills/interactive-map/examples/README.md) links each licence and mapped commit.

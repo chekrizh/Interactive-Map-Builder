@@ -73,9 +73,9 @@
       "huekey": "component",
       "icon": "bell-ring",
       "line1": "25+ ways to send an alert,",
-      "line2": "plus monthly reports.",
+      "line2": "plus regular reports.",
       "chips": "transports · sendreports",
-      "text": "One transport per integration sends the alert; a second loop mails monthly reports and reminders while something stays down.",
+      "text": "One transport per integration sends the alert; a second loop mails monthly, weekly or daily reports and reminders while something stays down.",
       "members": [
         "notifier",
         "sendreports",
@@ -215,8 +215,8 @@
       "zone": "web",
       "tool": "Component · hc/api/views.py",
       "concept": "Ping endpoint",
-      "what": "<code>/ping/&lt;uuid&gt;</code> and its variants. Works out what the request means (success, start, fail, log or ignore) from the path, the exit code, the method and keywords in the body, then hands it to the check.",
-      "why": "It must answer fast and never fail a job: no login, no CSRF, any method, CORS open. All the logic lives one call further.",
+      "what": "<code>/ping/&lt;uuid&gt;</code> and its variants. Works out what the request means (success, start, fail, log or ignore) from the path, the exit code, the method (a POST-only check ignores other methods) and, when the check filters on it, keywords in the body, then hands it to the check. An unknown UUID gets a 404.",
+      "why": "It must answer fast and be easy to call from any job: no login (the UUID is the secret), no CSRF, any method, CORS open. All the logic lives one call further.",
       "tools": "<code>hc/api/views.py</code> · <code>hc/api/urls.py</code>"
     },
     {
@@ -231,7 +231,7 @@
       "concept": "Email listener",
       "what": "A small SMTP server. An email to <code>&lt;uuid&gt;@your-host</code> is a ping; subject or body keywords can turn it into a start or a failure.",
       "why": "Some jobs (backup appliances, NAS boxes) can only send email. They get the same check as a curl call.",
-      "tools": "<code>hc/api/management/commands/smtpd.py</code> · aiosmtpd"
+      "tools": "<code>hc/api/management/commands/smtpd.py</code> · minismtpd"
     },
     {
       "id": "check",
@@ -256,7 +256,7 @@
       "zone": "web",
       "tool": "Component · hc/front",
       "concept": "Dashboard",
-      "what": "My Checks, check details and the event log. The page asks for every check's status every 3 seconds while the tab is visible and redraws only what changed.",
+      "what": "My Checks, check details and the event log. The page asks for every check's status every 3 seconds for a short while after the tab becomes visible or the user is active, every 60 seconds otherwise, and redraws only what changed.",
       "why": "Status is computed on read from the last ping, so the dashboard can show a check as late a moment before the alert loop has noticed.",
       "tools": "<code>hc/front/views.py</code> · <code>static/js/checks.js</code> · Django templates"
     },
@@ -269,8 +269,8 @@
       "zone": "web",
       "tool": "Component · hc/api",
       "concept": "REST API",
-      "what": "Create, update, pause and list checks, read pings and flips. A request carries a project API key in <code>X-Api-Key</code>; read-only keys see but cannot change.",
-      "why": "Teams create checks from their deploy scripts, so a new cron job gets monitored without anyone opening the dashboard.",
+      "what": "Create, update, pause and list checks, read pings and flips. A request carries a project API key in <code>X-Api-Key</code> (write calls also take <code>api_key</code> in the JSON body); read-only keys see but cannot change. Status badges are read by a signed URL without logging in; the Prometheus metrics view (in <code>hc/integrations/prometheus/</code>) takes a read-only key in the URL or a Bearer header.",
+      "why": "Scripts can create and update checks through it, so a new cron job can be monitored without anyone opening the dashboard.",
       "tools": "<code>hc/api/views.py</code> · <code>hc/api/decorators.py</code> · pydantic"
     },
     {
@@ -295,7 +295,7 @@
       "zone": "web",
       "tool": "Component · hc/integrations/*",
       "concept": "Channel setup",
-      "what": "One folder per integration with its own pages: connect Slack by OAuth, verify an email address, type a webhook URL. Each saves a <code>Channel</code> row with its settings in JSON.",
+      "what": "One folder per integration with its own pages: connect Slack by OAuth, verify an email address, type a webhook URL. Each saves a <code>Channel</code> row with its settings in a text field, JSON for most kinds. Telegram also takes calls in: its bot posts to <code>/integrations/telegram/bot/</code> to link a chat.",
       "why": "Adding an integration means adding a folder, not touching the alert loop.",
       "tools": "<code>hc/integrations/</code> · <code>Channel</code> in <code>hc/api/models.py</code>"
     },
@@ -310,9 +310,9 @@
       "inside": "sendalerts",
       "tool": "Process · manage.py sendalerts",
       "concept": "Alert loop",
-      "what": "A loop that never stops: find checks whose deadline has passed and mark them down (a flip), then claim each unprocessed flip and hand it to a pool of worker threads.",
+      "what": "A loop that runs until it gets SIGTERM or SIGINT: find checks whose deadline has passed and mark them down (a flip), then claim each unprocessed flip and hand it to a pool of worker threads.",
       "why": "A job that stops running sends nothing, so no request ever arrives to react to. Something has to look at the clock.",
-      "tools": "<code>hc/api/management/commands/sendalerts.py</code> · ThreadPoolExecutor"
+      "tools": "<code>hc/api/management/commands/sendalerts.py</code> · ThreadPoolExecutor · optional StatsD counters (<code>STATSD_HOST</code>)"
     },
     {
       "id": "notifier",
@@ -323,8 +323,8 @@
       "zone": "loops",
       "tool": "Component · transports",
       "concept": "Notifier",
-      "what": "<code>Channel.notify()</code> records a <code>Notification</code>, calls the channel's transport (Slack, email, Telegram, webhook and 20 more) and saves the error, if any, on the channel.",
-      "why": "Each transport only knows how to format and post one message; retries, timing and bookkeeping are shared.",
+      "what": "<code>Channel.notify()</code> records a <code>Notification</code>, calls the channel's transport (Slack, email, Telegram, webhook and about 25 more) and saves the error, if any, on the channel.",
+      "why": "Each transport only knows how to format and post one message; timing and bookkeeping are shared, and HTTP transports share retries.",
       "tools": "<code>hc/api/transports.py</code> · <code>hc/integrations/*/transport.py</code> · pycurl"
     },
     {
@@ -337,7 +337,7 @@
       "zone": "loops",
       "tool": "Process · manage.py sendreports",
       "concept": "Reports and nags",
-      "what": "Monthly or weekly summaries by email, and hourly or daily reminders while any check stays down.",
+      "what": "Monthly, weekly or daily summaries by email, and hourly or daily reminders while any check stays down.",
       "why": "An alert can be missed. A reminder that keeps coming until the job is fixed is the safety net.",
       "tools": "<code>hc/api/management/commands/sendreports.py</code> · <code>Profile.send_report()</code>"
     },
@@ -354,7 +354,7 @@
       "concept": "Notification services",
       "what": "Slack, Telegram, Discord, PagerDuty, Opsgenie, ntfy, Signal, SMS and phone calls, plain webhooks and more.",
       "why": "Teams already watch one of these; the alert has to land where they look.",
-      "tools": "HTTPS APIs and incoming webhooks"
+      "tools": "Mostly HTTPS APIs and webhooks; Signal through a local signal-cli socket"
     },
     {
       "id": "mailer",
@@ -366,7 +366,7 @@
       "zone": "outside",
       "tool": "External system",
       "concept": "Outgoing mail server",
-      "what": "The SMTP relay that delivers email alerts, sign-in links, reports and nags.",
+      "what": "The SMTP relay that delivers email alerts, sign-in links, reports and nags. Bounces come back to <code>POST /api/v1/bounces/</code>, which marks the notification failed; a permanent failure switches the email channel off, or the reports and nags for a report email.",
       "why": "Email is the one channel every account has, so it carries the reports and the sign-in links too.",
       "tools": "Any SMTP service · <code>EMAIL_HOST</code>"
     },
@@ -380,9 +380,9 @@
       "shape": "database",
       "zone": "data",
       "inside": "db",
-      "tool": "PostgreSQL · MySQL · MariaDB",
+      "tool": "SQLite · PostgreSQL · MySQL · MariaDB",
       "concept": "Database",
-      "what": "Checks, pings, flips, channels, notifications, users and projects. The only thing the four processes share.",
+      "what": "Checks, pings, flips, channels, notifications, users and projects. The only thing the four processes share. SQLite by default; PostgreSQL, MySQL or MariaDB when <code>DB</code> is set.",
       "why": "Row locks and conditional updates in this database are what keep two processes from recording the same ping or sending the same alert twice.",
       "tools": "Django ORM · migrations in each app"
     },
@@ -397,8 +397,8 @@
       "zone": "data",
       "tool": "S3-compatible bucket",
       "concept": "Ping body storage",
-      "what": "Optional. With <code>S3_BUCKET</code> set, a ping body over 100 bytes is stored here under <code>&lt;check uuid&gt;/&lt;ping number&gt;</code> and the database keeps only its size.",
-      "why": "Logs pasted into pings would otherwise swell the database and slow down its backups.",
+      "what": "Optional. With <code>S3_BUCKET</code> set, a ping body over 100 bytes is stored here under <code>&lt;check uuid&gt;/</code> plus a sortable form of the ping number, and the database keeps only its size.",
+      "why": "Not stated in the code, but probably: logs pasted into pings would otherwise swell the database.",
       "tools": "<code>hc/lib/s3.py</code> · minio client"
     }
   ],
@@ -407,7 +407,7 @@
       "id": "jo_pi",
       "from": "job",
       "to": "ping",
-      "label": "GET /ping/uuid"
+      "label": "HTTP /ping/uuid"
     },
     {
       "id": "jo_sm",
@@ -554,7 +554,7 @@
         },
         {
           "e": "pi_ch",
-          "t": "The view finds the check by UUID, reads the client address, method and body, and decides the action: success here. An exit code above 0, <code>/fail</code> or a failure keyword would make it a failure."
+          "t": "The view finds the check by UUID, reads the client address, method and body, and decides the action: success here. An exit code above 0, <code>/fail</code> or (when the check filters the body) a failure keyword would make it a failure."
         },
         {
           "e": "ch_db",
@@ -575,7 +575,7 @@
         },
         {
           "e": "pi_ch",
-          "t": "A non-zero exit code makes the action <code>fail</code>. Keyword rules on the body could have done the same.",
+          "t": "A non-zero exit code makes the action <code>fail</code>. If the check filters the body, a failure keyword could have done the same.",
           "bad": true
         },
         {
@@ -585,22 +585,22 @@
         },
         {
           "e": "sa_db",
-          "t": "Within two seconds the alert loop asks for a flip with no <code>processed</code> time, and claims it with a conditional update so a second sendalerts process cannot take it too.",
+          "t": "Within about two seconds, if a worker is free, the alert loop asks for a flip with no <code>processed</code> time, and claims it with a conditional update so a second sendalerts process cannot take it too.",
           "bad": true
         },
         {
           "e": "sa_no",
-          "t": "The flip goes to one of the worker threads. The channels to notify are this check's channels that are enabled, fastest first.",
+          "t": "The flip goes to one of the worker threads. The channels to notify are this check's channels that are enabled, fastest first, minus those that ignore this kind of change.",
           "bad": true
         },
         {
           "e": "no_db",
-          "t": "Before anything is sent, a <code>Notification</code> row records the attempt; its error field is filled in afterwards.",
+          "t": "Before anything is sent, a <code>Notification</code> row records the attempt with its error set to <code>Sending</code>; the result replaces it afterwards.",
           "bad": true
         },
         {
           "e": "no_se",
-          "t": "The Slack transport posts a message with the check's name, its last ping and the other checks that are down.",
+          "t": "The Slack transport posts a message with the check's name, its new status and the reason, its schedule, its total pings and its last ping with the body.",
           "bad": true
         },
         {
@@ -632,12 +632,12 @@
         },
         {
           "e": "sa_no",
-          "t": "On the next pass the loop claims that flip and gives it to a worker thread, at most ten at a time by default.",
+          "t": "On the next pass the loop claims that flip and gives it to a worker thread. By default there is one (<code>--num-workers</code>), so a slow send makes the next flip wait.",
           "bad": true
         },
         {
           "e": "no_ma",
-          "t": "This check has an email channel: the email transport sends the alert through the outgoing mail server.",
+          "t": "This check has an email channel with a verified address: the email transport sends the alert through the outgoing mail server.",
           "bad": true
         },
         {
@@ -653,7 +653,7 @@
       ]
     },
     "report": {
-      "title": "The monthly report",
+      "title": "The periodic report",
       "hue": "background",
       "desc": "A separate loop mails each account a summary of its checks, and reminders while something stays down.",
       "hops": [
@@ -663,7 +663,7 @@
         },
         {
           "e": "sr_ma",
-          "t": "The report lists every check in every project of the account with its downtime this month. It is skipped when no check has been pinged for six months."
+          "t": "The report lists every check in every project of the account with its downtime in each of the last two completed periods (months, weeks or days), not the current one. It is skipped when no check has been pinged for six months."
         }
       ]
     }
@@ -725,7 +725,7 @@
     },
     {
       "title": "Keep reminding",
-      "text": "Monthly reports and repeating nags by email.",
+      "text": "Periodic reports and repeating nags by email.",
       "decision": "Reports reuse the alert loop's trick: a conditional update decides which process sends.",
       "runnable": "./manage.py sendreports --loop",
       "nodes": [
@@ -820,7 +820,7 @@
       "flow": "report",
       "title": "Reports and nags",
       "body": [
-        "A second loop mails monthly summaries and keeps reminding while something is down."
+        "A second loop mails monthly, weekly or daily summaries and keeps reminding while something is down."
       ],
       "why": "An alert at 3 a.m. is easy to miss. A reminder every hour is not."
     },
@@ -874,7 +874,7 @@
         },
         {
           "t": "Status changed?",
-          "d": "Up to down or down to up writes a <code>Flip</code>; the alert loop sends it.",
+          "d": "A success or failure that changes the status (new to up included) writes a <code>Flip</code>; the alert loop sends the ones that matter.",
           "code": "hc/api/models.py:535-539"
         },
         {
@@ -894,7 +894,7 @@
         },
         {
           "t": "Every 100th ping, prune",
-          "d": "Old pings and notifications beyond the plan's limit are deleted.",
+          "d": "Pings beyond the plan's limit are deleted with their S3 bodies, and older notifications and flips with them.",
           "code": "hc/api/models.py:572-573"
         }
       ]
@@ -916,7 +916,7 @@
         },
         {
           "t": "Recompute its status",
-          "d": "A crash here pushes <code>alert_after</code> an hour ahead, so one bad check cannot stop the loop.",
+          "d": "A crash here pushes <code>alert_after</code> an hour ahead and re-raises, which ends the command; once restarted, it skips that check for an hour.",
           "code": "hc/api/management/commands/sendalerts.py:144-151"
         },
         {
@@ -1023,7 +1023,7 @@
             {
               "n": "kind",
               "type": "varchar",
-              "note": "empty for success; start, fail, ign, log"
+              "note": "null for success; start, fail, ign, log"
             },
             {
               "n": "body_raw",
@@ -1038,7 +1038,7 @@
         },
         {
           "name": "api_flip",
-          "note": "A status change waiting to be sent.",
+          "note": "A status change, usually waiting to be sent.",
           "code": "hc/api/models.py:1361-1383",
           "fields": [
             {
@@ -1053,7 +1053,7 @@
             {
               "n": "processed",
               "type": "timestamp",
-              "note": "empty until sendalerts claims it"
+              "note": "empty until sendalerts claims it; set at once for pauses, resumes and downs caused by a schedule edit in the web UI"
             },
             {
               "n": "old_status · new_status",
@@ -1084,7 +1084,7 @@
             {
               "n": "value",
               "type": "text",
-              "note": "the integration's settings, often JSON"
+              "note": "the integration's settings, JSON for most kinds"
             },
             {
               "n": "disabled · last_error",
@@ -1100,7 +1100,8 @@
             {
               "n": "owner_id",
               "type": "fk",
-              "ref": "api_check"
+              "ref": "api_check",
+              "note": "null for a test notification"
             },
             {
               "n": "channel_id",
@@ -1114,7 +1115,7 @@
             {
               "n": "error",
               "type": "varchar",
-              "note": "empty when it was delivered"
+              "note": "Sending, then empty when delivered"
             }
           ]
         }
@@ -1125,12 +1126,12 @@
     "entries": [
       {
         "path": "manage.py",
-        "t": "Django's command line: runs the web server in development and the three background loops.",
+        "t": "Django's command line: runs the web server in development, the three background loops and one-off admin commands.",
         "tag": "entry point"
       },
       {
         "path": "hc/settings.py",
-        "t": "Every setting comes from an environment variable: database, email, S3, each integration's keys.",
+        "t": "Almost every setting comes from an environment variable: database, email, S3, each integration's keys. An optional <code>hc/local_settings.py</code> can override them.",
         "tag": "config",
         "why": "One image serves every deployment; nothing is edited in the code."
       },
@@ -1164,7 +1165,7 @@
       },
       {
         "path": "hc/api/views.py",
-        "t": "The ping views and the REST API views.",
+        "t": "The ping views and the REST API views, plus badges, bounces, metrics and status.",
         "nodes": [
           "ping",
           "api"
@@ -1194,7 +1195,7 @@
       },
       {
         "path": "hc/api/management/commands/",
-        "t": "The background processes, each a Django management command.",
+        "t": "The background processes, each a Django management command, plus maintenance commands (pruning old objects and tokens, setting the Telegram webhook) that an admin runs now and then inside the container. More such commands live in <code>hc/accounts/management/commands/</code>.",
         "open": true,
         "more": "pruning commands for old pings and objects"
       },
@@ -1209,7 +1210,7 @@
       },
       {
         "path": "hc/api/management/commands/sendreports.py",
-        "t": "Monthly reports and nags.",
+        "t": "Monthly, weekly or daily reports and nags.",
         "tag": "process",
         "nodes": [
           "sendreports"
@@ -1283,19 +1284,19 @@
       },
       {
         "path": "static/js/checks.js",
-        "t": "The dashboard's script: polls status every 3 seconds and updates rows in place.",
+        "t": "The dashboard's script: polls status every 3 seconds while the user is active, every 60 seconds otherwise (the timer is in <code>adaptive-setinterval.js</code>), and updates rows that changed.",
         "nodes": [
           "dashboard"
         ]
       },
       {
         "path": "templates/",
-        "t": "Django templates for pages, emails and the text of many integrations' messages.",
-        "more": "emails/, integrations/, front/"
+        "t": "Django templates for pages, docs and emails. Email alerts use <code>templates/emails/</code>; most other integrations keep their message text in their own folders (<code>hc/integrations/*/templates/</code>).",
+        "more": "accounts/, docs/, emails/, front/"
       },
       {
         "path": "docker/",
-        "t": "Dockerfile, compose file and the start script.",
+        "t": "Dockerfile, compose file, the start script and the gunicorn config.",
         "tag": "deploy",
         "open": true
       },
@@ -1312,7 +1313,7 @@
       },
       {
         "path": "requirements.txt",
-        "t": "Django, cronsim, oncalendar, pycurl, aiosmtpd, minio, pydantic and the database drivers.",
+        "t": "Django, cronsim, oncalendar, pycurl, minismtpd, psycopg, pydantic and a few more. The Dockerfile adds apprise, minio, mysqlclient and gunicorn.",
         "tag": "config"
       }
     ]

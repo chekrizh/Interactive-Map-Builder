@@ -27,7 +27,9 @@ plugins/interactive-map/
     scripts/layout_check.py         redraws the map as the viewer does and reports layout problems
     scripts/metrics.json            Manrope character widths for layout_check.py (tools/build_metrics.js)
     scripts/preview.py, preview.js  screenshots of a rendered map (overview, full map, each flow)
-  skills/interactive-map-repo/      repo mode: how to read a repository and model it in C4 terms
+    scripts/claims.py               lists a map's checkable statements with stable ids (the extra check)
+  skills/interactive-map-repo/      repo mode: how to read a repository and model it in C4 terms;
+                                    verify.md tells the extra check's reviewer what counts as confirmed
 app/                                viewer source (Vite): dev server + template build
   src/app.d.ts                      the map format as TypeScript types
   src/runtime/engine.js             wires the viewer modules; each module gets explicit inputs
@@ -38,6 +40,7 @@ tests/viewer_snapshots.js           screenshots and state after every action, to
 tools/build_library.py              rebuilds the icon and logo library from upstream packages
 tools/build_metrics.js              measures Manrope for layout_check.py
 tools/readme_shots.js, readme_gifs.js  capture the README screenshots and GIFs from the example maps
+docs/extra-check-experiment.md      how the extra check was measured, and the results
 docs/readme/                        images for the README; social-preview.png is uploaded by hand
                                     in Settings -> General -> Social preview
 .github/workflows/                  release.yml (tag + release with skill zips), pages.yml (live demo)
