@@ -445,7 +445,7 @@
    "id": "vq_qu",
    "from": "visitq",
    "to": "queries",
-   "label": "store visit"
+   "label": "count and store"
   },
   {
    "id": "qu_rd",
@@ -464,7 +464,7 @@
    "id": "cr_qu",
    "from": "cron",
    "to": "queries",
-   "label": "expire"
+   "label": "delete expired"
   },
   {
    "id": "us_we",
