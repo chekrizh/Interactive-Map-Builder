@@ -1,0 +1,2218 @@
+{
+ "id": "htop-runtime-map",
+ "source": {
+  "repo": "https://github.com/htop-dev/htop",
+  "ref": "6655b88f719a723431b0b921ca21050c9820ddf6"
+ },
+ "page": {
+  "title": "htop: how it runs, mapped",
+  "slots": {
+   "overviewDescription": "htop in context: a person at a terminal, one C program, and the operating system it samples.",
+   "mapDescription": "The modules of the htop binary with the paths of startup, a refresh tick, drawing a frame, a keypress and a settings change.",
+   "completionIntro": "You followed htop from <code>main</code> into its one loop, watched a tick pull numbers out of the kernel into the process table and the meters, saw a frame drawn row by row, and traced a keypress down to a <code>kill()</code> call.",
+   "completionLessons": "<li>The whole program is one loop in <code>ScreenManager_run</code>: sample if the delay passed, draw if needed, wait for a key</li><li>Core code calls <code>Machine_scan</code>, <code>ProcessTable_goThroughEntries</code> and <code>Platform_*</code>; exactly one platform directory is compiled in to provide them</li><li>\"Classes\" are structs whose first member is the parent struct, plus a const table of function pointers</li><li>Keys go to the focused panel first; actions answer with <code>Htop_Reaction</code> flags that the panel turns into a <code>HandlerResult</code> for the loop</li>"
+  }
+ },
+ "panels": {
+  "introHtml": "<div class=\"p-eyebrow\">Start here</div><h2>htop, an interactive process viewer</h2><p style=\"margin-top:8px\">A map of <a href=\"https://github.com/htop-dev/htop\">htop-dev/htop</a> for a newcomer who wants to contribute. htop is one C99 program with no threads and no services: it samples the operating system, keeps a table of processes in memory and draws it with ncurses.</p><p>The map favours the runtime: what happens on every refresh tick, on a keypress and when a frame is drawn, and which file holds each part.</p><p><small>htop is made by Hisham Muhammad and the htop dev team and released under the <a href=\"https://github.com/htop-dev/htop/blob/6655b88f719a723431b0b921ca21050c9820ddf6/COPYING\">GPLv2 or later</a>. This map is not affiliated with its authors.</small></p><h3>Try it</h3><ul class=\"newlist\"><li>Play <b>A refresh tick</b>, then <b>Draw a frame</b>: together they are one turn of the main loop.</li><li>Open <b>Main loop</b> or <b>Platform layer</b> and look inside for a code walkthrough with line links.</li><li>Open <b>Project structure</b> to see which files to read first.</li></ul><div class=\"panel-actions\"><button type=\"button\" class=\"panel-action\" id=\"gofull\">Open full map</button></div>",
+  "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>One binary, one loop</h2><p style=\"margin-top:8px\">Every card inside the boundary is a group of <code>.c</code> files linked into the single <code>htop</code> binary. Nothing runs in parallel: <code>ScreenManager_run</code> is the only loop, and everything else is called from it.</p><h3>How to read it</h3><p>The person and the terminal are on the left, startup and the loop next to them, the in-memory data model and the header meters in the middle, and the platform layer and the kernel on the right. Arrows are function calls, labelled with the function to search for.</p><p>The <b>Platform layer</b> card stands for nine directories of which one is compiled in; Linux is used as the example throughout.</p>"
+ },
+ "roles": {
+  "data": {
+   "label": "In-memory data",
+   "light": "#7a55c7",
+   "dark": "#c3a8ff",
+   "fillLight": "#f2edfb",
+   "fillDark": "#33294a"
+  },
+  "platform": {
+   "label": "Platform-specific code",
+   "light": "#b7791f",
+   "dark": "#f0c06a",
+   "fillLight": "#fbf3e4",
+   "fillDark": "#3d3222"
+  }
+ },
+ "groups": {
+  "people": {
+   "title": "Person at a terminal",
+   "huekey": "person",
+   "icon": "user",
+   "line1": "Runs htop, presses keys,",
+   "line2": "reads the screen.",
+   "chips": "keyboard · mouse",
+   "text": "htop is interactive: one person, one terminal. It can also run for a fixed number of frames with <code>-n</code>.",
+   "members": [
+    "user"
+   ]
+  },
+  "term": {
+   "title": "Terminal",
+   "huekey": "external",
+   "icon": "square-terminal",
+   "line1": "Shows the frames,",
+   "line2": "delivers key and mouse input.",
+   "chips": "ncurses · terminfo",
+   "text": "The terminal emulator or console htop runs in. htop talks to it almost entirely through the curses library.",
+   "members": [
+    "terminal"
+   ]
+  },
+  "start": {
+   "title": "Startup and settings",
+   "huekey": "component",
+   "icon": "play",
+   "line1": "Parse flags, read htoprc,",
+   "line2": "build everything once.",
+   "chips": "CommandLine.c · Settings.c",
+   "text": "<code>main</code> is one line. <code>CommandLine_run</code> builds the model, the header, the main panel and the screen manager, runs the loop and saves the settings on the way out.",
+   "members": [
+    "main",
+    "settings",
+    "htoprc"
+   ]
+  },
+  "loop": {
+   "title": "Main loop and input",
+   "huekey": "component",
+   "icon": "repeat",
+   "line1": "Sample, draw, wait for a key,",
+   "line2": "dispatch it.",
+   "chips": "ScreenManager.c · Action.c",
+   "text": "The only loop in the program, the panel that shows the process list and receives keys, the key actions, and the extra screens they open.",
+   "members": [
+    "screenmgr",
+    "mainpanel",
+    "actions",
+    "subscreens"
+   ]
+  },
+  "model": {
+   "title": "Data model",
+   "huekey": "data",
+   "icon": "table",
+   "line1": "The machine, its tables",
+   "line2": "and one row per process.",
+   "chips": "Machine.c · Table.c · Process.c",
+   "text": "What htop knows after a scan: host-wide numbers in <code>Machine</code>, rows in a <code>Table</code>, and a <code>Process</code> struct per process or thread.",
+   "members": [
+    "machine",
+    "ptable",
+    "process"
+   ]
+  },
+  "meters": {
+   "title": "Header meters",
+   "huekey": "component",
+   "icon": "gauge",
+   "line1": "CPU, memory, load and more",
+   "line2": "above the process list.",
+   "chips": "Header.c · Meter.c · *Meter.c",
+   "text": "The header lays meters out in columns. Each meter class knows how to fetch its values and the generic meter code knows how to draw them as text, bar, graph or LED.",
+   "members": [
+    "header",
+    "meters"
+   ]
+  },
+  "platform": {
+   "title": "Platform layer",
+   "huekey": "platform",
+   "icon": "layers",
+   "line1": "One directory per OS,",
+   "line2": "one compiled in.",
+   "chips": "linux/ · darwin/ · freebsd/ · pcp/",
+   "text": "The code that knows how to ask this operating system for CPU, memory and processes. The core calls it through a fixed set of function names.",
+   "members": [
+    "platform"
+   ]
+  },
+  "draw": {
+   "title": "Drawing and foundation",
+   "huekey": "component",
+   "icon": "palette",
+   "line1": "Coloured strings, curses setup,",
+   "line2": "containers, safe wrappers.",
+   "chips": "CRT.c · RichString.c · XUtils.c",
+   "text": "The pieces everything else leans on: the curses wrapper and colour schemes, attributed strings, and the Object, Vector, Hashtable and XUtils helpers.",
+   "members": [
+    "crt",
+    "richstring",
+    "foundation"
+   ]
+  },
+  "os": {
+   "title": "Operating system",
+   "huekey": "external",
+   "icon": "cpu",
+   "line1": "Kernel statistics",
+   "line2": "and process control.",
+   "chips": "/proc · sysctl · kill(2)",
+   "text": "Where the numbers come from and where signals go. On Linux that is mostly files under <code>/proc</code> and <code>/sys</code>.",
+   "members": [
+    "kernel"
+   ]
+  }
+ },
+ "overview": [
+  {
+   "g": "people"
+  },
+  {
+   "g": "term"
+  },
+  {
+   "g": "start"
+  },
+  {
+   "g": "loop"
+  },
+  {
+   "g": "draw"
+  },
+  {
+   "g": "model"
+  },
+  {
+   "g": "meters"
+  },
+  {
+   "g": "platform"
+  },
+  {
+   "g": "os"
+  }
+ ],
+ "overviewEdges": [
+  {
+   "id": "o1",
+   "from": "people",
+   "to": "term",
+   "label": "keys, screen"
+  },
+  {
+   "id": "o2",
+   "from": "start",
+   "to": "loop",
+   "label": "builds, then runs"
+  },
+  {
+   "id": "o3",
+   "from": "loop",
+   "to": "model",
+   "label": "scans, sorts, shows"
+  },
+  {
+   "id": "o4",
+   "from": "loop",
+   "to": "meters",
+   "label": "updates, draws"
+  },
+  {
+   "id": "o5",
+   "from": "model",
+   "to": "platform",
+   "label": "scan calls"
+  },
+  {
+   "id": "o6",
+   "from": "meters",
+   "to": "platform",
+   "label": "asks for values"
+  },
+  {
+   "id": "o7",
+   "from": "platform",
+   "to": "os",
+   "label": "reads statistics"
+  },
+  {
+   "id": "o8",
+   "from": "loop",
+   "to": "draw",
+   "label": "draws panels"
+  },
+  {
+   "id": "o9",
+   "from": "draw",
+   "to": "term",
+   "label": "ncurses"
+  }
+ ],
+ "zones": [
+  {
+   "id": "z_people",
+   "label": "Outside: person and terminal",
+   "hue": "person"
+  },
+  {
+   "id": "z_start",
+   "label": "Startup",
+   "hue": "component"
+  },
+  {
+   "id": "z_settings",
+   "label": "Settings",
+   "hue": "component"
+  },
+  {
+   "id": "z_loop",
+   "label": "Main loop and input",
+   "hue": "component"
+  },
+  {
+   "id": "z_model",
+   "label": "Data model (in memory)",
+   "hue": "data"
+  },
+  {
+   "id": "z_meters",
+   "label": "Header meters",
+   "hue": "component"
+  },
+  {
+   "id": "z_draw",
+   "label": "Curses layer",
+   "hue": "component"
+  },
+  {
+   "id": "z_platform",
+   "label": "Platform layer and OS",
+   "hue": "platform"
+  },
+  {
+   "id": "z_base",
+   "label": "Strings and foundation",
+   "hue": "component"
+  }
+ ],
+ "nodes": [
+  {
+   "id": "user",
+   "group": "people",
+   "zone": "z_people",
+   "cat": "person",
+   "shape": "person",
+   "step": 1,
+   "icon": "user",
+   "concept": "Person at a terminal",
+   "tool": "Keyboard and mouse",
+   "what": "Starts <code>htop</code> (or <code>pcp-htop</code>), reads the meters and the process list, and presses keys: arrows to move, F3 to search, F6 to sort, F9 to send a signal, F2 for Setup.",
+   "why": "Everything in the program is paced by this person: the loop wakes up either because a key arrived or because the refresh delay ran out.",
+   "tools": "Command-line flags are listed in <code>printHelpFlag</code> in <code>CommandLine.c</code>; the in-program key help is <code>actionHelp</code> in <code>Action.c</code>."
+  },
+  {
+   "id": "terminal",
+   "group": "term",
+   "zone": "z_people",
+   "cat": "external",
+   "shape": "external",
+   "step": 1,
+   "icon": "square-terminal",
+   "concept": "Terminal",
+   "tool": "Terminal emulator or console",
+   "what": "Displays what ncurses writes and sends key presses and mouse reports back as bytes on standard input.",
+   "why": "htop has no other user interface. If the terminal goes away, the loop ends after 100 empty reads in a row that were not refresh timeouts.",
+   "tools": "Reached only through the curses library (<code>ProvideCurses.h</code> picks the ncurses headers)."
+  },
+  {
+   "id": "main",
+   "group": "start",
+   "zone": "z_start",
+   "cat": "component",
+   "step": 1,
+   "icon": "play",
+   "inside": "main",
+   "concept": "Entry and startup",
+   "tool": "htop.c · CommandLine.c",
+   "what": "<code>main</code> in <code>htop.c</code> only calls <code>CommandLine_run</code>. That function parses the flags, initialises the platform, creates the machine, the process table, the settings, the header, the main panel and the screen manager, runs the loop, and on exit saves the settings and frees everything.",
+   "why": "This is the one place where you can see every long-lived object being created and in which order. The style guide calls <code>htop.c</code> and <code>pcp-htop.c</code> the main entrance points into the code.",
+   "tools": "<code>htop.c</code> · <code>pcp-htop.c</code> (the entry for the PCP build, which also sets up PMAPI options) · <code>CommandLine.c</code>"
+  },
+  {
+   "id": "settings",
+   "group": "start",
+   "zone": "z_settings",
+   "cat": "component",
+   "step": 3,
+   "icon": "settings",
+   "concept": "Settings",
+   "tool": "Settings.c",
+   "what": "Holds every option: display flags, the refresh <code>delay</code>, colour scheme, the header layout with meter names per column, and a list of <code>ScreenSettings</code> (one per screen tab) with its columns, sort key, sort direction and tree mode. Reads <code>htoprc</code> at startup and writes it back on exit when <code>changed</code> is set.",
+   "why": "Almost every module reads <code>host-&gt;settings</code>; <code>settings-&gt;ss</code> is the active screen and decides which columns are shown and how rows are sorted.",
+   "tools": "<code>Settings.c</code>, <code>Settings.h</code> · <code>Settings_new</code>, <code>Settings_read</code>, <code>Settings_write</code>"
+  },
+  {
+   "id": "htoprc",
+   "group": "start",
+   "zone": "z_settings",
+   "cat": "store",
+   "step": 3,
+   "icon": "file-cog",
+   "concept": "htoprc",
+   "tool": "Text file, key=value lines",
+   "what": "The configuration file. The path is <code>$HTOPRC</code> if set, otherwise <code>$XDG_CONFIG_HOME/htop/htoprc</code> when that variable is an absolute path, otherwise <code>htop/htoprc</code> under the home directory plus the build-time <code>CONFIGDIR</code> (<code>/.config</code> by default, <code>/.pcp</code> for the PCP build). If that cannot be read, the legacy <code>~/.htoprc</code> (which is then migrated to the new location and deleted) and then the system-wide <code>SYSCONFDIR/htoprc</code> are tried before built-in defaults.",
+   "why": "It is the only state htop keeps between runs, apart from the search and filter history file.",
+   "tools": "Path logic in <code>Settings_new</code> (<code>Settings.c</code>). Written through a temporary file and <code>rename</code>."
+  },
+  {
+   "id": "screenmgr",
+   "group": "loop",
+   "zone": "z_loop",
+   "cat": "component",
+   "step": 2,
+   "icon": "repeat",
+   "inside": "loop",
+   "concept": "Main loop",
+   "tool": "ScreenManager.c",
+   "what": "<code>ScreenManager_run</code> is the program's only loop. Each turn it checks whether the refresh delay has passed and, if so, rescans the machine and the tables and updates the meters; redraws the header and its panels when something changed; then waits for a key in <code>Panel_getCh</code> and offers it to the focused panel. It also lays its panels out side by side and turns mouse clicks into events.",
+   "why": "There is no timer and no second thread. The wait for a key has a timeout equal to the refresh delay, and that timeout is what makes the display update on its own.",
+   "tools": "<code>ScreenManager.c</code> · <code>ScreenManager_run</code>, <code>checkRecalculation</code>, <code>ScreenManager_drawPanels</code>. Setup and the pickers create a second <code>ScreenManager</code> and run the same loop nested."
+  },
+  {
+   "id": "mainpanel",
+   "group": "loop",
+   "zone": "z_loop",
+   "cat": "component",
+   "step": 2,
+   "icon": "list",
+   "inside": "keys",
+   "concept": "Panel and MainPanel",
+   "tool": "Panel.c · MainPanel.c",
+   "what": "<code>Panel</code> is the generic scrolling list widget: a <code>Vector</code> of objects, a selection, scroll offsets, a header line and a function bar. <code>Panel_draw</code> renders each visible item by calling its class's display function. <code>MainPanel</code> is the Panel subclass that shows the process list; its event handler looks keys up in a table of actions and drives incremental search and filter (<code>IncSet</code>).",
+   "why": "Keys are offered to the focused panel before the loop's own defaults, so each panel class decides what a key means. Every list on screen, from the process list to the Setup pages, is a Panel.",
+   "tools": "<code>Panel.c</code> · <code>MainPanel.c</code> · <code>IncSet.c</code> (search and filter line) with <code>History.c</code> (its history file) · <code>FunctionBar.c</code> (the F1 to F10 labels on the bottom line) · <code>ListItem.c</code>"
+  },
+  {
+   "id": "actions",
+   "group": "loop",
+   "zone": "z_loop",
+   "cat": "component",
+   "step": 5,
+   "icon": "keyboard",
+   "concept": "Key actions",
+   "tool": "Action.c",
+   "what": "One small function per key: sort, tree view, tag, kill, renice, follow, pause, open Setup or an information screen. <code>Action_setBindings</code> fills the key table; each action receives the shared <code>State</code> and returns <code>Htop_Reaction</code> flags such as <code>HTOP_REFRESH</code>, <code>HTOP_RECALCULATE</code>, <code>HTOP_SAVE_SETTINGS</code> or <code>HTOP_QUIT</code>.",
+   "why": "To add a key you write an action here and add one line to the binding table. The flags tell the caller what has to be redone, so most actions leave redrawing the main screen to the loop.",
+   "tools": "<code>Action.c</code>, <code>Action.h</code> · platform-only keys are added by <code>Platform_setBindings</code> (on Linux: I/O priority and autogroup nice)"
+  },
+  {
+   "id": "subscreens",
+   "group": "loop",
+   "zone": "z_loop",
+   "cat": "component",
+   "step": 5,
+   "icon": "app-window",
+   "concept": "Setup and info screens",
+   "tool": "*Panel.c · *Screen.c",
+   "what": "Everything that temporarily takes over the screen. Setup (<code>CategoriesPanel</code> plus the display options, header layout, meters, screens and colours panels) and the pickers (signals, sort column, user, affinity) are Panels run by a nested <code>ScreenManager</code>. The per-process information screens (environment, open files, locks, strace, command) derive from <code>InfoScreen</code>, which has its own small loop; the open-files and strace screens start <code>lsof</code> and <code>strace</code> (or <code>truss</code>) as child programs and show their output. The backtrace screen is different: a <code>BacktracePanel</code> run by a nested <code>ScreenManager</code> that has no header.",
+   "why": "Setup panels edit <code>Settings</code> directly and set <code>changed</code>, which is how a choice ends up in htoprc.",
+   "tools": "<code>CategoriesPanel.c</code>, <code>DisplayOptionsPanel.c</code>, <code>MetersPanel.c</code>, <code>ColumnsPanel.c</code>, <code>ColorsPanel.c</code>, <code>SignalsPanel.c</code>, <code>AffinityPanel.c</code> · <code>InfoScreen.c</code>, <code>EnvScreen.c</code>, <code>OpenFilesScreen.c</code>, <code>TraceScreen.c</code>, <code>ProcessLocksScreen.c</code>, <code>CommandScreen.c</code>, <code>BacktraceScreen.c</code>"
+  },
+  {
+   "id": "machine",
+   "group": "model",
+   "zone": "z_model",
+   "cat": "data",
+   "step": 3,
+   "icon": "server",
+   "inside": "structs",
+   "concept": "Machine",
+   "tool": "Machine.c",
+   "what": "The host as htop sees it: the settings pointer, timestamps of the current sample, total memory and swap, CPU counts, the users table, and the list of tables with the active one. <code>Machine_scanTables</code> runs the three scan phases (prepare, iterate, clean up) on every table. <code>Machine_new</code>, <code>Machine_scan</code> and <code>Machine_delete</code> are declared in <code>Machine.h</code> but implemented in the platform directory.",
+   "why": "It is the hub the rest of the code reaches through: rows, tables and meters all hold a <code>host</code> pointer. The platform extends the struct (on Linux, <code>LinuxMachine</code>) with the values it sampled.",
+   "tools": "<code>Machine.c</code>, <code>Machine.h</code> · <code>UsersTable.c</code> (uid to name cache via <code>getpwuid</code>). Unlike rows, tables, panels and meters, <code>Machine</code> is a plain struct, not an <code>Object</code>."
+  },
+  {
+   "id": "ptable",
+   "group": "model",
+   "zone": "z_model",
+   "cat": "data",
+   "step": 3,
+   "icon": "table",
+   "concept": "Process table",
+   "tool": "Table.c · ProcessTable.c",
+   "what": "<code>Table</code> keeps all known rows in a <code>Vector</code>, a <code>Hashtable</code> from row id to row, and a display list in screen order. After a scan it drops rows that were not seen again; <code>Table_rebuildPanel</code> sorts or builds the tree, skips hidden and filtered rows, fills the main panel and restores the selection. <code>ProcessTable</code> is the subclass whose rows are processes: it adds task counters and hands the scan to the platform.",
+   "why": "Scanning and showing are separate steps. A scan only updates rows; the panel is refilled from the table on every redraw, which is why a filter or a new sort order applies without rescanning.",
+   "tools": "<code>Table.c</code>, <code>Table.h</code> · <code>ProcessTable.c</code>, <code>ProcessTable.h</code>. <code>ProcessTable_new</code> and <code>ProcessTable_goThroughEntries</code> are implemented per platform."
+  },
+  {
+   "id": "process",
+   "group": "model",
+   "zone": "z_model",
+   "cat": "data",
+   "step": 3,
+   "icon": "rows-3",
+   "concept": "Row and Process",
+   "tool": "Row.c · Process.c",
+   "what": "<code>Row</code> is anything shown as a line in a table: id, parent, tagged, shown, tree state. <code>Process</code> extends it with the fields every platform has (user, command line, CPU and memory percent, nice, state) and the code that prints a field, compares two processes for sorting, builds the merged command string, and sends a signal or changes priority. Each platform extends it once more (<code>LinuxProcess</code>) for its own columns.",
+   "why": "A column is a <code>ProcessField</code> enum value (platform-only ones are listed in the platform's <code>ProcessField.h</code>) handled in three places: the field table that names it, <code>writeField</code> that prints it and <code>compareByKey</code> that sorts by it.",
+   "tools": "<code>Row.c</code>, <code>Row.h</code>, <code>RowField.h</code> · <code>Process.c</code>, <code>Process.h</code> · the platform's <code>ProcessField.h</code> and <code>LinuxProcess.c</code>"
+  },
+  {
+   "id": "platform",
+   "group": "platform",
+   "zone": "z_platform",
+   "cat": "platform",
+   "step": 4,
+   "icon": "layers",
+   "inside": "scan",
+   "concept": "Platform layer",
+   "tool": "linux/ and eight siblings",
+   "what": "The implementation of the functions the core calls but does not implement. On Linux: <code>Platform.c</code> (<code>Platform_init</code>, the list of meter classes, <code>Platform_setCPUValues</code>, <code>Platform_setMemoryValues</code>, load average, battery, disk and network I/O, extra key bindings), <code>LinuxMachine.c</code> (<code>Machine_new</code>, <code>Machine_scan</code>), <code>LinuxProcessTable.c</code> (<code>ProcessTable_new</code>, <code>ProcessTable_goThroughEntries</code>) and <code>LinuxProcess.c</code> (the Linux-only columns).",
+   "why": "The build picks exactly one directory, so core code calls <code>Platform_*</code> with no run-time dispatch. Porting htop means writing these four source files, their headers and a <code>ProcessField.h</code> for a new system.",
+   "tools": "<code>linux/</code> (procfs and sysfs) · <code>darwin/</code> (sysctl, Mach and libproc calls) · <code>freebsd/</code>, <code>dragonflybsd/</code>, <code>netbsd/</code>, <code>openbsd/</code> (sysctl and libkvm) · <code>solaris/</code> (kstat and procfs walking) · <code>pcp/</code> (Performance Co-Pilot metrics through PMAPI, built as <code>pcp-htop</code>, with columns, meters and screens defined in config files) · <code>unsupported/</code> (a stub with one fake process). <code>generic/</code> and <code>zfs/</code> hold code shared by several platforms. On Linux, optional libraries (libsensors for temperatures, libnl for delay accounting) are loaded at run time with <code>dlopen</code>. Selection: <code>configure.ac</code> sets <code>my_htop_platform</code>, <code>Makefile.am</code> adds that directory's sources."
+  },
+  {
+   "id": "kernel",
+   "group": "os",
+   "zone": "z_platform",
+   "cat": "external",
+   "shape": "external",
+   "step": 4,
+   "icon": "cpu",
+   "concept": "Operating system kernel",
+   "tool": "procfs · sysctl · syscalls",
+   "what": "The source of every number htop shows and the target of its actions. On Linux the platform layer reads text files such as <code>/proc/stat</code>, <code>/proc/meminfo</code> and the per-process <code>/proc/PID/stat</code>, <code>statm</code> and <code>cmdline</code>; signals and priorities go through <code>kill</code> and <code>setpriority</code>.",
+   "why": "htop does not cache across runs and does not use a daemon (except in the PCP build, where the PCP collector is the source).",
+   "tools": "Linux paths are defined in <code>linux/LinuxMachine.h</code> (<code>PROCDIR</code>, <code>PROCSTATFILE</code>, <code>PROCMEMINFOFILE</code>)."
+  },
+  {
+   "id": "header",
+   "group": "meters",
+   "zone": "z_meters",
+   "cat": "component",
+   "step": 6,
+   "icon": "panel-top",
+   "concept": "Header",
+   "tool": "Header.c",
+   "what": "The area above the process list. It holds one <code>Vector</code> of meters per layout column, creates the meters named in the settings by looking the name up in <code>Platform_meterTypes</code>, asks every meter to update on each scan and to draw on each redraw, and computes its own height.",
+   "why": "The header is updated on every scan even while the process list is paused, so graph meters have no gaps.",
+   "tools": "<code>Header.c</code>, <code>Header.h</code>, <code>HeaderLayout.h</code> · <code>Header_populateFromSettings</code>, <code>Header_updateData</code>, <code>Header_draw</code>"
+  },
+  {
+   "id": "meters",
+   "group": "meters",
+   "zone": "z_meters",
+   "cat": "component",
+   "step": 6,
+   "icon": "gauge",
+   "concept": "Meters",
+   "tool": "Meter.c · *Meter.c",
+   "what": "<code>Meter.c</code> has the generic part: the <code>MeterClass</code> function table and the four draw modes (text, bar, graph, LED). Each concrete meter (<code>CPUMeter.c</code>, <code>MemoryMeter.c</code>, <code>LoadAverageMeter.c</code>, <code>TasksMeter.c</code> and others) is a <code>MeterClass</code> instance with an <code>updateValues</code> function that fills <code>values</code> and a text buffer, usually by calling a <code>Platform_*</code> function.",
+   "why": "A new meter is one file with a class definition plus one line in each platform's <code>Platform_meterTypes</code> list. Drawing comes for free.",
+   "tools": "<code>Meter.c</code>, <code>Meter.h</code>, <code>MeterMode.h</code> · 15 concrete <code>*Meter.c</code> files at the top level, more in <code>linux/</code>, <code>zfs/</code> and other platform directories · <code>DynamicMeter.c</code> for meters defined by config files (PCP)"
+  },
+  {
+   "id": "crt",
+   "group": "draw",
+   "zone": "z_draw",
+   "cat": "component",
+   "step": 2,
+   "icon": "palette",
+   "concept": "CRT: curses setup and colours",
+   "tool": "CRT.c · ncurses",
+   "what": "Starts and stops curses (<code>CRT_init</code>, <code>CRT_done</code>), sets the input timeout with <code>halfdelay(settings-&gt;delay)</code>, enables the keypad and the mouse, defines the colour schemes and exposes the active one as <code>CRT_colors[element]</code>, and installs the crash handler that restores the terminal and prints a bug-report template to standard error, including the current settings.",
+   "why": "It does not wrap drawing: panels and meters call curses functions such as <code>mvhline</code> and <code>mvaddnstr</code> directly and only take their attributes from <code>CRT_colors</code>.",
+   "tools": "<code>CRT.c</code>, <code>CRT.h</code> · <code>ProvideCurses.h</code> · ncurses"
+  },
+  {
+   "id": "richstring",
+   "group": "draw",
+   "zone": "z_base",
+   "cat": "component",
+   "step": 2,
+   "icon": "type",
+   "concept": "RichString",
+   "tool": "RichString.c",
+   "what": "A string in which every character carries its own colour and attributes. A row or a meter builds one by appending pieces (<code>RichString_appendAscii</code>, <code>RichString_appendWide</code>); the panel then writes it to the screen with curses' attributed-string call.",
+   "why": "It separates what a line says from where it is drawn, so a row can be rendered without knowing its screen position or whether it is selected.",
+   "tools": "<code>RichString.c</code>, <code>RichString.h</code> · wide-character or plain variant chosen at build time"
+  },
+  {
+   "id": "foundation",
+   "group": "draw",
+   "zone": "z_base",
+   "cat": "component",
+   "step": 1,
+   "icon": "boxes",
+   "concept": "Object, containers, XUtils",
+   "tool": "Object.h · Vector.c · Hashtable.c · XUtils.c",
+   "what": "<code>Object.h</code> defines the base of the class emulation: a struct holding a pointer to an <code>ObjectClass</code> with <code>extends</code>, <code>display</code>, <code>delete</code> and <code>compare</code>. <code>Vector</code> is a growable array of objects that can own and sort its items; <code>Hashtable</code> maps an integer key to a pointer. <code>XUtils</code> wraps allocation (<code>xMalloc</code>, <code>xCalloc</code>, <code>xStrdup</code>) and string helpers (<code>String_eq</code>, <code>String_startsWith</code>, <code>xSnprintf</code>).",
+   "why": "The <code>x</code> allocators never return NULL: on failure they restore the terminal and abort, so callers do not check. Subclasses add function pointers by embedding the parent class struct first (<code>RowClass</code>, <code>PanelClass</code>, <code>MeterClass</code>, <code>TableClass</code>).",
+   "tools": "<code>Object.h</code>, <code>Object.c</code> · <code>Vector.c</code> · <code>Hashtable.c</code> · <code>XUtils.c</code>, <code>XUtils.h</code> · <code>Macros.h</code>"
+  }
+ ],
+ "edges": [
+  {
+   "id": "u_term",
+   "from": "user",
+   "to": "terminal",
+   "label": "keys, reads screen"
+  },
+  {
+   "id": "crt_term",
+   "from": "crt",
+   "to": "terminal",
+   "label": "ncurses",
+   "bidir": true
+  },
+  {
+   "id": "main_plat",
+   "from": "main",
+   "to": "platform",
+   "label": "Platform_init, Machine_new"
+  },
+  {
+   "id": "main_set",
+   "from": "main",
+   "to": "settings",
+   "label": "Settings_new, _write"
+  },
+  {
+   "id": "set_rc",
+   "from": "settings",
+   "to": "htoprc",
+   "label": "reads, writes"
+  },
+  {
+   "id": "main_hdr",
+   "from": "main",
+   "to": "header",
+   "label": "Header_new"
+  },
+  {
+   "id": "main_crt",
+   "from": "main",
+   "to": "crt",
+   "label": "CRT_init"
+  },
+  {
+   "id": "main_sm",
+   "from": "main",
+   "to": "screenmgr",
+   "label": "ScreenManager_run"
+  },
+  {
+   "id": "sm_mach",
+   "from": "screenmgr",
+   "to": "machine",
+   "label": "Machine_scan, _scanTables"
+  },
+  {
+   "id": "mach_plat",
+   "from": "machine",
+   "to": "platform",
+   "label": "Machine_scan body"
+  },
+  {
+   "id": "mach_pt",
+   "from": "machine",
+   "to": "ptable",
+   "label": "prepare, iterate, cleanup"
+  },
+  {
+   "id": "pt_plat",
+   "from": "ptable",
+   "to": "platform",
+   "label": "goThroughEntries"
+  },
+  {
+   "id": "plat_kern",
+   "from": "platform",
+   "to": "kernel",
+   "label": "reads /proc"
+  },
+  {
+   "id": "plat_proc",
+   "from": "platform",
+   "to": "process",
+   "label": "creates, fills"
+  },
+  {
+   "id": "sm_hdr",
+   "from": "screenmgr",
+   "to": "header",
+   "label": "updateData, draw"
+  },
+  {
+   "id": "hdr_met",
+   "from": "header",
+   "to": "meters",
+   "label": "updateValues, draw"
+  },
+  {
+   "id": "met_plat",
+   "from": "meters",
+   "to": "platform",
+   "label": "Platform_set*Values"
+  },
+  {
+   "id": "sm_pt",
+   "from": "screenmgr",
+   "to": "ptable",
+   "label": "Table_rebuildPanel"
+  },
+  {
+   "id": "pt_mp",
+   "from": "ptable",
+   "to": "mainpanel",
+   "label": "Panel_set"
+  },
+  {
+   "id": "sm_mp",
+   "from": "screenmgr",
+   "to": "mainpanel",
+   "label": "getCh, handler, draw"
+  },
+  {
+   "id": "mp_proc",
+   "from": "mainpanel",
+   "to": "process",
+   "label": "Object_display"
+  },
+  {
+   "id": "proc_rs",
+   "from": "process",
+   "to": "richstring",
+   "label": "writeField"
+  },
+  {
+   "id": "mp_crt",
+   "from": "mainpanel",
+   "to": "crt",
+   "label": "curses calls"
+  },
+  {
+   "id": "mp_act",
+   "from": "mainpanel",
+   "to": "actions",
+   "label": "keys[ch](state)"
+  },
+  {
+   "id": "act_sub",
+   "from": "actions",
+   "to": "subscreens",
+   "label": "opens"
+  },
+  {
+   "id": "act_sm",
+   "from": "actions",
+   "to": "screenmgr",
+   "label": "nested run"
+  },
+  {
+   "id": "act_proc",
+   "from": "actions",
+   "to": "process",
+   "label": "signal, renice"
+  },
+  {
+   "id": "proc_kern",
+   "from": "process",
+   "to": "kernel",
+   "label": "kill, setpriority"
+  },
+  {
+   "id": "sub_set",
+   "from": "subscreens",
+   "to": "settings",
+   "label": "edits, sets changed"
+  },
+  {
+   "id": "pt_fnd",
+   "from": "ptable",
+   "to": "foundation",
+   "label": "Vector, Hashtable"
+  }
+ ],
+ "flows": {
+  "startup": {
+   "title": "Startup",
+   "hue": "component",
+   "desc": "From typing htop to the first turn of the loop: everything long-lived is built once, in CommandLine_run.",
+   "hops": [
+    {
+     "e": "u_term",
+     "t": "The person runs <code>htop</code>. <code>main</code> in <code>htop.c</code> does nothing but <code>return CommandLine_run(argc, argv)</code>."
+    },
+    {
+     "e": "main_plat",
+     "t": "After <code>parseArguments</code>, <code>Platform_init</code> runs; on Linux it checks that <code>/proc</code> is readable and detects whether htop runs in a container. Then <code>Machine_new</code> and <code>ProcessTable_new</code> are called: both are implemented in the platform directory and return the platform's larger structs (<code>LinuxMachine</code>, <code>LinuxProcessTable</code>).",
+     "note": "A users table and the dynamic meter, column and screen tables are created just before; only the PCP build fills the dynamic ones; on Linux the platform returns NULL for them, and the column table is then replaced by an empty one."
+    },
+    {
+     "e": "main_set",
+     "t": "<code>Settings_new(host, dm, dc, ds)</code> fills in the defaults in code, then looks for a configuration file."
+    },
+    {
+     "e": "set_rc",
+     "t": "<code>Settings_read</code> parses htoprc line by line. If it cannot be read, the legacy <code>~/.htoprc</code> and the system-wide htoprc are tried; if none can be read, default meters and default screens are created instead."
+    },
+    {
+     "e": "main_hdr",
+     "t": "<code>Machine_populateTablesFromSettings</code> attaches the process table to every screen that has no table of its own. <code>Header_new</code> and <code>Header_populateFromSettings</code> create one meter per name in the settings, matching names against <code>Platform_meterTypes</code>."
+    },
+    {
+     "e": "main_crt",
+     "t": "Flags from the command line override the loaded settings (delay, tree view, sort key, colours). <code>CRT_init</code> then starts curses, sets <code>halfdelay(settings-&gt;delay)</code>, enables the keypad, installs signal handlers and loads the colour scheme."
+    },
+    {
+     "e": "main_sm",
+     "t": "<code>MainPanel_new</code> builds the main panel and its key table, a <code>State</code> struct ties host, panel and header together, and the panel is added to a new <code>ScreenManager</code>. After one priming <code>Machine_scan</code> and <code>Machine_scanTables</code>, <code>ScreenManager_run</code> takes over until the person quits.",
+     "note": "When it returns: <code>Platform_done</code>, <code>CRT_done</code>, <code>Settings_write</code> if anything changed, then everything is freed."
+    }
+   ]
+  },
+  "tick": {
+   "title": "A refresh tick",
+   "hue": "data",
+   "desc": "No key arrives within the delay: the loop samples the machine, rescans the processes, updates the meters and refills the panel.",
+   "hops": [
+    {
+     "e": "sm_mp",
+     "t": "The loop is waiting in <code>Panel_getCh</code>, which calls curses <code>getch()</code>. Because of <code>halfdelay(settings-&gt;delay)</code>, it gives up after <code>delay</code> tenths of a second (15 by default, so 1.5 s) and returns <code>ERR</code>. The loop goes round again.",
+     "note": "The same path runs right after a key press, but then the scan is skipped unless the delay has passed or the key asked for a rescan."
+    },
+    {
+     "e": "sm_mach",
+     "t": "<code>checkRecalculation</code> reads the clock. If more than <code>delay</code> tenths have passed since the last scan (or a key asked for a rescan, or the clock went backwards), it marks the active table for sorting and calls <code>Machine_scan(host)</code>.",
+     "note": "No sort is requested while updates are paused. After a key that falls through to the panel's default scrolling handler, sorting is held back for a few turns, except in tree view."
+    },
+    {
+     "e": "mach_plat",
+     "t": "<code>Machine_scan</code> is the platform's function. In <code>linux/LinuxMachine.c</code> it scans memory, zswap, huge pages, ZFS ARC, zram and CPU times, plus CPU frequency when that option or the CPU temperature option is on."
+    },
+    {
+     "e": "plat_kern",
+     "t": "On Linux these are reads of <code>/proc/meminfo</code>, <code>/proc/stat</code> and similar files. The results land in fields of <code>LinuxMachine</code> such as <code>usedMem</code>, <code>cachedMem</code> and the per-CPU <code>cpuData</code>."
+    },
+    {
+     "e": "sm_mach",
+     "t": "Unless updates are paused (the <code>Z</code> key), <code>Machine_scanTables</code> runs next: for every table it calls <code>Table_scanPrepare</code>, <code>Table_scanIterate</code> and <code>Table_scanCleanup</code>, which dispatch through the table's class."
+    },
+    {
+     "e": "mach_pt",
+     "t": "Prepare: <code>ProcessTable_prepareEntries</code> zeroes the task counters and <code>Table_prepareEntries</code> marks every existing row <code>updated = false</code>, <code>show = true</code>."
+    },
+    {
+     "e": "pt_plat",
+     "t": "Iterate: <code>ProcessTable_iterateEntries</code> does one thing, it calls the platform's <code>ProcessTable_goThroughEntries</code>."
+    },
+    {
+     "e": "plat_kern",
+     "t": "On Linux, <code>LinuxProcessTable_recurseProcTree</code> lists <code>/proc</code>, opens every numeric directory, recurses into its <code>task</code> directory for threads, and reads <code>statm</code>, <code>stat</code> and, depending on the columns in use, more files."
+    },
+    {
+     "e": "plat_proc",
+     "t": "<code>ProcessTable_getProcess</code> finds the row by PID in the table's hashtable or constructs a new <code>LinuxProcess</code>. The fields are filled in, CPU percent is computed from the change in user plus system time over the sample period, a new process is added with <code>ProcessTable_add</code>, and the row is marked <code>updated = true</code>."
+    },
+    {
+     "e": "mach_pt",
+     "t": "Clean up: <code>ProcessTable_cleanupEntries</code> rebuilds each command string and removes rows that were not updated, because their process is gone. With \"highlight changes\" on, such a row, if it was shown, stays as a tombstone for <code>highlightDelaySecs</code> first."
+    },
+    {
+     "e": "sm_hdr",
+     "t": "Back in <code>checkRecalculation</code>, <code>Header_updateData</code> runs. It runs even when updates are paused, so graphs keep moving. If the header height changed, the panels are resized."
+    },
+    {
+     "e": "hdr_met",
+     "t": "For each meter in each column, <code>Meter_updateValues</code> calls the class's <code>updateValues</code> function pointer."
+    },
+    {
+     "e": "met_plat",
+     "t": "Example: <code>MemoryMeter_updateValues</code> calls <code>Platform_setMemoryValues</code>, which copies the numbers <code>Machine_scan</code> stored in <code>LinuxMachine</code> into the meter's <code>values</code> array, adjusting them for ZFS ARC and zswap; the meter then formats its text buffer."
+    },
+    {
+     "e": "sm_pt",
+     "t": "The scan set <code>redraw</code>, so <code>Table_rebuildPanel(host-&gt;activeTable)</code> runs: <code>Table_updateDisplayList</code>, when <code>needsSort</code> is set, sorts the rows with the class's compare function, or builds the tree in tree view."
+    },
+    {
+     "e": "pt_mp",
+     "t": "The panel is emptied with <code>Panel_prune</code> and refilled with <code>Panel_set</code> for every row that is shown and not filtered out. Selection and scroll position are restored, or moved to the followed process."
+    }
+   ],
+   "ending": "The data is fresh and the panel holds the right rows. <b>Draw a frame</b> shows what happens next in the same turn of the loop."
+  },
+  "draw": {
+   "title": "Draw a frame",
+   "hue": "component",
+   "desc": "After a scan or a handled key: the header meters and the panels are drawn through curses.",
+   "hops": [
+    {
+     "e": "sm_hdr",
+     "t": "At the end of <code>checkRecalculation</code>, when <code>redraw</code> is set and the meters are not hidden, <code>Header_draw</code> runs."
+    },
+    {
+     "e": "hdr_met",
+     "t": "The header blanks its lines, then calls <code>meter-&gt;draw(meter, x, y, width)</code> for each meter, column by column. <code>draw</code> was set by <code>Meter_setMode</code> to the text, bar, graph or LED routine in <code>Meter.c</code>, unless the meter class brings its own.",
+     "note": "The draw routines write with curses calls such as <code>attrset</code> and <code>mvaddnstr</code>, taking attributes from <code>CRT_colors</code>. Text mode asks the meter class's display function to build a <code>RichString</code>."
+    },
+    {
+     "e": "sm_mp",
+     "t": "<code>ScreenManager_drawPanels</code> draws the screen tabs when enabled, then calls <code>Panel_draw</code> for each of its panels."
+    },
+    {
+     "e": "mp_proc",
+     "t": "On a forced redraw the column header is rebuilt by <code>Table_printHeader</code>. When the panel needs a redraw, each visible item gets <code>Object_display(item, &amp;richString)</code>; for a process that is <code>Row_display</code>.",
+     "note": "When only the selection moved, just the old and the new selected lines are drawn."
+    },
+    {
+     "e": "proc_rs",
+     "t": "<code>Row_display</code> walks the active screen's <code>fields</code> and calls the class's <code>writeField</code> for each. <code>LinuxProcess_rowWriteField</code> prints the Linux-only columns and passes the rest to <code>Process_writeField</code>. Each call appends coloured text to the <code>RichString</code>."
+    },
+    {
+     "e": "mp_crt",
+     "t": "The panel clears the line with <code>mvhline</code> and writes the finished string with curses' attributed-string call (a second call when pinned columns are on), using the selection colour for the selected row. Then it draws the function bar on the last line."
+    },
+    {
+     "e": "crt_term",
+     "t": "Nothing in the loop calls <code>refresh()</code>. The frame reaches the terminal when the loop next waits in <code>getch()</code>.",
+     "note": "That <code>getch()</code> refreshes the screen first is curses behaviour; it is not visible in htop's code."
+    }
+   ]
+  },
+  "kill": {
+   "title": "A keypress: F9 sends a signal",
+   "hue": "person",
+   "desc": "One key from the terminal to a kill() call and back to a redraw, through the panel's key table and a nested loop for the signal picker.",
+   "hops": [
+    {
+     "e": "u_term",
+     "t": "The person selects a process and presses F9."
+    },
+    {
+     "e": "crt_term",
+     "rev": true,
+     "t": "The terminal sends an escape sequence. Because <code>CRT_init</code> enabled <code>keypad</code> mode, curses hands it over as the single code <code>KEY_F(9)</code>."
+    },
+    {
+     "e": "mp_crt",
+     "rev": true,
+     "t": "The focused panel was waiting in <code>Panel_getCh</code>; its <code>getch()</code> call now returns the key instead of timing out."
+    },
+    {
+     "e": "sm_mp",
+     "t": "Back in <code>ScreenManager_run</code>, the key is not <code>ERR</code>, so <code>redraw</code> is set and <code>Panel_eventHandler(panelFocus, ch)</code> is called, which for the main panel is <code>MainPanel_eventHandler</code>."
+    },
+    {
+     "e": "mp_act",
+     "t": "No search or filter is being typed, so the handler runs <code>this-&gt;keys[ch](this-&gt;state)</code>. <code>Action_setBindings</code> put <code>actionKill</code> at <code>KEY_F(9)</code> and at <code>k</code>."
+    },
+    {
+     "e": "act_sub",
+     "t": "<code>actionKill</code> returns at once in read-only mode or on a screen that does not show processes. Otherwise it builds a <code>SignalsPanel</code>: a plain Panel listing the platform's signals."
+    },
+    {
+     "e": "act_sm",
+     "t": "<code>Action_pickFromVector</code> creates a second <code>ScreenManager</code> with the signal list on the left and the main panel beside it, and runs the same loop nested. Ticks keep happening, and the selected process is followed so the selection stays on it.",
+     "note": "Enter ends the nested loop: the default Panel handler returns <code>BREAK_LOOP</code>."
+    },
+    {
+     "e": "act_proc",
+     "t": "With a signal chosen, the header shows \"Sending...\" and <code>MainPanel_foreachRow</code> calls <code>Process_rowSendSignal</code> on every tagged row, or on the selected row when none is tagged."
+    },
+    {
+     "e": "proc_kern",
+     "t": "<code>Process_sendSignal</code> is one line: <code>kill(Process_getPid(this), sgn.i)</code>."
+    },
+    {
+     "e": "mp_act",
+     "rev": true,
+     "t": "<code>actionKill</code> returns <code>HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR</code>."
+    },
+    {
+     "e": "sm_mp",
+     "rev": true,
+     "t": "<code>MainPanel_eventHandler</code> translates the reaction into a <code>HandlerResult</code>: <code>HANDLED | REFRESH | REDRAW</code>. The loop clears the sort hold-off and forces a full redraw on its next turn."
+    }
+   ],
+   "ending": "The signalled process is still listed. It disappears on a later tick, when the scan no longer finds it and cleanup removes its row."
+  },
+  "setup": {
+   "title": "Change a setting and keep it",
+   "hue": "store",
+   "desc": "F2 opens Setup in a nested loop; a changed option sets a flag, and the flag makes htop write htoprc when it exits.",
+   "hops": [
+    {
+     "e": "u_term",
+     "t": "The person presses F2 (or <code>S</code>, or <code>C</code>)."
+    },
+    {
+     "e": "sm_mp",
+     "t": "The loop passes <code>KEY_F(2)</code> to <code>MainPanel_eventHandler</code>."
+    },
+    {
+     "e": "mp_act",
+     "t": "The key table holds <code>actionSetup</code>, which calls <code>Action_runSetup</code>."
+    },
+    {
+     "e": "act_sm",
+     "t": "<code>Action_runSetup</code> creates a new <code>ScreenManager</code> that shares the header and runs <code>ScreenManager_run(scr, NULL, NULL, \"Setup\")</code>."
+    },
+    {
+     "e": "act_sub",
+     "t": "<code>CategoriesPanel_new</code> adds the category list as the left panel. Selecting a category removes the other panels and builds that page: display options, header layout, meters, screens or colours.",
+     "note": "A sixth page, screen tabs, exists only in the PCP build."
+    },
+    {
+     "e": "sub_set",
+     "t": "Toggling an item in <code>DisplayOptionsPanel</code> changes the field in <code>Settings</code> and sets <code>settings-&gt;changed = true</code>. The panel also recalculates the header so the effect is visible at once."
+    },
+    {
+     "e": "mp_act",
+     "rev": true,
+     "t": "Leaving Setup ends the nested loop. If settings changed, <code>Action_runSetup</code> copies the header's meters back with <code>Header_writeBackToSettings</code>. <code>actionSetup</code> returns a reaction that includes <code>HTOP_RESIZE</code>."
+    },
+    {
+     "e": "sm_mp",
+     "rev": true,
+     "t": "The main panel reports <code>RESIZE</code>, <code>REDRAW</code> and <code>REFRESH</code>; the outer loop lays the panels out again and redraws everything."
+    },
+    {
+     "e": "main_set",
+     "t": "Much later, when the person quits and <code>ScreenManager_run</code> returns, <code>CommandLine_run</code> checks <code>settings-&gt;changed</code> and calls <code>Settings_write(settings, false)</code>."
+    },
+    {
+     "e": "set_rc",
+     "t": "<code>Settings_write</code> writes to a temporary file next to htoprc and renames it over the old file. Nothing is written when <code>writeConfig</code> is false, which <code>Settings_read</code> sets when the existing file is not a regular file owned by and writable for the user, or cannot be opened for writing."
+    }
+   ]
+  }
+ },
+ "buildSteps": [
+  null,
+  {
+   "title": "A program at a terminal",
+   "text": "A one-line main, a startup function and the helpers every file uses: the Object base, Vector, Hashtable and the x-allocators.",
+   "decision": "Classes are emulated with structs and const tables of function pointers, so plain C99 gets virtual methods without a framework.",
+   "nodes": [
+    "user",
+    "terminal",
+    "main",
+    "foundation"
+   ]
+  },
+  {
+   "title": "A loop that draws lists",
+   "text": "Start curses, show a scrolling Panel, and wait for a key with a timeout.",
+   "decision": "The input timeout doubles as the refresh timer, so one thread and one loop are enough.",
+   "nodes": [
+    "crt",
+    "richstring",
+    "mainpanel",
+    "screenmgr"
+   ]
+  },
+  {
+   "title": "Something to show",
+   "text": "A Machine, a table of rows and a Process per PID, configured by settings read from htoprc.",
+   "decision": "Scanning fills the table; the panel is refilled from the table on every redraw. Filters and sorting never need a rescan.",
+   "nodes": [
+    "machine",
+    "ptable",
+    "process",
+    "settings",
+    "htoprc"
+   ]
+  },
+  {
+   "title": "Ask the operating system",
+   "text": "Implement Machine_scan and ProcessTable_goThroughEntries for one system.",
+   "decision": "One platform directory is chosen at configure time and linked in; the core calls fixed function names with no run-time dispatch.",
+   "runnable": "./autogen.sh && ./configure && make",
+   "nodes": [
+    "platform",
+    "kernel"
+   ]
+  },
+  {
+   "title": "Keys that do things",
+   "text": "A table from key code to action, and the extra screens actions open.",
+   "decision": "Actions return flags instead of redrawing; the loop decides what to recompute.",
+   "nodes": [
+    "actions",
+    "subscreens"
+   ]
+  },
+  {
+   "title": "Meters on top",
+   "text": "A header with columns of meters, each with an updateValues function and a shared set of draw modes.",
+   "decision": "Many meters read what the machine scan already collected; the rest ask the platform layer when they update.",
+   "nodes": [
+    "header",
+    "meters"
+   ]
+  }
+ ],
+ "tourChapters": [
+  {
+   "name": "Context",
+   "hue": "--ink"
+  },
+  {
+   "name": "Startup",
+   "hue": "--h-component"
+  },
+  {
+   "name": "The tick",
+   "hue": "--h-data"
+  },
+  {
+   "name": "The frame",
+   "hue": "--h-component"
+  },
+  {
+   "name": "Input",
+   "hue": "--h-person"
+  },
+  {
+   "name": "Recap",
+   "hue": "--ink"
+  }
+ ],
+ "tour": [
+  {
+   "ch": 0,
+   "level": 0,
+   "title": "One program between a person and the kernel",
+   "body": [
+    "htop is a single C program. A person watches it in a terminal; it reads statistics from the operating system and can send signals back.",
+    "Inside are six parts: startup and settings, the main loop, the data model, the header meters, the platform layer, and the drawing helpers."
+   ],
+   "why": "There are about 170 files at the top level, but they fall into these few groups, and only one loop connects them."
+  },
+  {
+   "ch": 1,
+   "flow": "startup",
+   "title": "Everything is built once",
+   "body": [
+    "Follow CommandLine_run: platform, machine, process table, settings, header, curses, main panel, then the loop."
+   ],
+   "why": "The order matters: settings need the machine, the header needs the settings, and curses starts late so that errors before it print normally."
+  },
+  {
+   "ch": 2,
+   "flow": "tick",
+   "hops": [
+    0,
+    4
+   ],
+   "title": "The timeout is the timer",
+   "body": [
+    "Waiting for a key gives up after the refresh delay. The loop then samples machine-wide numbers through the platform layer."
+   ],
+   "why": "Machine_scan is declared in the core and implemented in the platform directory. That is the pattern for every platform call."
+  },
+  {
+   "ch": 2,
+   "flow": "tick",
+   "hops": [
+    4,
+    10
+   ],
+   "title": "Rescan the processes",
+   "body": [
+    "Prepare marks every row as not seen, the platform walks the process list and updates or creates rows, cleanup removes the ones that were not seen."
+   ],
+   "why": "Rows persist between scans, which is how CPU percent can be computed from the difference to the previous sample."
+  },
+  {
+   "ch": 2,
+   "flow": "tick",
+   "hops": [
+    10,
+    15
+   ],
+   "title": "Meters, then the panel",
+   "body": [
+    "Meters pull their values from what the scan stored. The table is sorted or turned into a tree and the visible rows are put into the panel."
+   ],
+   "why": "Scanning and showing are separate, so a filter or a different sort key takes effect on the next redraw without touching the kernel."
+  },
+  {
+   "ch": 3,
+   "flow": "draw",
+   "title": "A frame, line by line",
+   "body": [
+    "The header draws its meters, the panel asks each row to render itself into a RichString, and curses sends the result to the terminal."
+   ],
+   "why": "Rows and meters draw themselves through function pointers in their class, so the panel and the header stay generic."
+  },
+  {
+   "ch": 4,
+   "flow": "kill",
+   "title": "A key becomes an action",
+   "body": [
+    "F9 travels from the terminal through the focused panel's handler to an action, which opens a picker in a nested loop and finally calls kill()."
+   ],
+   "why": "Two result types are in play: actions return Htop_Reaction, panel handlers return HandlerResult. MainPanel translates between them."
+  },
+  {
+   "ch": 4,
+   "flow": "setup",
+   "title": "A setting that survives",
+   "body": [
+    "Setup edits the Settings struct in place and sets a changed flag; the file is written once, at exit."
+   ],
+   "why": "If htop is ended by a signal (SIGINT, SIGTERM or SIGQUIT) instead of the quit key, the handler exits without writing htoprc."
+  },
+  {
+   "ch": 5,
+   "whole": true,
+   "title": "All of htop on one map",
+   "recap": {
+    "people": "A person runs it and presses keys.",
+    "term": "The terminal shows frames and delivers input.",
+    "start": "CommandLine_run builds everything once.",
+    "loop": "One loop: sample, draw, wait, dispatch.",
+    "draw": "Curses setup, coloured strings, containers.",
+    "model": "Machine, tables and a row per process.",
+    "meters": "Header columns of self-updating meters.",
+    "platform": "One OS directory supplies the scan functions.",
+    "os": "The kernel answers and receives signals."
+   },
+   "body": [
+    "To change behaviour on a key, start in Action.c. To add a column, look at Process.c and the platform's ProcessField.h. To add a meter, copy a small one such as MemoryMeter.c.",
+    "When in doubt, set a breakpoint in ScreenManager_run and step: every path on this map starts there."
+   ]
+  }
+ ],
+ "insides": {
+  "main": {
+   "kind": "steps",
+   "title": "Inside startup: CommandLine_run",
+   "sub": "What <code>CommandLine_run</code> in <code>CommandLine.c</code> does between <code>main</code> and exit, in order.",
+   "cap": "Read this function first. Every long-lived object is created here, in dependency order, and destroyed here. Nothing else in the program allocates the machine, the settings or the header.",
+   "steps": [
+    {
+     "t": "Set the locale and parse flags",
+     "d": "<code>parseArguments</code> fills a <code>CommandLineSettings</code> struct; only the read-only flag is applied at once.",
+     "code": "CommandLine.c:411-425",
+     "exit": {
+      "when": "help, version or a bad flag",
+      "t": "Return without starting curses",
+      "code": "CommandLine.c:421-422"
+     }
+    },
+    {
+     "t": "Initialise the platform",
+     "code": "CommandLine.c:427-428",
+     "exit": {
+      "when": "Platform_init fails",
+      "t": "Exit status 1"
+     }
+    },
+    {
+     "t": "Create the model",
+     "d": "Users table, the dynamic meter, column and screen tables, then <code>Machine_new</code>, <code>ProcessTable_new</code>, <code>Settings_new</code> and <code>Machine_populateTablesFromSettings</code>.",
+     "code": "CommandLine.c:430-438"
+    },
+    {
+     "t": "Create the header",
+     "d": "<code>Header_populateFromSettings</code> instantiates the meters named in the settings.",
+     "code": "CommandLine.c:440-441"
+    },
+    {
+     "t": "Let flags override settings",
+     "d": "Among others: delay, monochrome, mouse, tree view, sort key, highlight changes, function bar.",
+     "code": "CommandLine.c:443-474"
+    },
+    {
+     "t": "Start curses",
+     "d": "<code>CRT_init</code>. From here on the terminal is in curses mode.",
+     "code": "CommandLine.c:475-481"
+    },
+    {
+     "t": "Create the main panel and State",
+     "d": "<code>State</code> bundles host, main panel and header and is what every action receives. The search and filter history file is attached here.",
+     "code": "CommandLine.c:483-505"
+    },
+    {
+     "t": "Create the screen manager and scan once",
+     "d": "The first <code>Machine_scan</code> and <code>Machine_scanTables</code> happen before the loop, so the first frame already has data.",
+     "code": "CommandLine.c:507-514"
+    },
+    {
+     "t": "Run the loop",
+     "d": "<code>ScreenManager_run</code> returns when the loop ends, normally because the person quit.",
+     "code": "CommandLine.c:516-516"
+    },
+    {
+     "t": "Shut down and save",
+     "d": "<code>Platform_done</code>, <code>CRT_done</code>, then <code>Settings_write</code> if <code>settings-&gt;changed</code>.",
+     "code": "CommandLine.c:518-530"
+    },
+    {
+     "t": "Free everything",
+     "d": "Settings and the dynamic tables go last because the crash handler may still read them.",
+     "code": "CommandLine.c:532-553"
+    }
+   ]
+  },
+  "loop": {
+   "kind": "steps",
+   "title": "Inside the main loop: ScreenManager_run",
+   "sub": "One turn of the <code>while (!quit)</code> loop in <code>ScreenManager.c</code>. Setup and the pickers run this same function on a second ScreenManager.",
+   "cap": "There is no separate timer. Step 3 blocks for at most the refresh delay; an empty read sends the loop back to step 1, where the clock decides whether to scan. A key press reaches step 6 and sets <code>redraw</code>, so the next turn redraws without necessarily rescanning.",
+   "steps": [
+    {
+     "t": "Recalculate if due",
+     "d": "<code>checkRecalculation</code>: if the delay passed or a rescan was requested, run <code>Machine_scan</code>, <code>Machine_scanTables</code> (unless paused) and <code>Header_updateData</code>. If <code>redraw</code> is set, run <code>Table_rebuildPanel</code> and <code>Header_draw</code>. Skipped when this ScreenManager has no header.",
+     "code": "ScreenManager.c:122-172"
+    },
+    {
+     "t": "Draw the panels",
+     "d": "Only when <code>redraw</code> or <code>force_redraw</code> is set.",
+     "code": "ScreenManager.c:270-279",
+     "exit": {
+      "when": "the -n iteration count reaches zero",
+      "t": "Leave the loop",
+      "code": "ScreenManager.c:273-277"
+     }
+    },
+    {
+     "t": "Wait for a key",
+     "d": "<code>Panel_getCh</code> on the focused panel; returns <code>ERR</code> on timeout.",
+     "code": "ScreenManager.c:281-282"
+    },
+    {
+     "t": "Translate mouse events",
+     "d": "Only when built with mouse support and the mouse is enabled. A click becomes a function-bar key, a meter click, a column-header click, a screen-tab click or a row selection; the wheel becomes scroll keys.",
+     "code": "ScreenManager.c:285-359"
+    },
+    {
+     "t": "Nothing pressed",
+     "d": "Count down the sort hold-off, clear <code>redraw</code> and start the next turn.",
+     "code": "ScreenManager.c:360-373",
+     "exit": {
+      "when": "100 empty reads in a row that were not timeouts",
+      "t": "Leave the loop",
+      "code": "ScreenManager.c:363-367"
+     }
+    },
+    {
+     "t": "Offer the key to the focused panel",
+     "d": "<code>Panel_eventHandler(panelFocus, ch)</code> returns a <code>HandlerResult</code> bit set.",
+     "code": "ScreenManager.c:382-385"
+    },
+    {
+     "t": "Apply the result",
+     "d": "<code>REFRESH</code> clears the sort hold-off, <code>REDRAW</code> forces a full redraw, <code>RESIZE</code> lays the panels out again, <code>RESCAN</code> requests a scan on the next turn. <code>HANDLED</code> ends the turn.",
+     "code": "ScreenManager.c:386-408",
+     "exit": {
+      "when": "BREAK_LOOP",
+      "t": "Leave the loop",
+      "code": "ScreenManager.c:405-408"
+     }
+    },
+    {
+     "t": "Built-in keys",
+     "d": "Terminal resize, left and right to change the focused panel when there are at least two, <code>#</code> to hide the meters, Esc, <code>q</code> or F10 to quit. Anything else goes to <code>Panel_onKey</code> for scrolling, and the sort hold-off is set to 5 turns.",
+     "code": "ScreenManager.c:410-484"
+    }
+   ]
+  },
+  "keys": {
+   "kind": "steps",
+   "title": "Inside the main panel: one key",
+   "sub": "What <code>MainPanel_eventHandler</code> in <code>MainPanel.c</code> does with a key before the loop's defaults see it.",
+   "cap": "Actions speak <code>Htop_Reaction</code> (<code>Action.h</code>); the loop understands <code>HandlerResult</code> (<code>Panel.h</code>). The last step is the translation between the two, and it is also where <code>HTOP_SAVE_SETTINGS</code> sets <code>settings-&gt;changed</code>.",
+   "steps": [
+    {
+     "t": "Leave resize to the loop",
+     "code": "MainPanel.c:65-67",
+     "exit": {
+      "when": "KEY_RESIZE",
+      "t": "Return IGNORED"
+     }
+    },
+    {
+     "t": "Housekeeping",
+     "d": "Any real key shows the selection bar again; an up, down or page key stops following a process unless sticky follow is on.",
+     "code": "MainPanel.c:69-86"
+    },
+    {
+     "t": "Click on a column header",
+     "d": "Sort by that column, or invert the order if it is already the sort key. In tree view sorted always by PID, the click leaves tree view and sorts by the column.",
+     "code": "MainPanel.c:88-104"
+    },
+    {
+     "t": "Click on a screen tab",
+     "code": "MainPanel.c:105-108"
+    },
+    {
+     "t": "Search or filter is active",
+     "d": "The key goes to <code>IncSet_handleKey</code>. A changed filter is stored in the active table and takes effect on the next panel rebuild.",
+     "code": "MainPanel.c:109-129"
+    },
+    {
+     "t": "Escape",
+     "d": "Hide the selection bar and stop following.",
+     "code": "MainPanel.c:130-136",
+     "exit": {
+      "when": "Esc",
+      "t": "Return HANDLED"
+     }
+    },
+    {
+     "t": "A bound key",
+     "d": "<code>this-&gt;keys[ch](this-&gt;state)</code>: the table filled by <code>Action_setBindings</code> and <code>Platform_setBindings</code>.",
+     "code": "MainPanel.c:137-139"
+    },
+    {
+     "t": "A digit",
+     "d": "Digits typed in a row select the process with that PID.",
+     "code": "MainPanel.c:140-141"
+    },
+    {
+     "t": "Turn the reaction into a result",
+     "d": "<code>HTOP_REDRAW_BAR</code> updates the function-bar labels here; <code>HTOP_RESIZE</code>, <code>HTOP_UPDATE_PANELHDR</code>, <code>HTOP_REFRESH</code> and <code>HTOP_RECALCULATE</code> become <code>RESIZE</code>, <code>REDRAW</code>, <code>REFRESH</code> and <code>RESCAN</code>.",
+     "code": "MainPanel.c:152-176",
+     "exit": {
+      "when": "HTOP_QUIT",
+      "t": "Return BREAK_LOOP",
+      "code": "MainPanel.c:170-172"
+     }
+    }
+   ]
+  },
+  "scan": {
+   "kind": "steps",
+   "title": "Inside the platform layer: the Linux process scan",
+   "sub": "What <code>ProcessTable_goThroughEntries</code> and <code>LinuxProcessTable_recurseProcTree</code> in <code>linux/LinuxProcessTable.c</code> do for every process on each tick. Other platforms implement the same function with their own system calls.",
+   "cap": "The cost of a tick is this loop times the number of tasks, so expensive files are read only when a visible column needs them: each column sets bits in <code>ss-&gt;flags</code>, and the scan checks those bits.",
+   "steps": [
+    {
+     "t": "Start at /proc",
+     "d": "Check whether autogroup is enabled if that column is shown, shift the GPU time counters, then recurse from <code>PROCDIR</code>.",
+     "code": "linux/LinuxProcessTable.c:1856-1892"
+    },
+    {
+     "t": "List the directory",
+     "d": "Only entries whose name starts with a digit are processes (or, inside <code>task</code>, threads).",
+     "code": "linux/LinuxProcessTable.c:1529-1564"
+    },
+    {
+     "t": "Find or create the row",
+     "d": "<code>ProcessTable_getProcess</code> with <code>LinuxProcess_new</code> as constructor; record the thread group.",
+     "code": "linux/LinuxProcessTable.c:1566-1572"
+    },
+    {
+     "t": "Recurse into task/ for threads",
+     "d": "Only for main tasks.",
+     "code": "linux/LinuxProcessTable.c:1574-1579"
+    },
+    {
+     "t": "Skip what is hidden",
+     "d": "A row seen before that the settings hide is marked updated and not shown without reading any file. Hidden kernel and userland threads are still counted in the task totals; a hidden container process is not.",
+     "code": "linux/LinuxProcessTable.c:1587-1608",
+     "exit": {
+      "when": "hidden and seen before",
+      "t": "Next entry"
+     }
+    },
+    {
+     "t": "Read statm and stat",
+     "d": "Memory sizes, state, times, parent, tty. Between the two, <code>maps</code> is read now and then when the library-size column or the deleted-library highlight needs it. CPU percent is the change in <code>utime + stime</code> divided by the sample period; memory percent is resident size over total memory.",
+     "code": "linux/LinuxProcessTable.c:1610-1662",
+     "exit": {
+      "when": "a read fails",
+      "t": "A new row is deleted, a known row is kept",
+      "code": "linux/LinuxProcessTable.c:1832-1850"
+     }
+    },
+    {
+     "t": "Owner and container",
+     "d": "Look up the user, and compare the PID namespace with htop's own to tell whether the process runs in a container.",
+     "code": "linux/LinuxProcessTable.c:1664-1688"
+    },
+    {
+     "t": "First sighting: command line",
+     "d": "A new process gets its <code>cmdline</code> and <code>comm</code> read and is added to the table. Known processes re-read them only when \"update process names\" is on.",
+     "code": "linux/LinuxProcessTable.c:1690-1715"
+    },
+    {
+     "t": "Optional data, by column flags",
+     "d": "cgroup, smaps, I/O counters, delay accounting, OOM score, I/O priority, security attributes, working directory, autogroup, scheduling policy, GPU time.",
+     "code": "linux/LinuxProcessTable.c:1735-1798"
+    },
+    {
+     "t": "Mark as seen",
+     "d": "<code>updated = true</code>, update the thread and task counters, and decide <code>show</code> from the hide settings.",
+     "code": "linux/LinuxProcessTable.c:1809-1828"
+    }
+   ]
+  },
+  "structs": {
+   "kind": "schema",
+   "title": "Inside the data model: the structs",
+   "sub": "There is no database. These C structs are the state between two ticks; a subclass embeds its parent as its first member, called <code>super</code>.",
+   "cap": "The inheritance chain for one line of the process list on Linux is Object, Row, Process, LinuxProcess. The same row sits in three containers of its table at once: the <code>rows</code> vector, the <code>table</code> hashtable and the <code>displayList</code>.",
+   "tables": [
+    {
+     "name": "Machine",
+     "note": "The host. One instance, created by the platform.",
+     "code": "Machine.h:38-73",
+     "fields": [
+      {
+       "n": "settings",
+       "type": "Settings*",
+       "note": "every module reaches the settings through here"
+      },
+      {
+       "n": "realtime, realtimeMs, monotonicMs, prevMonotonicMs",
+       "type": "timestamps",
+       "note": "time of the current and the previous sample"
+      },
+      {
+       "n": "totalMem, totalSwap, usedSwap, cachedSwap",
+       "type": "memory_t"
+      },
+      {
+       "n": "activeCPUs, existingCPUs",
+       "type": "unsigned int"
+      },
+      {
+       "n": "usersTable",
+       "type": "UsersTable*",
+       "note": "uid to user name cache"
+      },
+      {
+       "n": "tables, tableCount",
+       "type": "Table**",
+       "ref": "Table",
+       "note": "every table that gets scanned"
+      },
+      {
+       "n": "activeTable",
+       "type": "Table*",
+       "ref": "Table",
+       "note": "the table of the screen tab being shown"
+      },
+      {
+       "n": "processTable",
+       "type": "Table*",
+       "ref": "Table"
+      }
+     ]
+    },
+    {
+     "name": "LinuxMachine",
+     "note": "The Linux extension: what Machine_scan stores for the meters.",
+     "code": "linux/LinuxMachine.h:69-102",
+     "fields": [
+      {
+       "n": "super",
+       "type": "Machine",
+       "ref": "Machine"
+      },
+      {
+       "n": "jiffies, period",
+       "type": "long, double",
+       "note": "clock ticks per second; the sample period used for CPU percent"
+      },
+      {
+       "n": "usedMem, cachedMem, sharedMem, buffersMem, availableMem",
+       "type": "memory_t",
+       "note": "from /proc/meminfo"
+      },
+      {
+       "n": "cpuData",
+       "type": "CPUData*",
+       "note": "per-CPU time counters from /proc/stat"
+      },
+      {
+       "n": "runningTasks",
+       "type": "unsigned int",
+       "note": "procs_running from /proc/stat"
+      }
+     ]
+    },
+    {
+     "name": "Table",
+     "note": "A set of rows plus what is needed to show them.",
+     "code": "Table.h:24-42",
+     "fields": [
+      {
+       "n": "super",
+       "type": "Object"
+      },
+      {
+       "n": "rows",
+       "type": "Vector*",
+       "ref": "Row",
+       "note": "all known rows; owns them"
+      },
+      {
+       "n": "displayList",
+       "type": "Vector*",
+       "ref": "Row",
+       "note": "rows in display order, rebuilt before the panel is filled"
+      },
+      {
+       "n": "table",
+       "type": "Hashtable*",
+       "ref": "Row",
+       "note": "row id to row"
+      },
+      {
+       "n": "needsSort",
+       "type": "bool"
+      },
+      {
+       "n": "incFilter",
+       "type": "const char*",
+       "note": "the text typed in the filter line, or NULL"
+      },
+      {
+       "n": "following",
+       "type": "int",
+       "note": "id of the followed row, or -1"
+      },
+      {
+       "n": "panel",
+       "type": "Panel*",
+       "note": "the panel this table fills"
+      }
+     ]
+    },
+    {
+     "name": "ProcessTable",
+     "note": "The table of processes; the platform extends it again.",
+     "code": "ProcessTable.h:20-29",
+     "fields": [
+      {
+       "n": "super",
+       "type": "Table",
+       "ref": "Table"
+      },
+      {
+       "n": "pidMatchList",
+       "type": "Hashtable*",
+       "note": "PIDs given with -p, or NULL"
+      },
+      {
+       "n": "totalTasks, runningTasks, userlandThreads, kernelThreads",
+       "type": "unsigned int",
+       "note": "counters shown by the Tasks meter"
+      }
+     ]
+    },
+    {
+     "name": "Row",
+     "note": "One line in a table.",
+     "code": "Row.h:37-77",
+     "fields": [
+      {
+       "n": "super",
+       "type": "Object"
+      },
+      {
+       "n": "host",
+       "type": "const Machine*",
+       "ref": "Machine"
+      },
+      {
+       "n": "id, group, parent",
+       "type": "int",
+       "note": "for a process: PID, thread group, parent PID"
+      },
+      {
+       "n": "tag",
+       "type": "bool",
+       "note": "tagged by the user with Space"
+      },
+      {
+       "n": "show, wasShown",
+       "type": "bool",
+       "note": "set during the scan"
+      },
+      {
+       "n": "updated",
+       "type": "bool",
+       "note": "seen in the last scan; rows left false are removed, at once or after the highlight delay"
+      },
+      {
+       "n": "showChildren, indent, tree_depth",
+       "type": "tree state"
+      },
+      {
+       "n": "seenStampMs, tombStampMs",
+       "type": "uint64_t",
+       "note": "for highlighting new and exited processes"
+      }
+     ]
+    },
+    {
+     "name": "Process",
+     "note": "Fields every platform fills.",
+     "code": "Process.h:81-201",
+     "fields": [
+      {
+       "n": "super",
+       "type": "Row",
+       "ref": "Row"
+      },
+      {
+       "n": "st_uid, user",
+       "type": "uid_t, const char*"
+      },
+      {
+       "n": "cmdline, procComm, procExe",
+       "type": "char*",
+       "note": "merged into the Command column by Process_makeCommandStr"
+      },
+      {
+       "n": "percent_cpu, percent_mem",
+       "type": "float"
+      },
+      {
+       "n": "priority, nice",
+       "type": "long, int"
+      },
+      {
+       "n": "m_virt, m_resident",
+       "type": "long",
+       "note": "kilobytes"
+      },
+      {
+       "n": "state",
+       "type": "ProcessState"
+      },
+      {
+       "n": "isKernelThread, isUserlandThread",
+       "type": "bool"
+      }
+     ]
+    },
+    {
+     "name": "LinuxProcess",
+     "note": "Linux-only columns.",
+     "code": "linux/LinuxProcess.h:33-113",
+     "fields": [
+      {
+       "n": "super",
+       "type": "Process",
+       "ref": "Process"
+      },
+      {
+       "n": "utime, stime, cutime, cstime",
+       "type": "unsigned long long",
+       "note": "CPU percent comes from how much utime + stime grew since the previous scan"
+      },
+      {
+       "n": "m_share, m_priv, m_pss, m_swap",
+       "type": "memory sizes"
+      },
+      {
+       "n": "ioPriority",
+       "type": "IOPriority"
+      }
+     ]
+    },
+    {
+     "name": "ScreenSettings",
+     "note": "One screen tab: what the table view looks like. Lives in Settings.",
+     "code": "Settings.h:42-56",
+     "fields": [
+      {
+       "n": "heading",
+       "type": "char*",
+       "note": "tab name"
+      },
+      {
+       "n": "table",
+       "type": "Table*",
+       "ref": "Table"
+      },
+      {
+       "n": "fields",
+       "type": "RowField*",
+       "note": "the columns, in order"
+      },
+      {
+       "n": "flags",
+       "type": "uint32_t",
+       "note": "which optional data the scan must collect"
+      },
+      {
+       "n": "sortKey, direction, treeSortKey, treeDirection",
+       "type": "RowField, int"
+      },
+      {
+       "n": "treeView",
+       "type": "bool"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "files": {
+  "entries": [
+   {
+    "path": "htop.c",
+    "t": "<code>main</code>: one call to <code>CommandLine_run</code>.",
+    "tag": "entry point",
+    "nodes": [
+     "main"
+    ]
+   },
+   {
+    "path": "pcp-htop.c",
+    "t": "<code>main</code> of the <code>pcp-htop</code> binary: PMAPI option setup, then the same <code>CommandLine_run</code>.",
+    "tag": "entry point",
+    "nodes": [
+     "main"
+    ]
+   },
+   {
+    "path": "CommandLine.c",
+    "t": "Flag parsing and <code>CommandLine_run</code>: creates every long-lived object, runs the loop, saves settings.",
+    "why": "The best first file to read. It shows which objects exist and in what order they depend on each other.",
+    "nodes": [
+     "main"
+    ]
+   },
+   {
+    "path": "ScreenManager.c",
+    "t": "The main loop: <code>ScreenManager_run</code> and <code>checkRecalculation</code>.",
+    "why": "Almost every runtime path starts here (the information screens have their own small loop). A breakpoint in <code>ScreenManager_run</code> is the fastest way to see htop work.",
+    "nodes": [
+     "screenmgr"
+    ]
+   },
+   {
+    "path": "Panel.c",
+    "t": "The generic list widget: items, selection, scrolling, <code>Panel_draw</code>, <code>Panel_onKey</code>, <code>Panel_getCh</code>.",
+    "nodes": [
+     "mainpanel"
+    ]
+   },
+   {
+    "path": "MainPanel.c",
+    "t": "The process-list panel: key table lookup, search and filter, reaction to result translation.",
+    "nodes": [
+     "mainpanel"
+    ]
+   },
+   {
+    "path": "IncSet.c",
+    "t": "Incremental search and filter line shown in place of the function bar; <code>History.c</code> keeps its history in a file.",
+    "nodes": [
+     "mainpanel"
+    ]
+   },
+   {
+    "path": "FunctionBar.c",
+    "t": "The F1 to F10 labels on the bottom line and the mapping from a click position to a key.",
+    "nodes": [
+     "mainpanel"
+    ]
+   },
+   {
+    "path": "Action.c",
+    "t": "One function per key and <code>Action_setBindings</code>, the table that maps keys to them.",
+    "why": "Every action has the same function-pointer type (<code>Htop_Action</code>), so platforms can add their own keys to the same table with <code>Platform_setBindings</code>.",
+    "nodes": [
+     "actions"
+    ]
+   },
+   {
+    "path": "CategoriesPanel.c",
+    "t": "The Setup screen: the category list that builds the other Setup panels.",
+    "nodes": [
+     "subscreens"
+    ]
+   },
+   {
+    "path": "DisplayOptionsPanel.c",
+    "t": "The Setup page with the on/off and numeric display options. Other pages: <code>MetersPanel.c</code>, <code>ColumnsPanel.c</code>, <code>ColorsPanel.c</code>, <code>ScreensPanel.c</code>, <code>HeaderOptionsPanel.c</code>.",
+    "nodes": [
+     "subscreens"
+    ]
+   },
+   {
+    "path": "InfoScreen.c",
+    "t": "Base of the per-process screens (<code>EnvScreen.c</code>, <code>OpenFilesScreen.c</code>, <code>TraceScreen.c</code>, <code>ProcessLocksScreen.c</code>, <code>CommandScreen.c</code>) with its own input loop.",
+    "nodes": [
+     "subscreens"
+    ]
+   },
+   {
+    "path": "Settings.c",
+    "t": "All options, htoprc reading and writing, screen definitions.",
+    "why": "A new option needs a field in <code>Settings.h</code>, a default and a parse line in <code>Settings_read</code>, and a line in <code>Settings_write</code>.",
+    "nodes": [
+     "settings",
+     "htoprc"
+    ]
+   },
+   {
+    "path": "Machine.c",
+    "t": "Host state shared by all platforms and <code>Machine_scanTables</code>.",
+    "nodes": [
+     "machine"
+    ]
+   },
+   {
+    "path": "Table.c",
+    "t": "Rows, lookup by id, tree building, <code>Table_rebuildPanel</code>, removal of vanished rows.",
+    "nodes": [
+     "ptable"
+    ]
+   },
+   {
+    "path": "ProcessTable.c",
+    "t": "The Table subclass for processes; forwards the scan to the platform.",
+    "nodes": [
+     "ptable"
+    ]
+   },
+   {
+    "path": "Row.c",
+    "t": "Base of a table line: <code>Row_display</code> and the number formatting helpers (<code>Row_printKBytes</code>, <code>Row_printTime</code>).",
+    "nodes": [
+     "process"
+    ]
+   },
+   {
+    "path": "Process.c",
+    "t": "Platform-independent process fields: printing, comparing, the merged command string, signals and priority.",
+    "nodes": [
+     "process"
+    ]
+   },
+   {
+    "path": "Header.c",
+    "t": "Meter columns above the process list.",
+    "nodes": [
+     "header"
+    ]
+   },
+   {
+    "path": "Meter.c",
+    "t": "<code>MeterClass</code> and the text, bar, graph and LED draw modes.",
+    "nodes": [
+     "meters"
+    ]
+   },
+   {
+    "path": "MemoryMeter.c",
+    "t": "A small complete meter, good to copy from. Siblings: <code>CPUMeter.c</code>, <code>SwapMeter.c</code>, <code>LoadAverageMeter.c</code>, <code>TasksMeter.c</code> and more.",
+    "nodes": [
+     "meters"
+    ]
+   },
+   {
+    "path": "CRT.c",
+    "t": "Curses start and stop, colour schemes, key constants, crash handler.",
+    "nodes": [
+     "crt"
+    ]
+   },
+   {
+    "path": "RichString.c",
+    "t": "Strings with per-character attributes.",
+    "nodes": [
+     "richstring"
+    ]
+   },
+   {
+    "path": "Object.h",
+    "t": "<code>Object</code>, <code>ObjectClass</code> and the macros behind the class emulation (<code>Class()</code>, <code>Object_display</code>, <code>Object_delete</code>).",
+    "why": "Read this before any <code>*_class</code> definition; the pattern repeats in Row, Panel, Meter and Table.",
+    "nodes": [
+     "foundation"
+    ]
+   },
+   {
+    "path": "Vector.c",
+    "t": "Growable array of objects with sorting.",
+    "nodes": [
+     "foundation"
+    ]
+   },
+   {
+    "path": "Hashtable.c",
+    "t": "Integer-keyed hash table.",
+    "nodes": [
+     "foundation"
+    ]
+   },
+   {
+    "path": "XUtils.c",
+    "t": "Allocation wrappers that abort on failure, string helpers, safe <code>snprintf</code> and line reading.",
+    "why": "The style guide asks for these instead of raw <code>malloc</code> and <code>strcmp</code>, so most files include <code>XUtils.h</code>.",
+    "nodes": [
+     "foundation"
+    ]
+   },
+   {
+    "path": "linux/",
+    "t": "The Linux platform: the example used on this map.",
+    "why": "The effect of the split: each system's data collection stays in one directory, and the core needs no <code>#ifdef</code> per system for it (a few remain, mostly in user-interface code).",
+    "open": true,
+    "nodes": [
+     "platform"
+    ],
+    "more": "Linux-only meters (pressure stall, zram, systemd, SELinux), cgroup parsing, GPU, sensors, netlink"
+   },
+   {
+    "path": "linux/Platform.c",
+    "t": "<code>Platform_init</code>, <code>Platform_meterTypes</code>, the <code>Platform_set*Values</code> and <code>Platform_get*</code> functions meters call, Linux key bindings.",
+    "nodes": [
+     "platform"
+    ]
+   },
+   {
+    "path": "linux/LinuxMachine.c",
+    "t": "<code>Machine_new</code> and <code>Machine_scan</code>: memory, CPU times and frequency from procfs and sysfs.",
+    "nodes": [
+     "platform",
+     "machine"
+    ]
+   },
+   {
+    "path": "linux/LinuxProcessTable.c",
+    "t": "<code>ProcessTable_goThroughEntries</code>: the walk over <code>/proc</code>.",
+    "nodes": [
+     "platform",
+     "ptable"
+    ]
+   },
+   {
+    "path": "linux/LinuxProcess.c",
+    "t": "Linux-only columns: field table, printing and comparing.",
+    "nodes": [
+     "platform",
+     "process"
+    ]
+   },
+   {
+    "path": "darwin/",
+    "t": "macOS platform. Same four roles: Platform, DarwinMachine, DarwinProcessTable, DarwinProcess.",
+    "nodes": [
+     "platform"
+    ]
+   },
+   {
+    "path": "freebsd/",
+    "t": "FreeBSD platform. <code>dragonflybsd/</code>, <code>netbsd/</code>, <code>openbsd/</code> and <code>solaris/</code> follow the same layout.",
+    "nodes": [
+     "platform"
+    ]
+   },
+   {
+    "path": "pcp/",
+    "t": "Performance Co-Pilot platform, built as <code>pcp-htop</code>; reads metrics through PMAPI and defines extra columns, meters and screens in config files under <code>pcp/columns/</code>, <code>pcp/meters/</code>, <code>pcp/screens/</code>.",
+    "nodes": [
+     "platform"
+    ]
+   },
+   {
+    "path": "unsupported/",
+    "t": "Fallback platform that lets htop build anywhere: one fake process, empty meters.",
+    "nodes": [
+     "platform"
+    ]
+   },
+   {
+    "path": "generic/",
+    "t": "Helpers shared by several platforms: clock, hostname, uname, sysctl-based readers, and the symbol demangling and stack unwinding used by the backtrace screen.",
+    "nodes": [
+     "platform"
+    ]
+   },
+   {
+    "path": "configure.ac",
+    "t": "Detects the system, picks <code>my_htop_platform</code> and the optional libraries.",
+    "tag": "build"
+   },
+   {
+    "path": "Makefile.am",
+    "t": "Lists the core sources and, per platform, the directory's sources; exactly one set is compiled.",
+    "tag": "build"
+   },
+   {
+    "path": "docs/styleguide.md",
+    "t": "Naming, includes, memory and string conventions to follow in a patch.",
+    "tag": "docs"
+   }
+  ]
+ },
+ "layout": {
+  "nodes": {
+   "user": {
+    "x": 74,
+    "y": 214,
+    "w": 211,
+    "h": 72
+   },
+   "terminal": {
+    "x": 48,
+    "y": 424,
+    "w": 265,
+    "h": 72
+   },
+   "main": {
+    "x": 434,
+    "y": 74,
+    "w": 232,
+    "h": 72
+   },
+   "settings": {
+    "x": 466,
+    "y": 844,
+    "w": 168,
+    "h": 72
+   },
+   "htoprc": {
+    "x": 62,
+    "y": 844,
+    "w": 236,
+    "h": 72
+   },
+   "screenmgr": {
+    "x": 834,
+    "y": 214,
+    "w": 191,
+    "h": 72
+   },
+   "mainpanel": {
+    "x": 824,
+    "y": 424,
+    "w": 212,
+    "h": 72
+   },
+   "actions": {
+    "x": 846,
+    "y": 644,
+    "w": 168,
+    "h": 72
+   },
+   "subscreens": {
+    "x": 818,
+    "y": 844,
+    "w": 225,
+    "h": 72
+   },
+   "machine": {
+    "x": 1256,
+    "y": 424,
+    "w": 168,
+    "h": 72
+   },
+   "ptable": {
+    "x": 1224,
+    "y": 644,
+    "w": 232,
+    "h": 72
+   },
+   "process": {
+    "x": 1636,
+    "y": 644,
+    "w": 188,
+    "h": 72
+   },
+   "platform": {
+    "x": 1966,
+    "y": 214,
+    "w": 229,
+    "h": 72
+   },
+   "kernel": {
+    "x": 1962,
+    "y": 424,
+    "w": 235,
+    "h": 72
+   },
+   "header": {
+    "x": 1256,
+    "y": 214,
+    "w": 168,
+    "h": 72
+   },
+   "meters": {
+    "x": 1634,
+    "y": 214,
+    "w": 192,
+    "h": 72
+   },
+   "crt": {
+    "x": 414,
+    "y": 424,
+    "w": 273,
+    "h": 72
+   },
+   "richstring": {
+    "x": 1646,
+    "y": 844,
+    "w": 168,
+    "h": 72
+   },
+   "foundation": {
+    "x": 1170,
+    "y": 844,
+    "w": 341,
+    "h": 72
+   }
+  },
+  "zones": {
+   "z_people": {
+    "x": 26,
+    "y": 170,
+    "w": 309,
+    "h": 348
+   },
+   "z_start": {
+    "x": 412,
+    "y": 30,
+    "w": 276,
+    "h": 138
+   },
+   "z_settings": {
+    "x": 40,
+    "y": 800,
+    "w": 616,
+    "h": 138
+   },
+   "z_loop": {
+    "x": 796,
+    "y": 170,
+    "w": 269,
+    "h": 768
+   },
+   "z_model": {
+    "x": 1202,
+    "y": 380,
+    "w": 644,
+    "h": 358
+   },
+   "z_meters": {
+    "x": 1234,
+    "y": 170,
+    "w": 614,
+    "h": 138
+   },
+   "z_draw": {
+    "x": 392,
+    "y": 380,
+    "w": 317,
+    "h": 138
+   },
+   "z_platform": {
+    "x": 1940,
+    "y": 170,
+    "w": 279,
+    "h": 348
+   },
+   "z_base": {
+    "x": 1148,
+    "y": 800,
+    "w": 688,
+    "h": 138
+   }
+  }
+ }
+}
