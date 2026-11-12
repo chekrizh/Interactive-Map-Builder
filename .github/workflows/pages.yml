@@ -8,6 +8,7 @@ on:
     paths:
       - plugins/interactive-map/skills/interactive-map/**
       - .github/workflows/pages.yml
+      - docs/gallery/**
   workflow_dispatch:
 
 permissions:
@@ -31,7 +32,7 @@ jobs:
       - name: Render the example maps
         run: |
           mkdir _site
-          # Every real-project example becomes a page; the Kutt map is also the front page.
+          # Every real-project example and every docs/gallery map becomes a page; the Kutt map is also the front page.
           # Each first panel says what made the map and links back here.
           python3 - <<'PY'
           import json, pathlib, subprocess
@@ -41,6 +42,8 @@ jobs:
           credit = ('<p>Made with <a href="https://github.com/chekrizh/Interactive-Map-Builder">Interactive Map Builder</a>, '
                     'a Claude Code plugin that maps a repository like this one.</p>')
           pages = {src.stem: src for src in sorted(examples.glob('*.json')) if src.stem != 'fastapi-service'}
+          # Maps of other projects made for the gallery: published, but not shipped with the plugin.
+          pages.update({src.stem: src for src in sorted(pathlib.Path('docs/gallery').glob('*.json'))})
           pages['index'] = examples / 'kutt-url-shortener.json'
           for name, src in pages.items():
               d = json.loads(src.read_text(encoding='utf-8'))
