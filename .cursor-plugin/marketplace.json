@@ -1,0 +1,16 @@
+{
+  "name": "interactive-map-builder",
+  "owner": {
+    "name": "chekrizh"
+  },
+  "metadata": {
+    "description": "Skills that turn a code repository into an interactive map, delivered as one offline HTML file."
+  },
+  "plugins": [
+    {
+      "name": "interactive-map",
+      "source": "./plugins/interactive-map",
+      "description": "Interactive maps of code repositories: C4 overview, drill-down into components, animated flows, look-inside scenes, build order and a guided tour, as one offline HTML file."
+    }
+  ]
+}

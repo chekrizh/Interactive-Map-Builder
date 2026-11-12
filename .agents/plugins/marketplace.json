@@ -1,0 +1,20 @@
+{
+  "name": "interactive-map-builder",
+  "interface": {
+    "displayName": "Interactive Map Builder"
+  },
+  "plugins": [
+    {
+      "name": "interactive-map",
+      "source": {
+        "source": "local",
+        "path": "./plugins/interactive-map"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

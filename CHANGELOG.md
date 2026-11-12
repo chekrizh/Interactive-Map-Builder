@@ -2,6 +2,10 @@
 
 Versions follow `plugins/interactive-map/.claude-plugin/plugin.json`. Each version change publishes a [GitHub release](https://github.com/chekrizh/Interactive-Map-Builder/releases) with the skill zips.
 
+## 0.7.6 — 2026-11-12
+
+- Plugin manifests for Cursor (`.cursor-plugin/`) and Codex (`plugin.json` and `.agents/plugins/marketplace.json`), beside the Claude Code one, with a test that keeps their versions in step. The README shows how to add the Codex marketplace.
+
 ## 0.7.5 — 2026-11-11
 
 Clearer skill instructions, from a builder agent's notes on a real run:
