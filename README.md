@@ -164,7 +164,7 @@ The skills are then also available as `/interactive-map:interactive-map` and `/i
 codex plugin marketplace add chekrizh/Interactive-Map-Builder
 ```
 
-Then install `interactive-map` from the Interactive Map Builder marketplace in the plugin directory. `codex plugin marketplace upgrade` fetches newer versions. This path has not been checked here yet.
+Then install `interactive-map` from the Interactive Map Builder marketplace in the plugin directory. `codex plugin marketplace upgrade` fetches newer versions.
 
 </details>
 
