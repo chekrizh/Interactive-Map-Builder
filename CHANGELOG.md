@@ -5,6 +5,7 @@ Versions follow `plugins/interactive-map/.claude-plugin/plugin.json`. Each versi
 ## 0.7.6 — 2026-11-12
 
 - Plugin manifests for Cursor (`.cursor-plugin/`) and Codex (`plugin.json` and `.agents/plugins/marketplace.json`), beside the Claude Code one, with a test that keeps their versions in step. The README shows how to add the Codex marketplace.
+- Three spare colour sets (sky, olive, brown) for a map's own roles, so they no longer copy a preset's colour and look the same in the legend.
 
 ## 0.7.5 — 2026-11-11
 
