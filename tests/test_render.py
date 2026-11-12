@@ -434,3 +434,26 @@ class AutoLayoutTest(unittest.TestCase):
 def layout_check_points(d):
     import layout_check
     return layout_check.points(d)
+
+
+class ManifestTest(unittest.TestCase):
+    """The plugin ships one manifest per agent; they must describe the same release."""
+    PLUGIN = ROOT / 'plugins' / 'interactive-map'
+    MANIFESTS = ('.claude-plugin/plugin.json', '.cursor-plugin/plugin.json', 'plugin.json')
+
+    def test_manifests_agree(self):
+        found = {m: json.loads((self.PLUGIN / m).read_text(encoding='utf-8')) for m in self.MANIFESTS}
+        for key in ('name', 'version', 'description'):
+            self.assertEqual(len({m[key] for m in found.values()}), 1, f'{key} differs between {self.MANIFESTS}')
+
+    def test_marketplaces_point_at_the_plugin(self):
+        for path, source in (('.claude-plugin/marketplace.json', lambda p: p['source']),
+                             ('.cursor-plugin/marketplace.json', lambda p: p['source']),
+                             ('.agents/plugins/marketplace.json', lambda p: p['source']['path'])):
+            entries = json.loads((ROOT / path).read_text(encoding='utf-8'))['plugins']
+            for p in entries:
+                self.assertTrue((ROOT / source(p)).resolve() == self.PLUGIN, path)
+
+    def test_manifest_assets_exist(self):
+        self.assertTrue((self.PLUGIN / 'icon.svg').is_file())
+        self.assertTrue((self.PLUGIN / 'assets' / 'logo.png').is_file())

@@ -6,8 +6,13 @@ Notes for working on the viewer and the skills, releasing updates and testing th
 
 ```
 .claude-plugin/marketplace.json     Claude Code marketplace: lists the plugin below
+.cursor-plugin/marketplace.json     the same for Cursor
+.agents/plugins/marketplace.json    the same for Codex
 plugins/interactive-map/
   .claude-plugin/plugin.json        plugin name and version (bump it to ship an update)
+  .cursor-plugin/plugin.json        Cursor manifest, same version
+  plugin.json                       Codex manifest (Agent Plugins format), same version
+  icon.svg, assets/logo.png         plugin icon (the PNG is for Codex)
   skills/interactive-map/           the format and renderer; self-contained, no Node needed
     SKILL.md
     assets/viewer/                  the viewer (unminified JS, CSS, font), built from app/ and committed;
@@ -68,7 +73,7 @@ Keep every file in the plugin readable and under 256 KiB (fonts and images aside
 
 1. Change the viewer in `app/` and run `npm run build:template`, or change the skill files directly.
 2. Run `python3 -m unittest discover tests` and `claude plugin validate .`.
-3. **Bump `version` in `plugins/interactive-map/.claude-plugin/plugin.json`.** Claude Code users keep their cached copy until this string changes, so a push without a bump reaches nobody.
+3. **Bump `version` in `plugins/interactive-map/.claude-plugin/plugin.json`**, and the same version in `.cursor-plugin/plugin.json` and `plugin.json` (Codex) next to it; a test checks that the three agree. Claude Code users keep their cached copy until this string changes, so a push without a bump reaches nobody.
 4. Merge to `main`. Marketplace users get the update on their next update command, or on their own if they enabled auto-update.
 5. Nothing else by hand. On a version change `.github/workflows/release.yml` tags `v<version>` and publishes a GitHub release with one zip per skill for Claude apps users (who have to upload them again), and `.github/workflows/pages.yml` re-renders every real-project example on GitHub Pages (Kutt on the front page) whenever the format skill changes.
 

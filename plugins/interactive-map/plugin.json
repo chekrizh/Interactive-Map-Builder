@@ -1,0 +1,31 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "interactive-map",
+  "version": "0.7.6",
+  "description": "Build an interactive map of a code repository (C4 overview, drill-down, animated flows, guided tour) as one self-contained HTML file.",
+  "author": {
+    "name": "chekrizh"
+  },
+  "homepage": "https://chekrizh.github.io/Interactive-Map-Builder/",
+  "repository": "https://github.com/chekrizh/Interactive-Map-Builder",
+  "license": "MIT",
+  "keywords": [
+    "codebase",
+    "architecture",
+    "c4-model",
+    "onboarding",
+    "code-understanding",
+    "interactive-map",
+    "visualization"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Interactive Map Builder",
+        "logo": "./assets/logo.png",
+        "composerIcon": "./assets/logo.png",
+        "brandColor": "#2B2F36"
+      }
+    }
+  }
+}

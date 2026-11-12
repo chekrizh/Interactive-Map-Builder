@@ -443,13 +443,31 @@ def pixels(d, column, row, zorder, zlayer):
         cx = round(cx / STEP) * STEP
         cy = round((rowy[row[i]] + h / 2) / STEP) * STEP
         cards[i] = layout_check.Box(cx - w / 2, cy - h / 2, w, h)
+    # Zones that share a layer and stand in the same columns share their width, so stacked
+    # zones line up. A zone that layout.grid moved into other columns keeps its own width.
+    span = {}
+    for i in nodes:
+        if zone_of[i]:
+            lo, hi = span.get(zone_of[i], (cards[i].x, cards[i].r))
+            span[zone_of[i]] = (min(lo, cards[i].x), max(hi, cards[i].r))
+    group = {z: {z} for z in span}
+    changed = True
+    while changed:
+        changed = False
+        for a in span:
+            for b in span:
+                if b not in group[a] and zlayer[a] == zlayer[b] and \
+                        min(span[a][1], span[b][1]) > max(span[a][0], span[b][0]):
+                    merged = group[a] | group[b]
+                    for z in merged:
+                        group[z] = merged
+                    changed = True
     zones = {}
     for z in zorder:
         if not z:
             continue
         mine = [cards[i] for i in nodes if zone_of[i] == z]
-        # Zones that share a layer share its width.
-        peers = [cards[i] for i in nodes if zone_of[i] and zlayer[zone_of[i]] == zlayer[z]]
+        peers = [cards[i] for i in nodes if zone_of[i] in group[z]]
         left = min(b.x for b in peers) - ZONE_PAD
         right = max(b.r for b in peers) + ZONE_PAD
         top = min(b.y for b in mine) - ZONE_TOP
