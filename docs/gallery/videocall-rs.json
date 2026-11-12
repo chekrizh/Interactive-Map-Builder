@@ -1,0 +1,1917 @@
+{
+ "id": "videocall-rs",
+ "source": {
+  "repo": "https://github.com/security-union/videocall-rs",
+  "ref": "31a8b2076e7228f1b846fe4ed75dc70ffc27eb44"
+ },
+ "page": {
+  "title": "videocall.rs: how a call works, mapped",
+  "slots": {
+   "overviewDescription": "videocall.rs in context: who connects, the browser app, the two kinds of server and the message bus between them.",
+   "mapDescription": "The browser client, the Meeting API, the media servers and NATS, with the paths a join, a connection and a video frame take.",
+   "completionIntro": "You followed a participant from sign-in to a room token, through the transport election, and one video frame from a camera to another screen.",
+   "completionLessons": "<li>Why there are two servers: one that decides who may join and one that only relays bytes</li><li>How a signed room token is the only link between them</li><li>Why media servers never talk to each other, only to NATS</li><li>How the client picks WebTransport or WebSocket by measuring round-trip time</li>"
+  }
+ },
+ "roles": {
+  "broker": {
+   "label": "Message broker",
+   "light": "#c2417a",
+   "dark": "#f59ac2",
+   "fillLight": "#fcedf3",
+   "fillDark": "#45263a"
+  },
+  "library": {
+   "label": "Shared library",
+   "light": "#52607a",
+   "dark": "#aab8d0",
+   "fillLight": "#eef1f6",
+   "fillDark": "#2a3040"
+  }
+ },
+ "panels": {
+  "introHtml": "<div class=\"p-eyebrow\">Start here</div><h2>videocall.rs, a video conferencing system in Rust</h2><p style=\"margin-top:8px\">A map of <a href=\"https://github.com/security-union/videocall-rs\">security-union/videocall-rs</a> at commit <code>31a8b20</code>, in C4 terms: context on this overview, containers and their main components on the full map. It favours the runtime model: how a call is set up and how media gets from one client to another.</p><p>The short version: a browser app written in Rust (WebAssembly) asks a small REST service for permission to join a room, then opens a WebSocket or WebTransport connection to a media server. Media servers do not mix or transcode anything. They relay protobuf packets through NATS to everyone else in the room. There is no WebRTC.</p><p><small>videocall.rs is made by Security Union LLC and contributors and released under the MIT or Apache 2.0 licence. This map describes it in its own words and is not affiliated with its authors.</small></p><h3>Try it</h3><ul class=\"newlist\"><li>Open a card to see its part of the system.</li><li>Play <b>One video frame, from Alice to Bob</b> to follow media through the servers.</li><li>Click a component for what it does and where it lives in the code.</li></ul><div class=\"panel-actions\"><button type=\"button\" class=\"panel-action\" id=\"gofull\">Open full map</button></div>",
+  "overviewHtml": "<div class=\"p-eyebrow\">The full map</div><h2>A control plane, a data plane and a bus</h2><p style=\"margin-top:8px\">In the local dev stack (<code>nix/dev-stack.nix</code>) these run as separate processes: the browser app, the Meeting API (<code>meeting-api</code>, port 8081), two media servers built from one crate (<code>actix-api</code>: WebSocket on 8080, WebTransport on UDP 4433), two small metrics servers, NATS and PostgreSQL.</p><h3>How to read it</h3><p>People and clients on the left, servers in the middle, NATS and storage on the right. The browser zone and the media-server zone are opened up into their main components. Four cards have a look-inside view: the connection manager, the session actor, the room router and the wire format.</p><p>Component names inside a zone are Rust modules or actors, not processes.</p>"
+ },
+ "groups": {
+  "people": {
+   "title": "People and devices",
+   "huekey": "person",
+   "icon": "users",
+   "line1": "Participants in a browser,",
+   "line2": "plus native clients.",
+   "chips": "browser · CLI · bot · mobile SDK",
+   "text": "Most participants use the web app. The repository also holds native clients that speak the same protocol over WebTransport: a command-line streamer, a load-test bot and an FFI library for the mobile apps.",
+   "members": [
+    "user",
+    "native"
+   ]
+  },
+  "browser": {
+   "title": "Browser app",
+   "huekey": "component",
+   "icon": "app-window",
+   "line1": "A Rust UI compiled to WebAssembly",
+   "line2": "and a client library under it.",
+   "chips": "dioxus-ui · videocall-client",
+   "text": "The UI (Dioxus) handles pages, sign-in and the waiting room. Under it, videocall-client owns the connection, encodes camera, microphone and screen, decodes every peer and measures quality.",
+   "members": [
+    "ui",
+    "vcclient",
+    "connmgr",
+    "encoders",
+    "decoders",
+    "diag"
+   ]
+  },
+  "control": {
+   "title": "Meeting API",
+   "huekey": "component",
+   "icon": "key-round",
+   "line1": "Who may join which room.",
+   "line2": "Issues signed room tokens.",
+   "chips": "meeting-api · Axum · PostgreSQL",
+   "text": "The control plane. It signs users in, stores meetings and participants, runs the waiting room and hands out short-lived room tokens. It never touches media.",
+   "members": [
+    "mapi",
+    "db"
+   ]
+  },
+  "media": {
+   "title": "Media servers",
+   "huekey": "component",
+   "icon": "radio-tower",
+   "line1": "Relay packets, never decode.",
+   "line2": "Two transports, one room logic.",
+   "chips": "actix-api · WS · WebTransport",
+   "text": "The data plane. One crate builds a WebSocket server and a WebTransport server. Both validate the room token, run one actor per connection and pass packets to and from NATS.",
+   "members": [
+    "ws",
+    "wt",
+    "session",
+    "chat"
+   ]
+  },
+  "backbone": {
+   "title": "Message backbone",
+   "huekey": "broker",
+   "icon": "waypoints",
+   "line1": "NATS subjects per room,",
+   "line2": "one protobuf envelope.",
+   "chips": "NATS · PacketWrapper",
+   "text": "Every packet is a protobuf PacketWrapper, and every room is a family of NATS subjects. This pair is the contract all the other parts share.",
+   "members": [
+    "nats",
+    "types"
+   ]
+  },
+  "observe": {
+   "title": "Observability",
+   "huekey": "background",
+   "icon": "activity",
+   "line1": "Client health reports",
+   "line2": "become Prometheus metrics.",
+   "chips": "NATS consumers · Prometheus",
+   "text": "Clients report what they receive from each peer. Two small servers read those reports from NATS and expose them for Prometheus to scrape.",
+   "members": [
+    "metrics",
+    "prom"
+   ]
+  },
+  "outside": {
+   "title": "Identity provider",
+   "huekey": "external",
+   "icon": "shield-check",
+   "line1": "Optional OAuth / OIDC sign-in.",
+   "line2": "Google or Okta buttons in the UI.",
+   "chips": "OIDC · PKCE",
+   "text": "When OAuth is configured, the Meeting API sends people to an outside identity provider and turns the result into its own session cookie.",
+   "members": [
+    "idp"
+   ]
+  }
+ },
+ "overview": [
+  {
+   "g": "people"
+  },
+  {
+   "g": "browser"
+  },
+  {
+   "g": "control"
+  },
+  {
+   "g": "outside"
+  },
+  {
+   "g": "media"
+  },
+  {
+   "g": "backbone"
+  },
+  {
+   "g": "observe"
+  }
+ ],
+ "overviewEdges": [
+  {
+   "id": "o1",
+   "from": "people",
+   "to": "browser",
+   "label": "open the app"
+  },
+  {
+   "id": "o2",
+   "from": "browser",
+   "to": "control",
+   "label": "sign in, join"
+  },
+  {
+   "id": "o3",
+   "from": "browser",
+   "to": "media",
+   "label": "media packets"
+  },
+  {
+   "id": "o4",
+   "from": "control",
+   "to": "outside",
+   "label": "OIDC login"
+  },
+  {
+   "id": "o5",
+   "from": "media",
+   "to": "backbone",
+   "label": "publish, subscribe"
+  },
+  {
+   "id": "o6",
+   "from": "control",
+   "to": "backbone",
+   "label": "meeting events"
+  },
+  {
+   "id": "o7",
+   "from": "observe",
+   "to": "backbone",
+   "label": "read health reports"
+  }
+ ],
+ "zones": [
+  {
+   "id": "people",
+   "label": "People and native clients",
+   "hue": "person"
+  },
+  {
+   "id": "browser",
+   "label": "Browser tab · Rust compiled to WebAssembly",
+   "hue": "component"
+  },
+  {
+   "id": "control",
+   "label": "Control plane · meeting-api",
+   "hue": "component"
+  },
+  {
+   "id": "media",
+   "label": "Media servers · actix-api crate (2 binaries)",
+   "hue": "component"
+  },
+  {
+   "id": "bus",
+   "label": "Shared by all servers",
+   "hue": "broker"
+  },
+  {
+   "id": "observe",
+   "label": "Observability",
+   "hue": "background"
+  }
+ ],
+ "nodes": [
+  {
+   "id": "user",
+   "group": "people",
+   "zone": "people",
+   "cat": "person",
+   "shape": "person",
+   "icon": "user",
+   "step": 1,
+   "concept": "Participant",
+   "tool": "Person · browser",
+   "what": "Opens a meeting link, picks a display name and devices, and talks. The first person to join a new meeting id becomes its host; later joiners may have to wait to be admitted.",
+   "why": "Everything else exists to move this person's camera, microphone and screen to the other people in the room with little delay.",
+   "tools": "A browser with WebCodecs. The UI checks for <code>MediaStreamTrackProcessor</code> and <code>VideoEncoder</code> and turns Firefox away unless <code>firefoxEnabled</code> is set (<code>dioxus-ui/src/components/browser_compatibility.rs</code>). WebTransport is not required: the client tries both transports and keeps one."
+  },
+  {
+   "id": "native",
+   "group": "people",
+   "zone": "people",
+   "cat": "component",
+   "icon": "terminal",
+   "step": 4,
+   "concept": "Native clients",
+   "tool": "CLI · bot · mobile SDK",
+   "what": "Programs that join a room without a browser. <code>videocall-cli</code> streams a camera or test pattern from a desktop, robot or Raspberry Pi. <code>bot</code> sends recorded audio and video for load tests. <code>videocall-sdk</code> wraps a WebTransport client behind UniFFI bindings meant for iOS and Android; the app projects under <code>apps/</code> are still template stubs that do not call it.",
+   "why": "They show the protocol is not tied to the browser: anything that can open a WebTransport session and send PacketWrapper bytes is a participant.",
+   "tools": "web-transport-quinn · the VP9 encoder in <code>videocall-codecs</code> (pure Rust by default, libvpx as an opt-in feature) · UniFFI. Key files: <code>videocall-cli/src/consumers/webtransport.rs</code>, <code>bot/src/webtransport_client.rs</code>, <code>videocall-sdk/src/lib.rs</code>. The CLI and the bot connect with the older <code>/lobby/USER/ROOM</code> path, which the server accepts only when <code>FEATURE_MEETING_MANAGEMENT</code> is off."
+  },
+  {
+   "id": "idp",
+   "group": "outside",
+   "zone": "control",
+   "cat": "external",
+   "shape": "external",
+   "icon": "shield-check",
+   "logo": "openid",
+   "step": 5,
+   "concept": "Identity provider",
+   "tool": "External · OAuth / OIDC",
+   "what": "An outside sign-in service. The Meeting API redirects the browser to it, then exchanges the returned code for tokens and reads the user's email and name.",
+   "why": "Optional. With no <code>OAUTH_CLIENT_ID</code> the login routes answer with an error; separately, the UI skips its session check when its own <code>oauthEnabled</code> setting is off. Not visible in the code: how a person gets a session cookie in that mode; the end-to-end tests inject a signed cookie themselves (<code>e2e/helpers/auth.ts</code>).",
+   "tools": "Any OIDC provider; endpoints come from <code>OAUTH_ISSUER</code> discovery or explicit URLs (<code>meeting-api/src/config.rs</code>, <code>meeting-api/src/oauth.rs</code>). The UI has Google and Okta sign-in buttons."
+  },
+  {
+   "id": "ui",
+   "group": "browser",
+   "zone": "browser",
+   "cat": "component",
+   "icon": "layout-dashboard",
+   "step": 1,
+   "concept": "Web UI",
+   "tool": "dioxus-ui · Dioxus 0.7",
+   "what": "The pages and components: home, meeting, settings, the waiting room, peer tiles and host controls. It calls the Meeting API through <code>videocall-meeting-client</code> and, once it holds a room token, builds the lobby URLs and creates a VideoCallClient.",
+   "why": "It is the only part that knows about meetings as a product (hosts, waiting, admission). The client library below it only knows rooms, peers and packets.",
+   "tools": "Dioxus 0.7 for the web, built with Trunk; runtime settings come from <code>window.__APP_CONFIG</code> in <code>dioxus-ui/scripts/config.js</code>. Key files: <code>dioxus-ui/src/pages/meeting.rs</code> (join state machine), <code>dioxus-ui/src/components/attendants.rs</code> (creates the call client), <code>dioxus-ui/src/components/waiting_room.rs</code> (creates an observer client, as the meeting page does while waiting for the host), <code>videocall-meeting-client/src/</code>. Log records at warning level and above are also sent to a Matomo analytics server through the <code>matomo-logger</code> crate (<code>dioxus-ui/src/main.rs</code>)."
+  },
+  {
+   "id": "vcclient",
+   "group": "browser",
+   "zone": "browser",
+   "cat": "component",
+   "icon": "cpu",
+   "step": 1,
+   "concept": "VideoCallClient",
+   "tool": "videocall-client · client/",
+   "what": "The hub of the client library. It owns the connection controller, the peer decode manager and the optional end-to-end encryption keys, and it sorts every inbound PacketWrapper by type: media to the decoders, MEETING events to UI callbacks, DIAGNOSTICS to the sender-side controller, CONGESTION to a step-down flag.",
+   "why": "One place decides what each packet type means for the client, so the UI and the encoders never parse the envelope themselves.",
+   "tools": "Rust for <code>wasm32-unknown-unknown</code>. Key file: <code>videocall-client/src/client/video_call_client.rs</code> (<code>on_inbound_media</code>). End-to-end encryption is off unless <code>e2eeEnabled</code> is set. When on, each client sends its RSA public key whenever it first sees a new peer; a client that receives one answers with its own AES-128-CBC key encrypted to that public key, and both packets are relayed through the servers like any other (<code>RSA_PUB_KEY</code>, <code>AES_KEY</code>). Code: <code>videocall-client/src/crypto/</code>."
+  },
+  {
+   "id": "connmgr",
+   "group": "browser",
+   "zone": "browser",
+   "cat": "component",
+   "icon": "git-compare-arrows",
+   "step": 4,
+   "inside": "connmgr",
+   "concept": "Connection manager",
+   "tool": "videocall-client · connection/",
+   "what": "Opens a connection to every configured server URL at once, measures round-trip time on each, elects one and closes the rest. After that it sends heartbeats, keeps probing once a second, starts a new election if latency degrades and reconnects with backoff when the link drops.",
+   "why": "A client cannot know in advance whether WebTransport works on its network or which region is closest. Measuring is cheaper than guessing.",
+   "tools": "Browser WebSocket and WebTransport APIs through <code>videocall-transport</code>. Key files: <code>videocall-client/src/connection/connection_manager.rs</code>, <code>connection_controller.rs</code> (timers), <code>connection.rs</code> (heartbeat), <code>webtransport.rs</code> and <code>websocket.rs</code>."
+  },
+  {
+   "id": "encoders",
+   "group": "browser",
+   "zone": "browser",
+   "cat": "component",
+   "icon": "video",
+   "step": 3,
+   "concept": "Encoders",
+   "tool": "videocall-client · encode/",
+   "what": "Three capture pipelines: camera, microphone and screen share. Video frames go through the browser's WebCodecs VideoEncoder (VP9, or VP8 on Firefox); audio goes through an Opus encoder worklet. Each encoded chunk becomes a MediaPacket with a sequence number, is encrypted if end-to-end encryption is on, and is wrapped as a MEDIA packet.",
+   "why": "Encoding happens in the browser because the servers never look inside media. The sequence number is what lets a receiver notice a gap and ask for a keyframe.",
+   "tools": "WebCodecs, MediaStreamTrackProcessor, AudioWorklet. Key files: <code>videocall-client/src/encode/camera_encoder.rs</code>, <code>microphone_encoder.rs</code>, <code>screen_encoder.rs</code>, <code>transform.rs</code> (video chunk to packet; the audio equivalent is in <code>microphone_encoder.rs</code>)."
+  },
+  {
+   "id": "decoders",
+   "group": "browser",
+   "zone": "browser",
+   "cat": "component",
+   "icon": "monitor-play",
+   "step": 3,
+   "concept": "Peer decoders",
+   "tool": "videocall-client · decode/",
+   "what": "Keeps one entry per remote session with a video decoder, a screen decoder and an audio decoder. Video packets go to a web worker that holds a jitter buffer and a WebCodecs VideoDecoder, and decoded frames are drawn on a canvas. Audio packets go to a second worker running NetEq, an adaptive jitter buffer, and come back as PCM for playback.",
+   "why": "Packets arrive late, in bursts or not at all. The jitter buffers trade a little delay for smooth playback, and gap tracking turns a lost video frame into a keyframe request instead of a frozen picture.",
+   "tools": "Key files: <code>videocall-client/src/decode/peer_decode_manager.rs</code>, <code>peer_decoder.rs</code>, <code>neteq_audio_decoder.rs</code>. The workers come from two other crates: <code>videocall-codecs/src/bin/worker_decoder.rs</code> and <code>neteq/src/bin/neteq_worker.rs</code>."
+  },
+  {
+   "id": "diag",
+   "group": "browser",
+   "zone": "browser",
+   "cat": "background",
+   "icon": "gauge",
+   "step": 6,
+   "concept": "Diagnostics and adaptation",
+   "tool": "videocall-client · diagnostics/",
+   "what": "Measures what the client receives from each peer (frame rate, bitrate) and sends it two ways: a DIAGNOSTICS packet to the peers, and a HEALTH packet meant for the servers' metrics. On the sending side it turns the diagnostics it gets back into a target bitrate and a quality tier for the encoders.",
+   "why": "There is no server-side bandwidth estimation. Receivers tell senders how it is going, and senders adapt. The one server-made signal is CONGESTION, sent when a receiver's outbound queue overflows.",
+   "tools": "Key files: <code>videocall-client/src/diagnostics/diagnostics_manager.rs</code>, <code>encoder_bitrate_controller.rs</code>, <code>adaptive_quality_manager.rs</code>, <code>videocall-client/src/health_reporter.rs</code>. The UI turns both on with a 1 second diagnostics interval and a 5 second health interval."
+  },
+  {
+   "id": "mapi",
+   "group": "control",
+   "zone": "control",
+   "cat": "component",
+   "icon": "key-round",
+   "step": 5,
+   "concept": "Meeting API",
+   "tool": "meeting-api · Axum",
+   "what": "A REST service for sign-in and meetings: OAuth login and callback, session check, meeting create, list, end and delete, join and leave, and the waiting room (list, admit, reject). Joining returns either a room token or an observer token. It also publishes meeting events to NATS (activation, waiting room changes, admit, reject) so waiting clients are told at once. Leaving or ending a meeting updates the database only; nothing is published for those.",
+   "why": "It is the only issuer of room tokens. A media server accepts a connection only with a token signed with the same <code>JWT_SECRET</code>, so who may join is decided here and nowhere else.",
+   "tools": "Axum 0.8, sqlx, jsonwebtoken (HMAC), async-nats; listens on <code>0.0.0.0:8081</code> by default. Key files: <code>meeting-api/src/routes/mod.rs</code> (route table), <code>routes/participants.rs</code> (join), <code>routes/waiting_room.rs</code>, <code>token.rs</code>, <code>auth.rs</code>, <code>nats_events.rs</code>. Room tokens live 60 seconds by default (<code>TOKEN_TTL_SECS</code>); observer tokens 30 minutes. <code>GET /api/v1/versions</code> also fetches <code>/version</code> from the URLs in <code>SERVICE_VERSION_URLS</code>, typically the media servers."
+  },
+  {
+   "id": "db",
+   "group": "control",
+   "zone": "control",
+   "cat": "store",
+   "shape": "database",
+   "icon": "database",
+   "logo": "postgresql",
+   "step": 5,
+   "concept": "PostgreSQL",
+   "tool": "Database · SQL",
+   "what": "Holds the meeting state: <code>meetings</code> (room id, creator, state idle, active or ended, waiting room on or off), <code>meeting_participants</code> (status waiting, admitted, rejected or left, host flag, display name), <code>users</code> and the short-lived <code>oauth_requests</code> rows used during login.",
+   "why": "Meetings and admissions must outlive any one server process. Media servers keep nothing here: in the dev stack they run with <code>DATABASE_ENABLED=false</code>.",
+   "tools": "PostgreSQL in the dev stack and Helm charts; the Meeting API can also be built for SQLite (<code>sqlite</code> feature). Schema and migrations: <code>dbmate/db/migrations/</code>, <code>dbmate/db/schema.sql</code>; queries: <code>meeting-api/src/db/</code>."
+  },
+  {
+   "id": "ws",
+   "group": "media",
+   "zone": "media",
+   "cat": "component",
+   "icon": "plug",
+   "step": 1,
+   "concept": "WebSocket server",
+   "tool": "actix-api · websocket_server",
+   "what": "An Actix Web server whose main route is <code>GET /lobby?token=JWT</code>. It validates the room token, reads user, room, display name and observer flag from the claims, and upgrades the request to a WebSocket handled by a session actor. Frames up to 4 MB are accepted.",
+   "why": "WebSocket works in every browser and through most proxies, so it is the transport that always exists.",
+   "tools": "actix-web 4, actix-web-actors; port from <code>ACTIX_PORT</code> (8080). Key files: <code>actix-api/src/bin/websocket_server.rs</code>, <code>actix-api/src/lobby.rs</code>, <code>actix-api/src/token_validator.rs</code>. The same binary still carries an older cookie-based OAuth login, registered only when OAuth and the database are both configured."
+  },
+  {
+   "id": "wt",
+   "group": "media",
+   "zone": "media",
+   "cat": "component",
+   "icon": "zap",
+   "step": 4,
+   "concept": "WebTransport server",
+   "tool": "actix-api · webtransport_server",
+   "what": "A QUIC endpoint that accepts WebTransport sessions on <code>/lobby?token=JWT</code>, validates the same token, and bridges each session to a session actor: one task reads unidirectional streams, one reads datagrams and one writes. A small HTTP server beside it answers health checks.",
+   "why": "QUIC streams are independent, so one lost packet does not hold up everything behind it as it does on a single TCP connection. The client prefers this transport when it works.",
+   "tools": "quinn and web-transport-quinn, TLS 1.3 with certificates from <code>CERT_PATH</code> and <code>KEY_PATH</code>; listens on <code>LISTEN_URL</code> (UDP 4433 in dev). Key files: <code>actix-api/src/bin/webtransport_server.rs</code>, <code>actix-api/src/webtransport/mod.rs</code>, <code>actix-api/src/webtransport/bridge.rs</code>."
+  },
+  {
+   "id": "session",
+   "group": "media",
+   "zone": "media",
+   "cat": "component",
+   "icon": "user-cog",
+   "step": 1,
+   "inside": "session",
+   "concept": "Session actor",
+   "tool": "Actix actor · one per connection",
+   "what": "One actor per client connection: <code>WsChatSession</code> or <code>WtChatSession</code>, both thin wrappers around the shared <code>SessionLogic</code>. It gets a random 64-bit session id, tells the client that id, classifies every inbound packet (echo an RTT probe, drop, publish as health, rate-limit a keyframe request, or forward to the room) and writes outbound packets to the socket.",
+   "why": "Keeping the decisions in one transport-neutral struct means the two transports cannot drift apart in behaviour.",
+   "tools": "Key files: <code>actix-api/src/actors/session_logic.rs</code>, <code>actix-api/src/actors/packet_handler.rs</code>, <code>actix-api/src/actors/transports/ws_chat_session.rs</code>, <code>wt_chat_session.rs</code>. Clients are dropped after 30 seconds of silence (<code>actix-api/src/constants.rs</code>)."
+  },
+  {
+   "id": "chat",
+   "group": "media",
+   "zone": "media",
+   "cat": "component",
+   "icon": "route",
+   "step": 1,
+   "inside": "chat",
+   "concept": "ChatServer",
+   "tool": "Actix actor · one per process",
+   "what": "The room router. It keeps the sessions on this process, their state (Testing or Active) and who is in which room. On join it subscribes that session to the room's NATS subjects; on each forwarded packet it publishes to the session's own subject; on each NATS message it hands the bytes to the right session actor. It also announces joins, and leaves after a 2 second grace period (<code>PARTICIPANT_LEFT</code> on the system subject).",
+   "why": "It owns every room subscription and almost all publishing on <code>room.*</code> subjects; the exceptions there are CONGESTION signals, which session actors publish themselves, and meeting events from the Meeting API. Health reports and server connection events use other subjects and other publishers. Because every delivery goes through NATS, two people in a room can be on different servers, or different transports, without either server knowing.",
+   "tools": "actix, async-nats. Key file: <code>actix-api/src/actors/chat_server.rs</code>; subject builder in <code>actix-api/src/models/mod.rs</code>."
+  },
+  {
+   "id": "nats",
+   "group": "backbone",
+   "zone": "bus",
+   "cat": "broker",
+   "shape": "queue",
+   "icon": "waypoints",
+   "logo": "natsdotio",
+   "step": 2,
+   "concept": "NATS",
+   "tool": "Message broker · pub/sub",
+   "what": "Carries every packet between server processes. Subjects in use: <code>room.ROOM.SESSION</code> for packets from one sender, <code>room.ROOM.system</code> for meeting events, <code>health.diagnostics.REGION.SERVICE.SERVER</code> for client health reports and <code>server.connections.REGION.SERVICE.SERVER</code> for server connection events.",
+   "why": "Without it a room would be limited to one server process. With it, media servers stay independent of each other and can be added or removed freely.",
+   "tools": "nats-server (started with JetStream enabled in the dev stack, though the code shown here uses plain publish and subscribe); clients use the <code>async-nats</code> crate. Dev setup: <code>nix/dev-stack.nix</code>; Helm values under <code>helm/global/</code>."
+  },
+  {
+   "id": "types",
+   "group": "backbone",
+   "zone": "bus",
+   "cat": "library",
+   "icon": "package",
+   "step": 1,
+   "inside": "types",
+   "concept": "Wire format",
+   "tool": "videocall-types · protobuf",
+   "what": "The protobuf messages every part speaks. A <code>PacketWrapper</code> envelope carries a type, the sender's user id and session id, and an opaque payload; the payload is a <code>MediaPacket</code>, a <code>MeetingPacket</code>, a <code>HealthPacket</code> and so on depending on the type.",
+   "why": "Servers route on the envelope alone and can relay payloads they cannot read, which is what makes end-to-end encryption possible.",
+   "tools": "Definitions in <code>protobuf/types/</code>; generated Rust checked in under <code>videocall-types/src/protos/</code> (regenerate with <code>protobuf/Makefile</code>). Used by the client, both servers, the Meeting API and the native clients."
+  },
+  {
+   "id": "metrics",
+   "group": "observe",
+   "zone": "observe",
+   "cat": "background",
+   "icon": "chart-line",
+   "step": 6,
+   "concept": "Metrics servers",
+   "tool": "actix-api · 2 small binaries",
+   "what": "Two NATS consumers that expose Prometheus text on <code>/metrics</code>. <code>metrics_server</code> reads client health reports from <code>health.diagnostics.&gt;</code> and turns them into per-session, per-peer gauges. <code>metrics_server_snapshot</code> reads <code>server.connections.&gt;</code> events that each media server publishes about its connections and bytes.",
+   "why": "Health data arrives at whichever media server a client happens to use. Publishing it to NATS and aggregating here gives one scrape target per kind of metric.",
+   "tools": "actix-web, prometheus crate, async-nats; ports from <code>METRICS_PORT</code> (9091 and 9092 in dev). Key files: <code>actix-api/src/bin/metrics_server.rs</code>, <code>actix-api/src/bin/metrics_server_snapshot.rs</code>, <code>actix-api/src/server_diagnostics.rs</code>."
+  },
+  {
+   "id": "prom",
+   "group": "observe",
+   "zone": "observe",
+   "cat": "external",
+   "shape": "external",
+   "icon": "chart-area",
+   "logo": "prometheus",
+   "step": 6,
+   "concept": "Prometheus and Grafana",
+   "tool": "Third-party · monitoring",
+   "what": "Prometheus scrapes the two metrics servers; Grafana shows dashboards built on those series.",
+   "why": "Call quality problems are per person and per network. These dashboards are how operators see them without access to anyone's media.",
+   "tools": "Scrape config and alert rules in <code>monitoring/prometheus/</code>, dashboards in <code>monitoring/grafana/</code>; both run in the dev stack and have Helm values under <code>helm/global/</code>."
+  }
+ ],
+ "edges": [
+  {
+   "id": "u_ui",
+   "from": "user",
+   "to": "ui",
+   "label": "uses in a browser"
+  },
+  {
+   "id": "ui_api",
+   "from": "ui",
+   "to": "mapi",
+   "label": "REST + session cookie"
+  },
+  {
+   "id": "api_idp",
+   "from": "mapi",
+   "to": "idp",
+   "label": "OIDC code exchange"
+  },
+  {
+   "id": "api_db",
+   "from": "mapi",
+   "to": "db",
+   "label": "SQL (sqlx)"
+  },
+  {
+   "id": "api_nats",
+   "from": "mapi",
+   "to": "nats",
+   "label": "meeting events"
+  },
+  {
+   "id": "ui_vc",
+   "from": "ui",
+   "to": "vcclient",
+   "label": "creates with room token"
+  },
+  {
+   "id": "vc_cm",
+   "from": "vcclient",
+   "to": "connmgr",
+   "label": "connect, send packets"
+  },
+  {
+   "id": "enc_vc",
+   "from": "encoders",
+   "to": "vcclient",
+   "label": "MEDIA packets"
+  },
+  {
+   "id": "vc_dec",
+   "from": "vcclient",
+   "to": "decoders",
+   "label": "peer MEDIA packets"
+  },
+  {
+   "id": "dec_diag",
+   "from": "decoders",
+   "to": "diag",
+   "label": "frame stats"
+  },
+  {
+   "id": "diag_vc",
+   "from": "diag",
+   "to": "vcclient",
+   "label": "DIAGNOSTICS, HEALTH"
+  },
+  {
+   "id": "diag_enc",
+   "from": "diag",
+   "to": "encoders",
+   "label": "bitrate, quality tier"
+  },
+  {
+   "id": "cm_ws",
+   "from": "connmgr",
+   "to": "ws",
+   "label": "WebSocket /lobby"
+  },
+  {
+   "id": "cm_wt",
+   "from": "connmgr",
+   "to": "wt",
+   "label": "WebTransport /lobby"
+  },
+  {
+   "id": "nat_wt",
+   "from": "native",
+   "to": "wt",
+   "label": "WebTransport (QUIC)"
+  },
+  {
+   "id": "ws_se",
+   "from": "ws",
+   "to": "session",
+   "label": "starts WsChatSession"
+  },
+  {
+   "id": "wt_se",
+   "from": "wt",
+   "to": "session",
+   "label": "starts WtChatSession"
+  },
+  {
+   "id": "se_ch",
+   "from": "session",
+   "to": "chat",
+   "label": "actor messages"
+  },
+  {
+   "id": "ch_nats",
+   "from": "chat",
+   "to": "nats",
+   "label": "pub/sub room.ROOM.*"
+  },
+  {
+   "id": "se_nats",
+   "from": "session",
+   "to": "nats",
+   "label": "HEALTH, CONGESTION"
+  },
+  {
+   "id": "met_nats",
+   "from": "metrics",
+   "to": "nats",
+   "label": "subscribes to reports"
+  },
+  {
+   "id": "prom_met",
+   "from": "prom",
+   "to": "metrics",
+   "label": "scrape /metrics"
+  }
+ ],
+ "flows": {
+  "join": {
+   "title": "Sign in and join as host",
+   "hue": "person",
+   "desc": "Alice opens a meeting link. The Meeting API signs her in, creates the meeting with her as host and returns a room token.",
+   "hops": [
+    {
+     "e": "u_ui",
+     "t": "Alice opens <code>/meeting/standup</code>. With OAuth on, the meeting page first asks the Meeting API whether she has a session (<code>GET /session</code>); if not, it remembers the URL and shows the login page (<code>dioxus-ui/src/pages/meeting.rs</code>)."
+    },
+    {
+     "e": "ui_api",
+     "t": "The login button points the browser at <code>GET /login</code> on the Meeting API, which creates a PKCE challenge, a CSRF state and a nonce."
+    },
+    {
+     "e": "api_db",
+     "t": "Those three values are stored in <code>oauth_requests</code> so the callback can be checked against them (<code>meeting-api/src/routes/oauth.rs</code>)."
+    },
+    {
+     "e": "api_idp",
+     "t": "The browser is redirected to the identity provider. On return, <code>GET /login/callback</code> exchanges the code for tokens, verifies the ID token and reads the email and name."
+    },
+    {
+     "e": "ui_api",
+     "rev": true,
+     "t": "The user is upserted and the API answers with a redirect back to the meeting URL plus a session JWT in an <code>HttpOnly</code> cookie. From here on every API call carries that cookie."
+    },
+    {
+     "e": "ui_api",
+     "t": "Alice picks a display name and the page sends <code>POST /api/v1/meetings/standup/join</code>."
+    },
+    {
+     "e": "api_db",
+     "t": "No meeting called <code>standup</code> exists, so one is created with Alice as creator. As host she activates it and gets a participant row with status <code>admitted</code> (<code>meeting-api/src/routes/participants.rs</code>)."
+    },
+    {
+     "e": "api_nats",
+     "t": "Activation is published as a <code>MEETING_ACTIVATED</code> event on <code>room.standup.system</code>, in case someone is already waiting for the host. If NATS is not configured this step is skipped."
+    },
+    {
+     "e": "ui_api",
+     "rev": true,
+     "t": "The response carries a room token: a JWT with her user id, the room, <code>room_join: true</code>, <code>is_host: true</code> and a 60 second expiry by default. It is only needed to open the connection."
+    },
+    {
+     "e": "ui_vc",
+     "t": "The page switches to the call view, which builds <code>/lobby?token=…</code> URLs for every configured server and creates a VideoCallClient (<code>dioxus-ui/src/components/attendants.rs</code>)."
+    }
+   ]
+  },
+  "connect": {
+   "title": "Connect and elect a transport",
+   "hue": "component",
+   "desc": "The client connects to every server it knows, measures round-trip time and keeps one connection. The server announces the participant only once that connection is used.",
+   "hops": [
+    {
+     "e": "ui_vc",
+     "t": "The UI passes two URL lists from <code>config.js</code>: WebSocket servers and WebTransport servers. Each list may name several servers, for example one per region."
+    },
+    {
+     "e": "vc_cm",
+     "t": "The connection manager starts an election and opens a connection to every URL at the same time."
+    },
+    {
+     "e": "cm_ws",
+     "t": "WebSocket: <code>GET /lobby?token=JWT</code>. The server checks signature, expiry and issuer, rejects room names that are not NATS-safe, and requires <code>room_join</code> or <code>observer</code>. A bad token gets 401 or 403 before any upgrade."
+    },
+    {
+     "e": "cm_wt",
+     "t": "WebTransport, in parallel and only if enabled in the UI config: a QUIC handshake, then the same path and the same token check."
+    },
+    {
+     "e": "ws_se",
+     "t": "Each accepted connection gets its own session actor with a fresh 64-bit session id. On start it sends two packets straight back: <code>SESSION_ASSIGNED</code> with that id, and <code>MEETING_STARTED</code>."
+    },
+    {
+     "e": "se_ch",
+     "t": "The actor registers with ChatServer, which marks the session <code>Testing</code>, and then sends <code>JoinRoom</code>."
+    },
+    {
+     "e": "ch_nats",
+     "t": "ChatServer subscribes the session to <code>room.standup.*</code> and sends it one <code>PARTICIPANT_JOINED</code> per person already in the room. Nothing is announced about the newcomer yet."
+    },
+    {
+     "e": "cm_ws",
+     "t": "During the election the client sends an RTT probe on every connection every 200 ms. A probe is a MEDIA packet of type RTT carrying a timestamp."
+    },
+    {
+     "e": "cm_ws",
+     "rev": true,
+     "t": "The session actor echoes each probe to its sender and nowhere else. The client averages the last ten round trips per connection."
+    },
+    {
+     "e": "vc_cm",
+     "rev": true,
+     "t": "After the election period (2 seconds by default, extended by a second at most twice while no connection has two samples) the client picks, in order: the fastest WebTransport connection with at least two samples, the fastest WebSocket connection with at least two, then connections with a single sample. The others are closed."
+    },
+    {
+     "e": "cm_wt",
+     "t": "The winner starts sending a heartbeat every 5 seconds with camera, microphone and screen state. The first packet that is not an RTT probe makes the session actor send <code>ActivateConnection</code>."
+    },
+    {
+     "e": "se_ch",
+     "t": "ChatServer moves the session from <code>Testing</code> to <code>Active</code>. Only Active sessions may publish to the room."
+    },
+    {
+     "e": "ch_nats",
+     "t": "Now the join is announced: <code>PARTICIPANT_JOINED</code> goes out on <code>room.standup.system</code>. The losing connections never became Active, so nobody saw them."
+    }
+   ]
+  },
+  "media": {
+   "title": "One video frame, from Alice to Bob",
+   "hue": "component",
+   "desc": "A camera frame is encoded in Alice's browser, relayed by her server through NATS to Bob's server, and decoded in Bob's browser. No server decodes it.",
+   "hops": [
+    {
+     "e": "enc_vc",
+     "t": "Alice's camera frame is encoded by the browser's VideoEncoder (VP9). The chunk becomes a <code>MediaPacket</code> with type VIDEO and a sequence number, is AES-encrypted if end-to-end encryption is on, and is wrapped in a <code>PacketWrapper</code> of type MEDIA."
+    },
+    {
+     "e": "vc_cm",
+     "t": "<code>send_media_packet</code> hands it to the elected connection."
+    },
+    {
+     "e": "cm_wt",
+     "t": "On WebTransport each media packet travels on its own unidirectional stream; small control packets go as datagrams. On WebSocket it would be one binary frame."
+    },
+    {
+     "e": "wt_se",
+     "t": "The bridge reads the stream (up to 4 MB) and passes the bytes to Alice's session actor."
+    },
+    {
+     "e": "se_ch",
+     "t": "The actor classifies the packet. It is ordinary media from a non-observer, so it is forwarded to ChatServer as a <code>ClientMessage</code>."
+    },
+    {
+     "e": "ch_nats",
+     "t": "ChatServer stamps Alice's session id into the envelope and publishes the bytes to <code>room.standup.ALICE_SESSION</code>."
+    },
+    {
+     "e": "ch_nats",
+     "rev": true,
+     "t": "Every session in the room has a subscription to <code>room.standup.*</code>, on whichever server process it lives. Bob's subscription receives the message; Alice's own subscription skips it because the subject is hers."
+    },
+    {
+     "e": "se_ch",
+     "rev": true,
+     "t": "The bytes are handed to Bob's session actor. If its mailbox is full the packet is dropped and the subscription carries on."
+    },
+    {
+     "e": "ws_se",
+     "rev": true,
+     "t": "Bob is on WebSocket, so his actor writes one binary frame. Had he been on WebTransport, a full outbound queue would count as a drop against Alice's session and could trigger a CONGESTION signal."
+    },
+    {
+     "e": "cm_ws",
+     "rev": true,
+     "t": "Bob's browser receives the frame on its elected connection."
+    },
+    {
+     "e": "vc_cm",
+     "rev": true,
+     "t": "VideoCallClient sees a MEDIA packet from a session id it may not know yet and creates the peer if needed."
+    },
+    {
+     "e": "vc_dec",
+     "t": "The peer's decoder decrypts and parses the MediaPacket, checks the sequence number for gaps, and posts the frame to the video worker, where a jitter buffer feeds a WebCodecs VideoDecoder. The decoded frame is drawn on Bob's canvas for Alice."
+    }
+   ]
+  },
+  "waiting": {
+   "title": "Waiting room: knock and be admitted",
+   "hue": "background",
+   "desc": "Bob joins a meeting that has the waiting room on. He gets an observer token, listens on the media server for news, and receives his room token only after the host admits him.",
+   "hops": [
+    {
+     "e": "ui_api",
+     "t": "Bob sends <code>POST /api/v1/meetings/standup/join</code>. He is not the creator and the meeting is active."
+    },
+    {
+     "e": "api_db",
+     "t": "In one transaction the API reads <code>waiting_room_enabled</code> and inserts Bob with status <code>waiting</code>. With the waiting room off he would be admitted here and get a room token at once."
+    },
+    {
+     "e": "api_nats",
+     "t": "A <code>WAITING_ROOM_UPDATED</code> event on <code>room.standup.system</code> tells the host's client to refresh its list of people waiting."
+    },
+    {
+     "e": "ui_api",
+     "rev": true,
+     "t": "Bob's response has no room token. It has an observer token instead: same room, <code>room_join: false</code>, <code>observer: true</code>, valid for 30 minutes."
+    },
+    {
+     "e": "ui_vc",
+     "t": "The waiting room component creates a VideoCallClient with the observer token, diagnostics and health reporting off."
+    },
+    {
+     "e": "cm_ws",
+     "t": "It connects like any client. The media server marks the session as observer: it receives room traffic, cannot publish media, and is never announced as a participant."
+    },
+    {
+     "e": "ui_api",
+     "t": "Meanwhile the host clicks Admit, and her UI sends <code>POST /api/v1/meetings/standup/admit</code> with Bob's user id. The API checks that the caller is the admitted host."
+    },
+    {
+     "e": "api_db",
+     "t": "Bob's row changes to <code>admitted</code>."
+    },
+    {
+     "e": "api_nats",
+     "t": "The API publishes <code>PARTICIPANT_ADMITTED</code> with <code>target_user_id</code> set to Bob. The token is deliberately not in the broadcast."
+    },
+    {
+     "e": "ch_nats",
+     "rev": true,
+     "t": "Bob's observer session is subscribed to <code>room.standup.*</code>, so the event reaches his server process."
+    },
+    {
+     "e": "cm_ws",
+     "rev": true,
+     "t": "It travels down his observer connection as a MEETING packet."
+    },
+    {
+     "e": "ui_vc",
+     "rev": true,
+     "t": "VideoCallClient compares <code>target_user_id</code> with its own user id and fires the admitted callback into the waiting room component."
+    },
+    {
+     "e": "ui_api",
+     "t": "The component calls <code>GET /api/v1/meetings/standup/status</code>, which now includes a room token, and the page moves on to the call view. The component also polls the same endpoint every 5 seconds the whole time, as a safety net in case the push is missed."
+    }
+   ]
+  },
+  "feedback": {
+   "title": "Quality feedback and metrics",
+   "hue": "background",
+   "desc": "Receivers report what they get. One report goes to the sender to steer its encoder, another to the metrics servers. The media server adds its own signal when a receiver cannot keep up.",
+   "hops": [
+    {
+     "e": "dec_diag",
+     "t": "Each decoded packet is counted per peer and media type, giving received frame rate and bitrate."
+    },
+    {
+     "e": "diag_vc",
+     "t": "Two kinds of report leave Bob's client: DIAGNOSTICS packets about each sender, and a HEALTH packet every 5 seconds summarising all peers, the active server and its RTT."
+    },
+    {
+     "e": "cm_ws",
+     "t": "Both travel on the elected connection like any other packet."
+    },
+    {
+     "e": "se_nats",
+     "t": "The session actor recognises HEALTH and does not relay it to the room. It publishes it to <code>health.diagnostics.REGION.SERVICE.SERVER</code> instead."
+    },
+    {
+     "e": "met_nats",
+     "rev": true,
+     "t": "<code>metrics_server</code> consumes that subject family in a queue group and updates Prometheus gauges per session and peer."
+    },
+    {
+     "e": "prom_met",
+     "t": "Prometheus scrapes <code>/metrics</code>; Grafana dashboards read from Prometheus."
+    },
+    {
+     "e": "ch_nats",
+     "t": "DIAGNOSTICS packets, by contrast, are ordinary room traffic and are relayed to everyone, including the sender they describe."
+    },
+    {
+     "e": "diag_vc",
+     "rev": true,
+     "t": "Alice's VideoCallClient passes each DIAGNOSTICS packet to her sender-side diagnostics."
+    },
+    {
+     "e": "diag_enc",
+     "t": "Her encoder bitrate controller turns the reported frame rates into a new target bitrate, and the adaptive quality manager moves between quality tiers when that is not enough."
+    },
+    {
+     "e": "se_nats",
+     "t": "A separate, server-made signal: when a WebTransport session's outbound queue (256 messages) is full and 5 packets from one sender are dropped within a second, the receiver's session publishes a CONGESTION packet on that sender's subject, at most once a second per sender. Clients cannot forge it; a CONGESTION packet arriving from a client is dropped."
+    },
+    {
+     "e": "enc_vc",
+     "rev": true,
+     "t": "Alice's client sees CONGESTION addressed to her session id and sets a flag that makes her encoder step down a quality tier."
+    }
+   ]
+  }
+ },
+ "buildSteps": [
+  null,
+  {
+   "title": "One room, one server",
+   "text": "A client, a socket, and a server that hands every packet from one connection to the others in the same room.",
+   "decision": "Packets are one protobuf envelope with a type and an opaque payload, so the server can route without understanding media.",
+   "runnable": "make dev-websocket",
+   "nodes": [
+    "user",
+    "ui",
+    "vcclient",
+    "ws",
+    "session",
+    "chat",
+    "types"
+   ]
+  },
+  {
+   "title": "Put a bus between servers",
+   "text": "Publish every packet to a NATS subject for its room and deliver from a subscription, even when sender and receiver share a process.",
+   "decision": "Servers never talk to each other. A room is a subject pattern, so adding a server needs no configuration.",
+   "runnable": "make dev-middleware",
+   "nodes": [
+    "nats"
+   ]
+  },
+  {
+   "title": "Real media",
+   "text": "Encode camera, microphone and screen in the browser; decode each peer behind a jitter buffer.",
+   "decision": "Use the browser's WebCodecs encoder and decoder and keep the relay codec-agnostic, instead of adopting WebRTC.",
+   "runnable": "make dev-ui",
+   "nodes": [
+    "encoders",
+    "decoders"
+   ]
+  },
+  {
+   "title": "A faster transport, chosen by measurement",
+   "text": "Add a WebTransport server next to the WebSocket one and let the client race them.",
+   "decision": "Both transports share one session logic struct; the client elects by round-trip time and prefers WebTransport.",
+   "runnable": "make dev-webtransport",
+   "nodes": [
+    "wt",
+    "connmgr",
+    "native"
+   ]
+  },
+  {
+   "title": "Meetings, identity and tokens",
+   "text": "A separate REST service owns sign-in, hosts, the waiting room and admission, and signs short-lived room tokens.",
+   "decision": "The media servers stay stateless: they trust a signed token and never query the database.",
+   "runnable": "make dev-meeting-api",
+   "nodes": [
+    "mapi",
+    "db",
+    "idp"
+   ]
+  },
+  {
+   "title": "Measure and adapt",
+   "text": "Receivers report quality to senders and to the metrics pipeline; senders adjust bitrate and tier.",
+   "decision": "Adaptation is driven by receivers, with one server-made congestion signal as a backstop.",
+   "runnable": "make dev-metrics",
+   "nodes": [
+    "diag",
+    "metrics",
+    "prom"
+   ]
+  }
+ ],
+ "tourChapters": [
+  {
+   "name": "Context",
+   "hue": "--ink"
+  },
+  {
+   "name": "Joining",
+   "hue": "--h-person"
+  },
+  {
+   "name": "Connecting",
+   "hue": "--h-component"
+  },
+  {
+   "name": "Media",
+   "hue": "--h-component"
+  },
+  {
+   "name": "Around the call",
+   "hue": "--h-background"
+  },
+  {
+   "name": "Recap",
+   "hue": "--ink"
+  }
+ ],
+ "tour": [
+  {
+   "ch": 0,
+   "level": 0,
+   "title": "Video calls without WebRTC",
+   "body": [
+    "videocall.rs is a video conferencing system written almost entirely in Rust, in the browser as well as on the server.",
+    "Seen from outside: people open a web app, the app asks a Meeting API for permission, then exchanges media through relay servers that are tied together by NATS."
+   ],
+   "why": "The usual stack hides transport, congestion control and codecs inside WebRTC. Here each of those is ordinary code you can read, which is why a map helps."
+  },
+  {
+   "ch": 1,
+   "flow": "join",
+   "hops": [
+    0,
+    5
+   ],
+   "title": "Signing in",
+   "body": [
+    "Follow Alice from a meeting link to a session cookie. This part is skipped when OAuth is off."
+   ],
+   "why": "The Meeting API issues its own session JWT after the identity provider vouches for the user, so the rest of the system depends on one secret, not on a provider."
+  },
+  {
+   "ch": 1,
+   "flow": "join",
+   "hops": [
+    5,
+    10
+   ],
+   "title": "Joining returns a token, not a connection",
+   "body": [
+    "The join call creates or finds the meeting and answers with a signed room token."
+   ],
+   "why": "That token is the only thing the media servers trust. It lives for a minute by default because it is only needed to open the connection."
+  },
+  {
+   "ch": 2,
+   "flow": "connect",
+   "hops": [
+    0,
+    7
+   ],
+   "title": "Connect to everything",
+   "body": [
+    "The client opens a connection to every server it was given. Each server validates the token and gives the connection a session id."
+   ],
+   "why": "The connection is real but silent: the server holds it in a Testing state and tells nobody."
+  },
+  {
+   "ch": 2,
+   "flow": "connect",
+   "hops": [
+    7,
+    13
+   ],
+   "title": "Elect one, announce once",
+   "body": [
+    "Round-trip probes decide which connection survives. The first real packet on it makes the participant visible."
+   ],
+   "why": "Announcing at activation rather than at connect is what stops the losing connections from showing up as ghost participants."
+  },
+  {
+   "ch": 3,
+   "flow": "media",
+   "title": "One frame across the system",
+   "body": [
+    "Encoded in one browser, relayed as opaque bytes through a session actor, NATS and another session actor, decoded in another browser."
+   ],
+   "why": "The servers are a relay, not a mixer. Cost per room grows with packets forwarded, not with video processing, and end-to-end encryption stays possible."
+  },
+  {
+   "ch": 4,
+   "flow": "waiting",
+   "title": "The waiting room uses the same pipes",
+   "body": [
+    "An observer token lets a waiting client sit on the media server and hear the moment it is admitted."
+   ],
+   "why": "The control plane has no socket to clients of its own. It reaches them by publishing to the room's system subject."
+  },
+  {
+   "ch": 4,
+   "flow": "feedback",
+   "title": "How the call watches itself",
+   "body": [
+    "Receivers measure and report; senders adapt; health reports become metrics."
+   ],
+   "why": "With no media processing on the server, the clients are the only place quality can be measured."
+  },
+  {
+   "ch": 5,
+   "whole": true,
+   "title": "The whole system on one map",
+   "recap": {
+    "people": "Browsers and native clients are all just participants.",
+    "browser": "The Rust client encodes, decodes and picks its transport.",
+    "control": "The Meeting API decides who may join and signs tokens.",
+    "outside": "An identity provider is optional.",
+    "media": "Two transports, one session logic, no media processing.",
+    "backbone": "NATS subjects per room; one protobuf envelope.",
+    "observe": "Client health reports become Prometheus metrics."
+   },
+   "body": [
+    "A control plane that issues tokens, a data plane that relays packets, and a bus that lets any number of relay servers act as one.",
+    "To go deeper, open the look-inside views on the connection manager, the session actor, ChatServer and the wire format."
+   ]
+  }
+ ],
+ "insides": {
+  "session": {
+   "kind": "steps",
+   "title": "Inside a session actor: one inbound packet",
+   "sub": "What happens to each packet a client sends, in order. The WebSocket and WebTransport actors both call <code>SessionLogic::handle_inbound</code> and then act on its answer.",
+   "cap": "The envelope is parsed once; for MEDIA packets the inner MediaPacket is parsed too, only to spot RTT probes and keyframe requests. If the payload is encrypted that inner parse fails and the packet is treated as ordinary data.",
+   "steps": [
+    {
+     "t": "Bytes arrive from the client",
+     "d": "A WebSocket binary frame, or a WebTransport stream or datagram. The liveness timer is reset.",
+     "code": "actix-api/src/actors/transports/ws_chat_session.rs:221-224"
+    },
+    {
+     "t": "Count the bytes",
+     "d": "Sent to the server diagnostics tracker over a channel.",
+     "code": "actix-api/src/actors/session_logic.rs:352-354"
+    },
+    {
+     "t": "Classify by parsing the envelope once",
+     "d": "Returns Rtt, Health, KeyframeRequest, Dropped or Data. Bytes that do not parse count as Data.",
+     "code": "actix-api/src/actors/packet_handler.rs:60-96"
+    },
+    {
+     "t": "A CONGESTION packet from a client?",
+     "d": "Only servers may create these.",
+     "code": "actix-api/src/actors/session_logic.rs:358-364",
+     "exit": {
+      "when": "CONGESTION",
+      "t": "Dropped silently",
+      "code": "actix-api/src/actors/packet_handler.rs:66-72"
+     }
+    },
+    {
+     "t": "An RTT probe?",
+     "d": "A MEDIA packet whose inner type is RTT.",
+     "code": "actix-api/src/actors/session_logic.rs:365-370",
+     "exit": {
+      "when": "RTT",
+      "t": "Echoed to the sender only; does not activate the session",
+      "code": "actix-api/src/actors/transports/ws_chat_session.rs:238-240"
+     }
+    },
+    {
+     "t": "A HEALTH report?",
+     "d": "Published to NATS for the metrics servers on a spawned task.",
+     "code": "actix-api/src/actors/session_logic.rs:371-375",
+     "async": true,
+     "exit": {
+      "when": "HEALTH",
+      "t": "Goes to health.diagnostics.*, never to the room",
+      "code": "actix-api/src/client_diagnostics.rs:53-68"
+     }
+    },
+    {
+     "t": "A KEYFRAME_REQUEST?",
+     "d": "Ignored from observers and limited to 2 per second per session; otherwise forwarded.",
+     "code": "actix-api/src/actors/session_logic.rs:376-391",
+     "exit": {
+      "when": "over the limit",
+      "t": "Dropped with a warning",
+      "code": "actix-api/src/actors/packet_handler.rs:127-143"
+     }
+    },
+    {
+     "t": "Ordinary data from an observer?",
+     "d": "Observer sessions (waiting room) may listen but not publish.",
+     "code": "actix-api/src/actors/session_logic.rs:392-403",
+     "exit": {
+      "when": "observer",
+      "t": "Dropped"
+     }
+    },
+    {
+     "t": "First packet that is not an RTT probe: activate",
+     "d": "Sends ActivateConnection to ChatServer once per session. Any outcome other than an echo counts, including a packet that was dropped above.",
+     "code": "actix-api/src/actors/transports/ws_chat_session.rs:226-235"
+    },
+    {
+     "t": "Forward to ChatServer",
+     "d": "The bytes are wrapped in a ClientMessage with session id, user and room.",
+     "code": "actix-api/src/actors/transports/ws_chat_session.rs:190-203",
+     "async": true
+    }
+   ]
+  },
+  "chat": {
+   "kind": "steps",
+   "title": "Inside ChatServer: join a room, then relay",
+   "sub": "The life of one session as ChatServer sees it: registered, joined, activated, publishing and receiving, then gone. Each step is a message handler in <code>chat_server.rs</code>.",
+   "cap": "Delivery always goes through NATS, even between two sessions on the same process. A departure is announced only after a 2 second grace period, so a quick reconnect by the same user causes neither a leave nor a join. The code can also publish MEETING_ENDED when a host leaves, but <code>SessionManager::end_session</code> currently always reports that the meeting continues.",
+   "steps": [
+    {
+     "t": "Connect: register the session",
+     "d": "Stores the actor's address and marks the session Testing.",
+     "code": "actix-api/src/actors/chat_server.rs:217-225"
+    },
+    {
+     "t": "JoinRoom: refuse the reserved system user id",
+     "code": "actix-api/src/actors/chat_server.rs:574-579",
+     "exit": {
+      "when": "system user id",
+      "t": "Error; the session stops"
+     }
+    },
+    {
+     "t": "Already subscribed?",
+     "code": "actix-api/src/actors/chat_server.rs:581-583",
+     "exit": {
+      "when": "duplicate join",
+      "t": "Return OK, do nothing"
+     }
+    },
+    {
+     "t": "Is this user reconnecting?",
+     "d": "A pending departure for the same room and user is cancelled, and the join announcement is suppressed.",
+     "code": "actix-api/src/actors/chat_server.rs:585-614"
+    },
+    {
+     "t": "Record the member",
+     "d": "Non-observers are added to the room's member list; the list as it was is kept for the next steps.",
+     "code": "actix-api/src/actors/chat_server.rs:631-652"
+    },
+    {
+     "t": "First in the room: publish MEETING_STARTED",
+     "d": "On room.ROOM.system, from a spawned task.",
+     "code": "actix-api/src/actors/chat_server.rs:683-689",
+     "async": true
+    },
+    {
+     "t": "Tell the newcomer who is already here",
+     "d": "One PARTICIPANT_JOINED per existing member, sent straight to the new session, not through NATS.",
+     "code": "actix-api/src/actors/chat_server.rs:718-740"
+    },
+    {
+     "t": "Subscribe to room.ROOM.*",
+     "d": "A queue subscription named after the session and room; the task then loops over incoming messages for the life of the session.",
+     "code": "actix-api/src/actors/chat_server.rs:742-759",
+     "async": true
+    },
+    {
+     "t": "ActivateConnection: Testing to Active",
+     "d": "Publishes the deferred PARTICIPANT_JOINED on the system subject, unless this is a reconnect or an observer.",
+     "code": "actix-api/src/actors/chat_server.rs:348-423"
+    },
+    {
+     "t": "ClientMessage: is the session Active?",
+     "code": "actix-api/src/actors/chat_server.rs:513-526",
+     "exit": {
+      "when": "still Testing",
+      "t": "Packet is not published"
+     }
+    },
+    {
+     "t": "Stamp the session id and publish",
+     "d": "If the envelope has no session id the server writes its own, then publishes to room.ROOM.SESSION.",
+     "code": "actix-api/src/actors/chat_server.rs:528-556",
+     "async": true
+    },
+    {
+     "t": "For each NATS message: deliver",
+     "d": "Messages on the session's own subject are skipped unless they are CONGESTION; the rest are handed to the session actor.",
+     "code": "actix-api/src/actors/chat_server.rs:784-814",
+     "exit": {
+      "when": "mailbox full",
+      "t": "Message dropped, subscription continues",
+      "code": "actix-api/src/actors/chat_server.rs:806-811"
+     }
+    },
+    {
+     "t": "Disconnect: wait before saying goodbye",
+     "d": "The subscription is aborted at once, but the departure is parked for 2 seconds. Observers skip the wait and are never announced.",
+     "code": "actix-api/src/actors/chat_server.rs:227-310"
+    },
+    {
+     "t": "Grace period over: publish PARTICIPANT_LEFT",
+     "d": "Only if the session had been Active and the user did not reconnect. Published on room.ROOM.system.",
+     "code": "actix-api/src/actors/chat_server.rs:428-498",
+     "async": true,
+     "exit": {
+      "when": "never activated",
+      "t": "Removed quietly, nothing published",
+      "code": "actix-api/src/actors/chat_server.rs:462-476"
+     }
+    }
+   ]
+  },
+  "connmgr": {
+   "kind": "steps",
+   "title": "Inside the connection manager: the election",
+   "sub": "How the browser client goes from a list of server URLs to one active connection. Timers in <code>connection_controller.rs</code> drive it: probes every 200 ms, a completion check every 100 ms.",
+   "cap": "WebTransport is preferred as a class, not by latency: a slower WebTransport connection with two samples still beats a faster WebSocket one. After the election the same probes run once a second to watch for degradation. The probe body goes through the same AES step as media, so the server can recognise it as an RTT probe only while end-to-end encryption is off, which is the default.",
+   "steps": [
+    {
+     "t": "Start the election",
+     "d": "Open a connection to every WebSocket URL and every WebTransport URL and enter the Testing state.",
+     "code": "videocall-client/src/connection/connection_manager.rs:283-307"
+    },
+    {
+     "t": "Hold each connection's SESSION_ASSIGNED",
+     "d": "Every server connection gets its own session id; ids for connections that are not elected yet are parked.",
+     "code": "videocall-client/src/connection/connection_manager.rs:404-429"
+    },
+    {
+     "t": "Probe round-trip time",
+     "d": "A MEDIA packet of type RTT with a monotonic timestamp, sent as a datagram where the transport has them.",
+     "code": "videocall-client/src/connection/connection_manager.rs:577-616"
+    },
+    {
+     "t": "Record each echo",
+     "d": "Round trips outside a sane range are discarded; the last 10 are averaged per connection.",
+     "code": "videocall-client/src/connection/connection_manager.rs:622-653"
+    },
+    {
+     "t": "Has the election period passed?",
+     "d": "If no connection has 2 samples yet, the deadline is extended by a second, at most twice.",
+     "code": "videocall-client/src/connection/connection_manager.rs:1626-1675"
+    },
+    {
+     "t": "Pick the winner",
+     "d": "Lowest average RTT among WebTransport connections with at least 2 samples, then WebSocket connections with at least 2, then WebTransport and WebSocket connections with fewer.",
+     "code": "videocall-client/src/connection/connection_manager.rs:756-833",
+     "exit": {
+      "when": "no measurements at all",
+      "t": "Election fails; state becomes Failed",
+      "code": "videocall-client/src/connection/connection_manager.rs:744-751"
+     }
+    },
+    {
+     "t": "Adopt the winner's session id",
+     "code": "videocall-client/src/connection/connection_manager.rs:676-714"
+    },
+    {
+     "t": "Start the heartbeat on the winner",
+     "d": "Every 5 seconds, first tick 5 seconds after the election, carrying camera, microphone, screen and speaking state. Media, health reports or an immediate heartbeat on a camera, microphone, screen or speaking change may reach the server sooner; whichever non-probe packet arrives first activates the session there.",
+     "code": "videocall-client/src/connection/connection_manager.rs:716-720"
+    },
+    {
+     "t": "Close the losers",
+     "code": "videocall-client/src/connection/connection_manager.rs:836-851"
+    },
+    {
+     "t": "Keep watching",
+     "d": "Once a second: probe again, and start a re-election if RTT has degraded.",
+     "code": "videocall-client/src/connection/connection_controller.rs:68-97"
+    }
+   ]
+  },
+  "types": {
+   "kind": "schema",
+   "title": "Inside the wire format: the protobuf messages",
+   "sub": "Everything on a WebSocket, a WebTransport stream or a NATS subject is a serialized <code>PacketWrapper</code>. Its <code>data</code> field holds one of the other messages, chosen by <code>packet_type</code>.",
+   "cap": "Control signals that must reach peers quickly (heartbeat, RTT probe, keyframe request) are media types inside a MEDIA envelope rather than envelope types of their own. With end-to-end encryption on, the <code>data</code> of media, heartbeat and RTT packets is ciphertext; diagnostics, health reports and the public keys still travel in the clear.",
+   "tables": [
+    {
+     "name": "PacketWrapper",
+     "note": "The envelope. Servers route on these fields; they look inside a MEDIA payload only to spot RTT probes and keyframe requests.",
+     "code": "protobuf/types/packet_wrapper.proto:3-21",
+     "fields": [
+      {
+       "n": "packet_type",
+       "type": "enum",
+       "note": "RSA_PUB_KEY, AES_KEY, MEDIA, CONNECTION, DIAGNOSTICS, HEALTH, MEETING, SESSION_ASSIGNED, CONGESTION"
+      },
+      {
+       "n": "user_id",
+       "type": "bytes",
+       "note": "sender's user id; a reserved system id on server-made meeting events"
+      },
+      {
+       "n": "data",
+       "type": "bytes",
+       "note": "the inner message, possibly encrypted"
+      },
+      {
+       "n": "session_id",
+       "type": "uint64",
+       "note": "which connection sent it; stamped by the server if the client left it at 0"
+      }
+     ]
+    },
+    {
+     "name": "MediaPacket",
+     "note": "Inside a MEDIA envelope: one encoded frame or a small control signal.",
+     "code": "protobuf/types/media_packet.proto:3-22",
+     "fields": [
+      {
+       "n": "media_type",
+       "type": "enum",
+       "note": "VIDEO, AUDIO, SCREEN, HEARTBEAT, RTT, KEYFRAME_REQUEST"
+      },
+      {
+       "n": "data",
+       "type": "bytes",
+       "note": "the encoded chunk"
+      },
+      {
+       "n": "frame_type",
+       "type": "string",
+       "note": "key or delta"
+      },
+      {
+       "n": "timestamp",
+       "type": "double"
+      },
+      {
+       "n": "video_metadata",
+       "type": "VideoMetadata",
+       "ref": "VideoMetadata"
+      },
+      {
+       "n": "heartbeat_metadata",
+       "type": "HeartbeatMetadata",
+       "ref": "HeartbeatMetadata"
+      }
+     ]
+    },
+    {
+     "name": "VideoMetadata",
+     "note": "What a receiver needs to detect a gap.",
+     "code": "protobuf/types/media_packet.proto:32-35",
+     "fields": [
+      {
+       "n": "sequence",
+       "type": "uint64",
+       "note": "per-stream counter set by the encoder"
+      },
+      {
+       "n": "codec",
+       "type": "enum",
+       "note": "VP8 or VP9 profile 0"
+      }
+     ]
+    },
+    {
+     "name": "HeartbeatMetadata",
+     "note": "A peer's on/off state, sent every 5 seconds and on change.",
+     "code": "protobuf/types/media_packet.proto:57-62",
+     "fields": [
+      {
+       "n": "video_enabled",
+       "type": "bool"
+      },
+      {
+       "n": "audio_enabled",
+       "type": "bool"
+      },
+      {
+       "n": "screen_enabled",
+       "type": "bool"
+      },
+      {
+       "n": "is_speaking",
+       "type": "bool"
+      }
+     ]
+    },
+    {
+     "name": "MeetingPacket",
+     "note": "Inside a MEETING envelope: lifecycle events made by the media servers and the Meeting API. Most travel on room.ROOM.system; a few are sent straight to one client.",
+     "code": "protobuf/types/meeting_packet.proto:4-38",
+     "fields": [
+      {
+       "n": "event_type",
+       "type": "enum",
+       "note": "MEETING_STARTED, MEETING_ENDED, PARTICIPANT_JOINED, PARTICIPANT_LEFT, MEETING_ACTIVATED, PARTICIPANT_ADMITTED, PARTICIPANT_REJECTED, WAITING_ROOM_UPDATED"
+      },
+      {
+       "n": "room_id",
+       "type": "string"
+      },
+      {
+       "n": "target_user_id",
+       "type": "bytes",
+       "note": "who the event is about; clients ignore admissions aimed at others"
+      },
+      {
+       "n": "session_id",
+       "type": "uint64",
+       "note": "the joining or leaving session"
+      },
+      {
+       "n": "display_name",
+       "type": "bytes"
+      }
+     ]
+    },
+    {
+     "name": "HealthPacket",
+     "note": "Inside a HEALTH envelope: one client's view of every peer. Never relayed to the room.",
+     "code": "protobuf/types/health_packet.proto:50-67",
+     "fields": [
+      {
+       "n": "session_id",
+       "type": "string"
+      },
+      {
+       "n": "meeting_id",
+       "type": "string"
+      },
+      {
+       "n": "peer_stats",
+       "type": "map",
+       "note": "per peer: can listen, can see, NetEq and video stats"
+      },
+      {
+       "n": "active_server_url",
+       "type": "string"
+      },
+      {
+       "n": "active_server_rtt_ms",
+       "type": "double"
+      }
+     ]
+    },
+    {
+     "name": "DiagnosticsPacket",
+     "note": "Inside a DIAGNOSTICS envelope: a receiver's report about one sender's stream, relayed to the room.",
+     "code": "protobuf/types/diagnostics_packet.proto:6-20",
+     "fields": [
+      {
+       "n": "sender_id",
+       "type": "string",
+       "note": "who wrote the report"
+      },
+      {
+       "n": "target_id",
+       "type": "string",
+       "note": "whose stream it describes"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "files": {
+  "entries": [
+   {
+    "path": "Cargo.toml",
+    "t": "The Cargo workspace: 15 member crates, from servers to codecs.",
+    "tag": "config"
+   },
+   {
+    "path": "Makefile",
+    "t": "The index of developer commands: <code>make dev</code> runs the whole stack, <code>make dev-websocket</code> and friends run one service.",
+    "tag": "entry point"
+   },
+   {
+    "path": "nix/dev-stack.nix",
+    "t": "The local stack as host processes: PostgreSQL, NATS, Prometheus, Grafana, the Meeting API, both media servers, both metrics servers and the UI.",
+    "tag": "deploy",
+    "why": "It is the clearest list of what runs and on which port. Shared settings such as <code>NATS_URL</code>, <code>DATABASE_URL</code> and <code>JWT_SECRET</code> are exported once and inherited by every process.",
+    "nodes": [
+     "nats",
+     "db",
+     "prom"
+    ]
+   },
+   {
+    "path": "protobuf/types/",
+    "t": "The <code>.proto</code> files for every packet on the wire.",
+    "why": "Change a message here, then regenerate the Rust under <code>videocall-types</code>.",
+    "nodes": [
+     "types"
+    ],
+    "open": true
+   },
+   {
+    "path": "videocall-types/src/protos/",
+    "t": "Generated Rust for those messages, checked in.",
+    "nodes": [
+     "types"
+    ]
+   },
+   {
+    "path": "videocall-types/src/feature_flags.rs",
+    "t": "Environment-driven flags such as <code>FEATURE_MEETING_MANAGEMENT</code>, shared by servers.",
+    "nodes": [
+     "types"
+    ]
+   },
+   {
+    "path": "meeting-api/src/main.rs",
+    "t": "Starts the Meeting API: config, database pool, optional NATS, CORS, router.",
+    "tag": "entry point",
+    "nodes": [
+     "mapi"
+    ]
+   },
+   {
+    "path": "meeting-api/src/routes/",
+    "t": "The REST handlers: OAuth, meetings, participants (join, leave, status) and the waiting room.",
+    "nodes": [
+     "mapi"
+    ],
+    "open": true,
+    "why": "Route table in <code>mod.rs</code>; one file per area: <code>oauth.rs</code>, <code>meetings.rs</code>, <code>participants.rs</code>, <code>waiting_room.rs</code>."
+   },
+   {
+    "path": "meeting-api/src/token.rs",
+    "t": "Signs session tokens, room tokens and observer tokens.",
+    "nodes": [
+     "mapi"
+    ],
+    "why": "The media servers verify the room and observer tokens signed here; the claims type is shared through <code>videocall-meeting-types</code>. Session tokens are checked by the Meeting API itself."
+   },
+   {
+    "path": "meeting-api/src/nats_events.rs",
+    "t": "Publishes meeting events to a room's system subject.",
+    "nodes": [
+     "mapi",
+     "nats"
+    ]
+   },
+   {
+    "path": "meeting-api/src/db/",
+    "t": "SQL queries for meetings, participants and OAuth requests.",
+    "nodes": [
+     "mapi",
+     "db"
+    ]
+   },
+   {
+    "path": "dbmate/db/migrations/",
+    "t": "PostgreSQL schema migrations, applied by dbmate before the Meeting API starts in dev.",
+    "nodes": [
+     "db"
+    ],
+    "more": "12 migrations; SQLite variants under dbmate/sqlite/"
+   },
+   {
+    "path": "videocall-meeting-types/src/token.rs",
+    "t": "<code>RoomAccessTokenClaims</code>: the fields of a room token, shared by issuer and verifier.",
+    "nodes": [
+     "mapi",
+     "ws",
+     "wt"
+    ]
+   },
+   {
+    "path": "actix-api/src/bin/",
+    "t": "Four binaries from one crate: the WebSocket server, the WebTransport server and the two metrics servers.",
+    "tag": "entry point",
+    "nodes": [
+     "ws",
+     "wt",
+     "metrics"
+    ],
+    "open": true
+   },
+   {
+    "path": "actix-api/src/lobby.rs",
+    "t": "The WebSocket <code>/lobby</code> routes: token check, then upgrade into a session actor. Also holds the deprecated <code>/lobby/USER/ROOM</code> route, which has no token and answers 410 Gone when meeting management is on.",
+    "nodes": [
+     "ws"
+    ]
+   },
+   {
+    "path": "actix-api/src/webtransport/",
+    "t": "The QUIC listener, request validation and the bridge between quinn tasks and the session actor.",
+    "nodes": [
+     "wt"
+    ]
+   },
+   {
+    "path": "actix-api/src/token_validator.rs",
+    "t": "Decodes and checks a room token.",
+    "nodes": [
+     "ws",
+     "wt"
+    ],
+    "why": "Also rejects room names that could be abused as NATS wildcards."
+   },
+   {
+    "path": "actix-api/src/actors/",
+    "t": "The actors: ChatServer, the shared session logic, the packet classifier and the two transport wrappers.",
+    "nodes": [
+     "session",
+     "chat"
+    ],
+    "open": true,
+    "why": "Session logic is shared so that WebSocket and WebTransport behave the same."
+   },
+   {
+    "path": "actix-api/src/server_diagnostics.rs",
+    "t": "Tracks connections and bytes per session inside each media server and publishes server events to NATS, where the server-stats metrics server reads them.",
+    "nodes": [
+     "ws",
+     "wt"
+    ]
+   },
+   {
+    "path": "videocall-client/src/client/",
+    "t": "<code>VideoCallClient</code>: the public API of the browser client and the inbound packet dispatcher.",
+    "nodes": [
+     "vcclient"
+    ]
+   },
+   {
+    "path": "videocall-client/src/connection/",
+    "t": "Transports, heartbeat, the election and reconnection.",
+    "nodes": [
+     "connmgr"
+    ]
+   },
+   {
+    "path": "videocall-client/src/encode/",
+    "t": "Camera, microphone and screen encoders.",
+    "nodes": [
+     "encoders"
+    ]
+   },
+   {
+    "path": "videocall-client/src/decode/",
+    "t": "Per-peer decoders and the peer decode manager.",
+    "nodes": [
+     "decoders"
+    ]
+   },
+   {
+    "path": "videocall-client/src/diagnostics/",
+    "t": "Receiver statistics, the sender's bitrate controller and quality tiers.",
+    "nodes": [
+     "diag"
+    ]
+   },
+   {
+    "path": "videocall-client/src/crypto/",
+    "t": "RSA and AES helpers for optional end-to-end encryption.",
+    "nodes": [
+     "vcclient"
+    ]
+   },
+   {
+    "path": "videocall-codecs/",
+    "t": "Video jitter buffer, the decoder web worker and VP8/VP9 codec code for native and WebAssembly.",
+    "nodes": [
+     "decoders",
+     "native"
+    ]
+   },
+   {
+    "path": "neteq/",
+    "t": "The audio jitter buffer (NetEq-style) and its web worker.",
+    "nodes": [
+     "decoders"
+    ]
+   },
+   {
+    "path": "dioxus-ui/src/pages/",
+    "t": "Home, meeting and meeting settings pages.",
+    "nodes": [
+     "ui"
+    ]
+   },
+   {
+    "path": "dioxus-ui/src/components/",
+    "t": "The call view, waiting room, host controls, peer tiles and device pickers.",
+    "nodes": [
+     "ui"
+    ]
+   },
+   {
+    "path": "videocall-meeting-client/",
+    "t": "A small REST client for the Meeting API, used by the UI.",
+    "nodes": [
+     "ui"
+    ]
+   },
+   {
+    "path": "videocall-cli/",
+    "t": "Native command-line streamer.",
+    "nodes": [
+     "native"
+    ]
+   },
+   {
+    "path": "bot/",
+    "t": "Synthetic participant for load testing.",
+    "nodes": [
+     "native"
+    ]
+   },
+   {
+    "path": "videocall-sdk/",
+    "t": "UniFFI bindings for a WebTransport client, meant for iOS and Android. The projects under <code>apps/</code> do not use them yet.",
+    "nodes": [
+     "native"
+    ]
+   },
+   {
+    "path": "monitoring/",
+    "t": "Prometheus scrape config and alert rules; Grafana dashboards.",
+    "tag": "config",
+    "nodes": [
+     "prom"
+    ]
+   },
+   {
+    "path": "helm/",
+    "t": "Kubernetes charts per service, with per-region values under <code>helm/global/</code>.",
+    "tag": "deploy"
+   },
+   {
+    "path": "e2e/",
+    "t": "Playwright end-to-end tests that drive the UI against a native stack.",
+    "tag": "tests"
+   },
+   {
+    "path": "docs/ARCHITECTURE.md",
+    "t": "The project's own architecture notes. Parts are older than the code: the packet examples lack newer fields such as <code>session_id</code> and still show <code>email</code> where the code has <code>user_id</code>.",
+    "tag": "docs"
+   }
+  ]
+ },
+ "layout": {
+  "grid": {
+   "user": [
+    0,
+    2
+   ],
+   "native": [
+    0,
+    4
+   ],
+   "diag": [
+    1,
+    0
+   ],
+   "decoders": [
+    1,
+    1
+   ],
+   "encoders": [
+    2,
+    0
+   ],
+   "vcclient": [
+    2,
+    1
+   ],
+   "ui": [
+    2,
+    2
+   ],
+   "connmgr": [
+    2,
+    3
+   ],
+   "ws": [
+    3,
+    3
+   ],
+   "wt": [
+    3,
+    4
+   ],
+   "session": [
+    4,
+    3
+   ],
+   "chat": [
+    5,
+    3
+   ],
+   "nats": [
+    7,
+    3
+   ],
+   "types": [
+    7,
+    2
+   ],
+   "idp": [
+    5,
+    1
+   ],
+   "mapi": [
+    5,
+    2
+   ],
+   "db": [
+    6,
+    2
+   ],
+   "prom": [
+    4,
+    5
+   ],
+   "metrics": [
+    5,
+    5
+   ]
+  }
+ }
+}
