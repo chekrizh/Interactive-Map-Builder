@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "interactive-map",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "Build an interactive map of a code repository (C4 overview, drill-down, animated flows, guided tour) as one self-contained HTML file.",
   "author": {
     "name": "chekrizh"
